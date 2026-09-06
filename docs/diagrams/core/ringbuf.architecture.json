@@ -1,0 +1,198 @@
+{
+  "schema_version": 1,
+  "diagram_type": "architecture",
+  "meta": {
+    "title": "Inside ringbuf",
+    "animation": "trace",
+    "quality_profile": "showcase",
+    "views": [
+      {
+        "id": "the-problem",
+        "label": "A signal never ends",
+        "focus": [
+          "stream"
+        ],
+        "note": "A program that reads a signal as it arrives needs the samples before the one in hand, and cannot keep them all."
+      },
+      {
+        "id": "nothing-moves",
+        "label": "Nothing is moved",
+        "focus": [
+          "head",
+          "block"
+        ],
+        "note": "The oldest sample is overwritten where it stands, and the index moves on by one."
+      },
+      {
+        "id": "fixed-cost",
+        "label": "The same cost at any size",
+        "focus": [
+          "cost",
+          "shift"
+        ],
+        "note": "A put costs the same whether the buffer holds four samples or four thousand."
+      },
+      {
+        "id": "built-on",
+        "label": "What is built on it",
+        "focus": [
+          "users"
+        ],
+        "note": "A filter looks back for its last samples, a detector for a peak, and a transform for a whole block."
+      }
+    ]
+  },
+  "layout": {
+    "mode": "grid",
+    "origin": [
+      40,
+      120
+    ],
+    "cols": 6,
+    "gapX": 28,
+    "gapY": 56,
+    "cellW": 124,
+    "cellH": 62
+  },
+  "components": [
+    {
+      "id": "stream",
+      "type": "external",
+      "label": "A Signal",
+      "sublabel": "that never ends",
+      "row": 1,
+      "col": 0
+    },
+    {
+      "id": "head",
+      "type": "backend",
+      "label": "Move the Index",
+      "sublabel": "by one",
+      "row": 1,
+      "col": 1
+    },
+    {
+      "id": "block",
+      "type": "database",
+      "label": "One Block",
+      "sublabel": "fixed size",
+      "row": 1,
+      "col": 2
+    },
+    {
+      "id": "shift",
+      "type": "security",
+      "label": "A List That Shifts",
+      "sublabel": "costs the size",
+      "row": 0,
+      "col": 2,
+      "tag": "what this avoids"
+    },
+    {
+      "id": "cost",
+      "type": "cloud",
+      "label": "Always One Write",
+      "sublabel": "whatever the size",
+      "row": 0,
+      "col": 3
+    },
+    {
+      "id": "users",
+      "type": "cloud",
+      "label": "Looking Back",
+      "sublabel": "fir, medfilt, stft",
+      "row": 1,
+      "col": 3
+    }
+  ],
+  "boundaries": [
+    {
+      "kind": "region",
+      "label": "the oldest is overwritten where it stands",
+      "wraps": [
+        "head",
+        "block"
+      ]
+    }
+  ],
+  "connections": [
+    {
+      "id": "arrives",
+      "from": "stream",
+      "to": "head",
+      "label": "one sample",
+      "variant": "emphasis",
+      "labelAt": [
+        176,
+        312
+      ]
+    },
+    {
+      "id": "writes",
+      "from": "head",
+      "to": "block",
+      "label": "in place",
+      "variant": "emphasis",
+      "labelAt": [
+        328.0,
+        312.0
+      ]
+    },
+    {
+      "id": "instead",
+      "from": "shift",
+      "to": "block",
+      "label": "would move them all",
+      "labelAt": [
+        404.0,
+        194.0
+      ]
+    },
+    {
+      "id": "cheap",
+      "from": "block",
+      "to": "cost",
+      "label": "one write"
+    },
+    {
+      "id": "serves",
+      "from": "block",
+      "to": "users",
+      "label": "the last n",
+      "variant": "emphasis",
+      "labelAt": [
+        480.0,
+        312.0
+      ]
+    }
+  ],
+  "cards": [
+    {
+      "dot": "cyan",
+      "title": "What it works out",
+      "items": [
+        "put: data[head] = sample, then head = (head + 1) mod size",
+        "get: data[(head - 1 - k) mod size]",
+        "Nothing is moved when a sample arrives"
+      ]
+    },
+    {
+      "dot": "emerald",
+      "title": "Why that matters",
+      "items": [
+        "A put costs the same whether the buffer holds four samples or four thousand",
+        "A list that shifts would cost the size of the buffer at every sample",
+        "A signal never ends, thus the keeping must not cost more as the window grows"
+      ]
+    },
+    {
+      "dot": "amber",
+      "title": "What stands on it",
+      "items": [
+        "A filter looks back for its last samples",
+        "A detector looks back for a peak",
+        "A transform needs a whole block of them"
+      ]
+    }
+  ]
+}

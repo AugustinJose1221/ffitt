@@ -9,7 +9,7 @@ python3 scripts/api_doc.py
 
 Making the signals to test with. Declared in `ffitt/util/generate.h`.
 
-[Back to the index](../API.md) | [How the util modules work](../../ffitt/util/README.md)
+[Back to the index](../API.md) | [How the util modules work](../../ffitt/util/README.md) | [How it works](../diagrams/util/generate.html) ([preview](https://htmlpreview.github.io/?https://github.com/AugustinJose1221/ffitt/blob/development/docs/diagrams/util/generate.html))
 
 ## Overview
 
@@ -71,6 +71,29 @@ the frequency did.
 This module carries the phase from one sample to the next and folds it into
 one turn each time, thus it runs for ever without losing digits and its
 frequency may be changed at any sample without a jump.
+
+## Method
+
+A sine is one line, and every other shape is a trap:
+
+    sine[n] = amplitude * sin(2*pi*f*n/rate + phase)
+
+A SQUARE WAVE IS NOT A ROW OF ONES AND MINUS ONES. Written that way its
+edges are instant, and an instant edge holds every frequency up to infinity.
+Sampled, everything above half the rate folds back and lands on frequencies
+the wave never had. The result looks right on a screen and is wrong in every
+transform of it.
+
+The shapes here are built from their harmonics instead, and only the
+harmonics that fit below half the rate are added:
+
+    square[n] = sum over odd k, while k*f < rate/2, of sin(2*pi*k*f*n/rate)/k
+
+Thus what is generated is the closest thing to that shape which the rate can
+actually hold, and nothing folds back.
+
+The noise is made from a generator whose seed the caller gives, thus a test
+that fails can be run again and fail the same way.
 
 ## Macros
 

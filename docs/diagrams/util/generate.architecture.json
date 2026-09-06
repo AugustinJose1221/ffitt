@@ -1,0 +1,209 @@
+{
+  "schema_version": 1,
+  "diagram_type": "architecture",
+  "meta": {
+    "title": "Inside generate",
+    "animation": "trace",
+    "quality_profile": "showcase",
+    "views": [
+      {
+        "id": "the-trap",
+        "label": "Why a square wave is a trap",
+        "focus": [
+          "naive",
+          "fold"
+        ],
+        "note": "Written as ones and minus ones its edges are instant, and an instant edge holds every frequency up to infinity."
+      },
+      {
+        "id": "harmonics",
+        "label": "Built from harmonics",
+        "focus": [
+          "harm",
+          "limit"
+        ],
+        "note": "Each shape is added up from its harmonics, and only those that fit below half the rate are added."
+      },
+      {
+        "id": "nothing-folds",
+        "label": "Nothing folds back",
+        "focus": [
+          "out"
+        ],
+        "note": "What is generated is the closest thing to that shape which the rate can actually hold."
+      },
+      {
+        "id": "repeatable",
+        "label": "A seed you give",
+        "focus": [
+          "seed"
+        ],
+        "note": "The noise comes from a generator whose seed the caller sets, thus a test that fails can fail the same way again."
+      }
+    ]
+  },
+  "layout": {
+    "mode": "grid",
+    "origin": [
+      40,
+      120
+    ],
+    "cols": 6,
+    "gapX": 28,
+    "gapY": 56,
+    "cellW": 124,
+    "cellH": 62
+  },
+  "components": [
+    {
+      "id": "ask",
+      "type": "external",
+      "label": "A Shape",
+      "sublabel": "square, saw, sine",
+      "row": 1,
+      "col": 0
+    },
+    {
+      "id": "naive",
+      "type": "security",
+      "label": "Ones and Minus Ones",
+      "sublabel": "edges are instant",
+      "row": 0,
+      "col": 1,
+      "tag": "the usual trap"
+    },
+    {
+      "id": "fold",
+      "type": "security",
+      "label": "Folds Back",
+      "sublabel": "onto frequencies it never had",
+      "row": 0,
+      "col": 2
+    },
+    {
+      "id": "harm",
+      "type": "backend",
+      "label": "Add the Harmonics",
+      "sublabel": "one at a time",
+      "row": 1,
+      "col": 1
+    },
+    {
+      "id": "limit",
+      "type": "backend",
+      "label": "Stop Below Half",
+      "sublabel": "the rate decides",
+      "row": 1,
+      "col": 2
+    },
+    {
+      "id": "seed",
+      "type": "database",
+      "label": "Your Seed",
+      "sublabel": "for the noise",
+      "row": 2,
+      "col": 2
+    },
+    {
+      "id": "out",
+      "type": "cloud",
+      "label": "What the Rate Holds",
+      "sublabel": "and nothing more",
+      "row": 1,
+      "col": 3
+    }
+  ],
+  "boundaries": [
+    {
+      "kind": "region",
+      "label": "only the harmonics that fit are added",
+      "wraps": [
+        "harm",
+        "limit"
+      ]
+    }
+  ],
+  "connections": [
+    {
+      "id": "asked",
+      "from": "ask",
+      "to": "harm",
+      "label": "the shape",
+      "variant": "emphasis",
+      "labelAt": [
+        176,
+        312
+      ]
+    },
+    {
+      "id": "wrong",
+      "from": "ask",
+      "to": "naive",
+      "label": "if written directly"
+    },
+    {
+      "id": "aliases",
+      "from": "naive",
+      "to": "fold",
+      "label": "every frequency",
+      "labelAt": [
+        328.0,
+        194.0
+      ]
+    },
+    {
+      "id": "cut",
+      "from": "harm",
+      "to": "limit",
+      "label": "while k*f < rate/2",
+      "variant": "emphasis",
+      "labelAt": [
+        328.0,
+        312.0
+      ]
+    },
+    {
+      "id": "clean",
+      "from": "limit",
+      "to": "out",
+      "label": "nothing folds",
+      "variant": "emphasis",
+      "labelDy": -24
+    },
+    {
+      "id": "same",
+      "from": "seed",
+      "to": "out",
+      "label": "again and again"
+    }
+  ],
+  "cards": [
+    {
+      "dot": "cyan",
+      "title": "What it works out",
+      "items": [
+        "sine[n] = amplitude * sin(2*pi*f*n/rate + phase)",
+        "square[n] = sum over odd k, while k*f < rate/2, of sin(2*pi*k*f*n/rate)/k",
+        "Only the harmonics that fit below half the rate are added"
+      ]
+    },
+    {
+      "dot": "rose",
+      "title": "Why not ones and minus ones",
+      "items": [
+        "Written that way the edges are instant",
+        "An instant edge holds every frequency up to infinity",
+        "Everything above half the rate folds back onto frequencies the wave never had"
+      ]
+    },
+    {
+      "dot": "amber",
+      "title": "What you get instead",
+      "items": [
+        "The closest thing to that shape which the rate can actually hold",
+        "It looks slightly rounded on a screen, and it is right in every transform",
+        "The noise takes a seed, thus a test that fails can be run again"
+      ]
+    }
+  ]
+}

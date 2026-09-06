@@ -1,0 +1,187 @@
+{
+  "schema_version": 1,
+  "diagram_type": "architecture",
+  "meta": {
+    "title": "Inside callback",
+    "animation": "trace",
+    "quality_profile": "showcase",
+    "views": [
+      {
+        "id": "one-shape",
+        "label": "One shape, no arithmetic",
+        "focus": [
+          "shape"
+        ],
+        "note": "The module holds the shape of a function that writes text, and nothing else."
+      },
+      {
+        "id": "printf-fits",
+        "label": "printf already fits",
+        "focus": [
+          "printf"
+        ],
+        "note": "That is the shape of printf, thus a caller with a console gives printf itself and nothing is written to make it fit."
+      },
+      {
+        "id": "no-console",
+        "label": "A target with no console",
+        "focus": [
+          "own",
+          "none"
+        ],
+        "note": "A caller gives its own function of that shape, writing to a serial port or to nothing at all."
+      },
+      {
+        "id": "why",
+        "label": "Why the indirection",
+        "focus": [
+          "modules"
+        ],
+        "note": "Every module that writes anything takes one of these rather than calling printf, thus the library needs no console."
+      }
+    ]
+  },
+  "layout": {
+    "mode": "grid",
+    "origin": [
+      40,
+      120
+    ],
+    "cols": 6,
+    "gapX": 28,
+    "gapY": 56,
+    "cellW": 124,
+    "cellH": 62
+  },
+  "components": [
+    {
+      "id": "modules",
+      "type": "external",
+      "label": "Any Module",
+      "sublabel": "that writes",
+      "row": 1,
+      "col": 0
+    },
+    {
+      "id": "shape",
+      "type": "database",
+      "label": "print_t",
+      "sublabel": "the shape of printf",
+      "row": 1,
+      "col": 1
+    },
+    {
+      "id": "printf",
+      "type": "backend",
+      "label": "printf Itself",
+      "sublabel": "given directly",
+      "row": 0,
+      "col": 2
+    },
+    {
+      "id": "own",
+      "type": "backend",
+      "label": "Your Function",
+      "sublabel": "a serial port",
+      "row": 0,
+      "col": 3
+    },
+    {
+      "id": "none",
+      "type": "backend",
+      "label": "NULL",
+      "sublabel": "and printf is used",
+      "row": 2,
+      "col": 2
+    },
+    {
+      "id": "out",
+      "type": "cloud",
+      "label": "No Console Needed",
+      "sublabel": "by the library",
+      "row": 1,
+      "col": 3
+    }
+  ],
+  "boundaries": [
+    {
+      "kind": "region",
+      "label": "one indirection, and no dependence on a console",
+      "wraps": [
+        "shape",
+        "out"
+      ]
+    }
+  ],
+  "connections": [
+    {
+      "id": "takes",
+      "from": "modules",
+      "to": "shape",
+      "label": "a function",
+      "variant": "emphasis",
+      "labelAt": [
+        176,
+        312
+      ]
+    },
+    {
+      "id": "one",
+      "from": "shape",
+      "to": "printf",
+      "label": "already fits"
+    },
+    {
+      "id": "two",
+      "from": "shape",
+      "to": "own",
+      "label": "yours instead"
+    },
+    {
+      "id": "three",
+      "from": "shape",
+      "to": "none",
+      "label": "or nothing at all"
+    },
+    {
+      "id": "free",
+      "from": "shape",
+      "to": "out",
+      "label": "whichever is given",
+      "variant": "emphasis",
+      "labelAt": [
+        480,
+        312
+      ]
+    }
+  ],
+  "cards": [
+    {
+      "dot": "cyan",
+      "title": "What it holds",
+      "items": [
+        "int (*print_t)(const char*, ...)",
+        "That is the shape of printf",
+        "There is no arithmetic here"
+      ]
+    },
+    {
+      "dot": "emerald",
+      "title": "The three ways to give one",
+      "items": [
+        "A machine with a console gives printf itself, and nothing is written to fit it",
+        "A target with no console gives its own function of that shape",
+        "A caller that gives NULL gets printf"
+      ]
+    },
+    {
+      "dot": "amber",
+      "title": "Why the indirection",
+      "items": [
+        "Every module that writes anything takes one of these",
+        "None of them calls printf itself",
+        "Thus the library does not depend on a console that a target may not have"
+      ]
+    }
+  ]
+}

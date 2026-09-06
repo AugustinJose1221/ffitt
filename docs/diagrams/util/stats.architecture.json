@@ -1,0 +1,208 @@
+{
+  "schema_version": 1,
+  "diagram_type": "architecture",
+  "meta": {
+    "title": "Inside stats",
+    "animation": "trace",
+    "quality_profile": "showcase",
+    "views": [
+      {
+        "id": "two-kinds",
+        "label": "Two kinds of measure",
+        "focus": [
+          "plain",
+          "robust"
+        ],
+        "note": "The plain measures follow every sample. The robust ones do not move until nearly half the list is wrong."
+      },
+      {
+        "id": "the-weakness",
+        "label": "What one bad sample does",
+        "focus": [
+          "bad"
+        ],
+        "note": "One sample that is wrong moves the mean and the deviation, and moves them further the more wrong it is."
+      },
+      {
+        "id": "the-cost",
+        "label": "What robustness costs",
+        "focus": [
+          "order"
+        ],
+        "note": "The median needs the list in order. That is why the robust measures are not free."
+      },
+      {
+        "id": "the-bridge",
+        "label": "From MAD to a deviation",
+        "focus": [
+          "scale"
+        ],
+        "note": "Multiplying the median absolute deviation by 1.4826 gives a number that means what a deviation means."
+      }
+    ]
+  },
+  "layout": {
+    "mode": "grid",
+    "origin": [
+      40,
+      120
+    ],
+    "cols": 6,
+    "gapX": 28,
+    "gapY": 56,
+    "cellW": 124,
+    "cellH": 62
+  },
+  "components": [
+    {
+      "id": "list",
+      "type": "external",
+      "label": "Your Samples",
+      "sublabel": "some may be wrong",
+      "row": 1,
+      "col": 0
+    },
+    {
+      "id": "bad",
+      "type": "security",
+      "label": "One Bad Sample",
+      "sublabel": "moves them all",
+      "row": 0,
+      "col": 1
+    },
+    {
+      "id": "plain",
+      "type": "backend",
+      "label": "Mean, Variance",
+      "sublabel": "one pass each",
+      "row": 0,
+      "col": 2
+    },
+    {
+      "id": "robust",
+      "type": "backend",
+      "label": "Median, MAD",
+      "sublabel": "half may be wrong",
+      "row": 2,
+      "col": 2
+    },
+    {
+      "id": "order",
+      "type": "security",
+      "label": "Put in Order",
+      "sublabel": "the cost of it",
+      "row": 2,
+      "col": 1
+    },
+    {
+      "id": "scale",
+      "type": "database",
+      "label": "Times 1.4826",
+      "sublabel": "MAD to deviation",
+      "row": 2,
+      "col": 3
+    },
+    {
+      "id": "out",
+      "type": "cloud",
+      "label": "A Threshold",
+      "sublabel": "set from live data",
+      "row": 1,
+      "col": 4
+    }
+  ],
+  "boundaries": [
+    {
+      "kind": "region",
+      "label": "nearly half the list may be wrong before a median moves",
+      "wraps": [
+        "robust",
+        "scale"
+      ]
+    }
+  ],
+  "connections": [
+    {
+      "id": "read1",
+      "from": "list",
+      "to": "plain",
+      "label": "every sample",
+      "variant": "emphasis"
+    },
+    {
+      "id": "read2",
+      "from": "list",
+      "to": "robust",
+      "label": "the middle one",
+      "variant": "emphasis"
+    },
+    {
+      "id": "harms",
+      "from": "bad",
+      "to": "plain"
+    },
+    {
+      "id": "needs",
+      "from": "order",
+      "to": "robust",
+      "label": "must be sorted",
+      "labelAt": [
+        328.0,
+        430.0
+      ]
+    },
+    {
+      "id": "bridged",
+      "from": "robust",
+      "to": "scale",
+      "label": "the spread",
+      "variant": "emphasis",
+      "labelAt": [
+        480.0,
+        430.0
+      ]
+    },
+    {
+      "id": "used",
+      "from": "scale",
+      "to": "out",
+      "label": "in deviations",
+      "variant": "emphasis"
+    },
+    {
+      "id": "also",
+      "from": "plain",
+      "to": "out",
+      "label": "when nothing is wrong"
+    }
+  ],
+  "cards": [
+    {
+      "dot": "cyan",
+      "title": "What it works out",
+      "items": [
+        "mean = sum over i of x[i] / n, and variance from that",
+        "median = the middle value once the list is in order",
+        "mad = the median of |x[i] - median|"
+      ]
+    },
+    {
+      "dot": "emerald",
+      "title": "Which to reach for",
+      "items": [
+        "The plain measures read the list once and follow every sample",
+        "One sample that is wrong moves all of them",
+        "Nearly half the list may be wrong before a median moves at all"
+      ]
+    },
+    {
+      "dot": "amber",
+      "title": "The bridge between them",
+      "items": [
+        "STATS_MAD_TO_DEVIATION is 1.4826",
+        "Multiplying the MAD by it gives what a deviation means for the usual shape",
+        "Thus a threshold in deviations can be set from data that already holds faults"
+      ]
+    }
+  ]
+}

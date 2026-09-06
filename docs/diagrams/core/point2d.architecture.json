@@ -1,0 +1,162 @@
+{
+  "schema_version": 1,
+  "diagram_type": "architecture",
+  "meta": {
+    "title": "Inside point2d",
+    "animation": "trace",
+    "quality_profile": "showcase",
+    "views": [
+      {
+        "id": "no-arithmetic",
+        "label": "No arithmetic at all",
+        "focus": [
+          "shape"
+        ],
+        "note": "The module holds one shape and nothing else. There is nothing here to work out."
+      },
+      {
+        "id": "why-a-name",
+        "label": "Why it earns a name",
+        "focus": [
+          "uses"
+        ],
+        "note": "A place on a plane comes up often enough here to be worth a name of its own."
+      },
+      {
+        "id": "the-fault",
+        "label": "The only fault it can have",
+        "focus": [
+          "swap"
+        ],
+        "note": "Passing two loose values lets a caller pass them the wrong way round. A name is what stops that."
+      },
+      {
+        "id": "who-uses",
+        "label": "Who takes one",
+        "focus": [
+          "uses"
+        ],
+        "note": "A peak at a place and a height, a reading from two axes, a point of a curve being fitted."
+      }
+    ]
+  },
+  "layout": {
+    "mode": "grid",
+    "origin": [
+      40,
+      120
+    ],
+    "cols": 6,
+    "gapX": 28,
+    "gapY": 56,
+    "cellW": 124,
+    "cellH": 62
+  },
+  "components": [
+    {
+      "id": "caller",
+      "type": "external",
+      "label": "Two Values",
+      "sublabel": "an x and a y",
+      "row": 1,
+      "col": 0
+    },
+    {
+      "id": "shape",
+      "type": "database",
+      "label": "point2d_t",
+      "sublabel": "x and y, named",
+      "row": 1,
+      "col": 1
+    },
+    {
+      "id": "swap",
+      "type": "security",
+      "label": "Two Loose Values",
+      "sublabel": "passed the wrong way",
+      "row": 0,
+      "col": 1
+    },
+    {
+      "id": "uses",
+      "type": "cloud",
+      "label": "Peaks, Axes, Curves",
+      "sublabel": "all take one",
+      "row": 1,
+      "col": 2
+    }
+  ],
+  "boundaries": [
+    {
+      "kind": "region",
+      "label": "one shape, and no arithmetic",
+      "wraps": [
+        "shape",
+        "uses"
+      ]
+    }
+  ],
+  "connections": [
+    {
+      "id": "named",
+      "from": "caller",
+      "to": "shape",
+      "label": "given a name",
+      "variant": "emphasis",
+      "labelAt": [
+        176,
+        312
+      ]
+    },
+    {
+      "id": "otherwise",
+      "from": "swap",
+      "to": "shape",
+      "label": "what it prevents",
+      "labelAt": [
+        252.0,
+        194.0
+      ]
+    },
+    {
+      "id": "taken",
+      "from": "shape",
+      "to": "uses",
+      "label": "a place is meant",
+      "variant": "emphasis",
+      "labelAt": [
+        328,
+        312
+      ]
+    }
+  ],
+  "cards": [
+    {
+      "dot": "cyan",
+      "title": "What it holds",
+      "items": [
+        "point2d_t = { x, y }",
+        "There is no arithmetic here at all",
+        "The module is one shape and nothing else"
+      ]
+    },
+    {
+      "dot": "emerald",
+      "title": "Why it earns a name",
+      "items": [
+        "A peak at a place and a height",
+        "A reading from two axes, or a point of a curve being fitted",
+        "A place on a plane comes up in enough of this library to be worth naming"
+      ]
+    },
+    {
+      "dot": "amber",
+      "title": "The only fault it can have",
+      "items": [
+        "Passing two loose values lets a caller pass them the wrong way round",
+        "Giving the pair a name is what keeps that from happening",
+        "Nothing else here can go wrong, because nothing else here is done"
+      ]
+    }
+  ]
+}

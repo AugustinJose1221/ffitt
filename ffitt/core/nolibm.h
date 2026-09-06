@@ -56,6 +56,29 @@
 // own tests are run against these as well as against the system's, thus the
 // table above is a tested number and not a hope.
 
+// Method:
+// Each function is worked out from what the width itself can do, with no
+// mathematics library behind it.
+//
+// The road is the same for most of them: bring the argument into a small range
+// where a series is accurate, work it out there, and put back what the bringing
+// in took away.
+//
+//     sqrt   Newton's step, x = (x + a/x)/2, from an estimate taken by halving
+//            the exponent of the number itself
+//     exp    take out the whole multiples of ln(2), leaving a small remainder
+//            for the series, then put them back by scaling the exponent
+//     log    the reverse: read the exponent, and use a series on what is left
+//     sin    fold the angle into a quarter turn, then a short series
+//
+// Bringing the argument in is what carries the accuracy. A series is accurate
+// near where it is written and nowhere else, thus every function here is a
+// range reduction with a short series inside it.
+//
+// The accuracy is measured and written in the table above, and it is not the
+// same as the system offers. Where the last digit matters, use the system.
+
+
 // The square root, by the method of Newton from a guess made by halving the
 // exponent. Gives a number that is not a number for a negative argument.
 double nolibm_sqrt(double x);
