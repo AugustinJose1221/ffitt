@@ -44,6 +44,91 @@ that no link of any Markdown file points at something that is not there:
 python3 scripts/api_doc.py --check
 ```
 
+## What a module says about its method
+
+Each header carries a block that opens with `Method:`. It holds a simplified
+equation of what the module works out, and the few lines that say how the
+library reaches it. `scripts/api_doc.py` carries that block into
+`docs/api/<module>.md` as a Method section, and the comment above it as an
+Overview.
+
+THREE RULES DECIDE WHETHER THE BLOCK IS READ AT ALL, and each was learned by
+getting it wrong:
+
+- An EMPTY LINE must stand above the block. Without one it joins the comment
+  before it and is read as part of the overview.
+- The block must stand ABOVE THE FIRST DECLARATION. Below it, nothing reads
+  it.
+- It must not be written INSIDE A MACRO THAT RUNS OVER SEVERAL LINES. A
+  `#define` whose line ends in a backslash continues on the next one, and a
+  block dropped between the two breaks the macro.
+
+An equation is written indented by four spaces. One space after the two
+slashes is taken away and the rest of the indent stays, thus the equation
+arrives as a block of code and keeps its shape.
+
+## Diagrams
+
+Each module has a drawing that says how it does its work, under
+`docs/diagrams/<area>/<module>.html`, beside the specification
+`docs/diagrams/<area>/<module>.architecture.json`.
+
+THE SPECIFICATION IS THE SOURCE AND THE PAGE IS THE RESULT. Neither is edited
+by hand: the specification is written, and the page is delivered from it.
+
+The pages are delivered by [archify](https://github.com/tt-a1i/archify),
+which is a separate project. This repository draws with version 2.17.0-dev.1,
+as `scripts/build_diagrams.py` records. Another version may draw the same
+specification differently, and the script says so.
+
+To make every page again, or to examine that each one agrees with its
+specification:
+
+```bash
+ARCHIFY_HOME=/path/to/archify/archify python3 scripts/build_diagrams.py
+ARCHIFY_HOME=/path/to/archify/archify python3 scripts/build_diagrams.py --check
+```
+
+A PAGE IS ACCEPTED ONLY ON A DELIVERY THAT PASSES ALL NINE ARTIFACT CHECKS
+with no errors and no warnings. Anything less is not a diagram of this
+library.
+
+What a specification holds:
+
+- A title of the shape `Inside <module>`, so that the whole set reads as one.
+- `animation: trace` and about four `views`, which give the reader the
+  chapters and the Play story control. Both are off unless they are asked
+  for, and a diagram without them is a still picture.
+- Three cards: what the module works out, how the library gets there, and
+  what it costs or what will catch you.
+
+A label may be left off a relationship when both of its nodes already say
+what the wording would say. That is a choice about meaning, and not a way to
+settle a complaint about geometry: never drop a label that names a direction,
+an order, or a mechanism.
+
+The validator gives an exact position for a label that overlaps something.
+Those positions are ABSOLUTE, thus applying one as a relative `labelDy` moves
+the label somewhere else and the complaint returns.
+
+A DELIVERY THAT PASSES IS NOT A DIAGRAM THAT READS WELL. Open the page and
+look at it. One diagram passed all nine checks with two labels sitting on top
+of each other, because the validator measures a label against a route and not
+against another label.
+
+To examine that every module has a method block and a diagram, that no file
+was left behind by a module that went away, and that every preview link names
+a file this repository holds:
+
+```bash
+python3 scripts/check_diagrams.py
+```
+
+That check needs no archify, thus it runs on every build. Whether each page
+still agrees with its specification is asked separately, with
+`scripts/build_diagrams.py --check`, because answering it means delivering
+the page again.
+
 ## The freeze, and what it became at 1.0.0
 
 **From 0.17.0 to 0.19.0 this library was in a feature freeze.** It took fixes,

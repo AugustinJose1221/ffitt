@@ -47,6 +47,42 @@ jobs:
         # header and did not make the file again.
         run: python scripts/api_doc.py --check
 
+  diagrams:
+    name: Diagram check
+    runs-on: ubuntu-latest
+    steps:
+      - name: Get the sources
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+
+      - name: Install pytest
+        run: python -m pip install --upgrade pip pytest
+
+      - name: Test the diagram check
+        # A check that cannot find a fault has no value. These tests give the
+        # check a repository with a known fault and examine that it finds it.
+        run: python -m pytest scripts/test_check_diagrams.py -v
+
+      - name: Examine that every module has its method, its diagram and a link
+        # Sixty four diagrams and sixty four method blocks were right on the day
+        # they were made. Nothing stopped the sixty fifth module from being
+        # added with neither, and nothing named a page left behind by a module
+        # that went away.
+        #
+        # This does not ask whether a diagram is a good diagram. No program can
+        # judge that. It answers whether the file is there, whether it has a
+        # source, and whether the preview link names something real.
+        #
+        # Whether a page still agrees with its specification is a separate
+        # question, because answering it means delivering the page again, and
+        # that needs archify, which is another project. CONTRIBUTING.md says how
+        # to ask it with scripts/build_diagrams.py --check.
+        run: python scripts/check_diagrams.py
+
   naming:
     name: Naming check
     runs-on: ubuntu-latest
