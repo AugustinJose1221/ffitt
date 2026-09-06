@@ -116,6 +116,19 @@ look at it. One diagram passed all nine checks with two labels sitting on top
 of each other, because the validator measures a label against a route and not
 against another label.
 
+To examine that every module has a method block and a diagram, that no file
+was left behind by a module that went away, and that every preview link names
+a file this repository holds:
+
+```bash
+python3 scripts/check_diagrams.py
+```
+
+That check needs no archify, thus it runs on every build. Whether each page
+still agrees with its specification is asked separately, with
+`scripts/build_diagrams.py --check`, because answering it means delivering
+the page again.
+
 ## The freeze, and what it became at 1.0.0
 
 **From 0.17.0 to 0.19.0 this library was in a feature freeze.** It took fixes,
