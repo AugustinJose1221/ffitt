@@ -9,7 +9,7 @@ python3 scripts/api_doc.py
 
 Detection of one frequency. Declared in `ffitt/transform/goertzel.h`.
 
-[Back to the index](../API.md) | [How the transform modules work](../../ffitt/transform/README.md) | [How it works](../diagrams/transform/goertzel.html) ([preview](https://htmlpreview.github.io/?https://github.com/AugustinJose1221/ffitt/blob/main/docs/diagrams/transform/goertzel.html))
+[Back to the index](../API.md) | [How the transform modules work](../../ffitt/transform/README.md) | [How it works](../diagrams/transform/goertzel.html) ([preview](https://htmlpreview.github.io/?https://github.com/AugustinJose1221/ffitt/blob/development/docs/diagrams/transform/goertzel.html))
 
 ## Overview
 

@@ -9,7 +9,7 @@ python3 scripts/api_doc.py
 
 Filters with a finite impulse response. Declared in `ffitt/filter/fir.h`.
 
-[Back to the index](../API.md) | [How the filter modules work](../../ffitt/filter/README.md)
+[Back to the index](../API.md) | [How the filter modules work](../../ffitt/filter/README.md) | [How it works](../diagrams/filter/fir.html) ([preview](https://htmlpreview.github.io/?https://github.com/AugustinJose1221/ffitt/blob/development/docs/diagrams/filter/fir.html))
 
 ## Overview
 
@@ -87,6 +87,28 @@ change the window; to turn faster, lengthen the filter.
 
 How far either side of a frequency the group delay is measured, for a filter
 that is not symmetric.
+
+## Method
+
+Each output is the last few samples weighed against the coefficients:
+
+    y[n] = sum over k of x[n-k] * h[k]
+
+There is no feedback in that line, and that is the whole character of the
+filter. Nothing it has produced comes back in, thus it cannot run away and
+it is stable whatever the coefficients are.
+
+Every frequency is held back by the same time, which is half the length of
+the filter. Thus the shape of a signal survives it, and that is why a filter
+whose output must keep its shape is built this way.
+
+The coefficients come from the windowed sinc: the ideal filter is a sinc in
+time, which runs for ever, and a window cuts it to a length that can be
+held. The window decides how deep the stop band is, and the length decides
+how sharp the edge is.
+
+The cost is that length. For the same sharpness this needs dozens of
+coefficients where a biquad needs five.
 
 ## Macros
 

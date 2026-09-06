@@ -9,7 +9,7 @@ python3 scripts/api_doc.py
 
 A transform of any size. Declared in `ffitt/transform/bluestein.h`.
 
-[Back to the index](../API.md) | [How the transform modules work](../../ffitt/transform/README.md) | [How it works](../diagrams/transform/bluestein.html) ([preview](https://htmlpreview.github.io/?https://github.com/AugustinJose1221/ffitt/blob/main/docs/diagrams/transform/bluestein.html))
+[Back to the index](../API.md) | [How the transform modules work](../../ffitt/transform/README.md) | [How it works](../diagrams/transform/bluestein.html) ([preview](https://htmlpreview.github.io/?https://github.com/AugustinJose1221/ffitt/blob/development/docs/diagrams/transform/bluestein.html))
 
 ## Overview
 

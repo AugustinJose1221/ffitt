@@ -9,7 +9,7 @@ python3 scripts/api_doc.py
 
 The Hilbert-Huang transform. Declared in `ffitt/transform/hht.h`.
 
-[Back to the index](../API.md) | [How the transform modules work](../../ffitt/transform/README.md) | [How it works](../diagrams/transform/hht.html) ([preview](https://htmlpreview.github.io/?https://github.com/AugustinJose1221/ffitt/blob/main/docs/diagrams/transform/hht.html))
+[Back to the index](../API.md) | [How the transform modules work](../../ffitt/transform/README.md) | [How it works](../diagrams/transform/hht.html) ([preview](https://htmlpreview.github.io/?https://github.com/AugustinJose1221/ffitt/blob/development/docs/diagrams/transform/hht.html))
 
 ## Overview
 

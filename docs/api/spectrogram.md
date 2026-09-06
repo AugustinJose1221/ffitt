@@ -9,7 +9,7 @@ python3 scripts/api_doc.py
 
 What the short pieces mean. Declared in `ffitt/transform/spectrogram.h`.
 
-[Back to the index](../API.md) | [How the transform modules work](../../ffitt/transform/README.md) | [How it works](../diagrams/transform/spectrogram.html) ([preview](https://htmlpreview.github.io/?https://github.com/AugustinJose1221/ffitt/blob/main/docs/diagrams/transform/spectrogram.html))
+[Back to the index](../API.md) | [How the transform modules work](../../ffitt/transform/README.md) | [How it works](../diagrams/transform/spectrogram.html) ([preview](https://htmlpreview.github.io/?https://github.com/AugustinJose1221/ffitt/blob/development/docs/diagrams/transform/spectrogram.html))
 
 ## Overview
 

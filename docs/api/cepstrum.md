@@ -9,7 +9,7 @@ python3 scripts/api_doc.py
 
 Finding what repeats in a spectrum. Declared in `ffitt/transform/cepstrum.h`.
 
-[Back to the index](../API.md) | [How the transform modules work](../../ffitt/transform/README.md) | [How it works](../diagrams/transform/cepstrum.html) ([preview](https://htmlpreview.github.io/?https://github.com/AugustinJose1221/ffitt/blob/main/docs/diagrams/transform/cepstrum.html))
+[Back to the index](../API.md) | [How the transform modules work](../../ffitt/transform/README.md) | [How it works](../diagrams/transform/cepstrum.html) ([preview](https://htmlpreview.github.io/?https://github.com/AugustinJose1221/ffitt/blob/development/docs/diagrams/transform/cepstrum.html))
 
 ## Overview
 

@@ -229,6 +229,10 @@ The files come from the comments in the headers, thus the documentation and the
 code cannot say two different things. [CONTRIBUTING.md](CONTRIBUTING.md) says
 how they are made again after a header changes.
 
+[docs/DIAGRAMS.md](docs/DIAGRAMS.md) lists a drawing for each module, showing
+how that module does its work. Each one can be opened in a browser and walked
+through a step at a time.
+
 ## Contributing
 
 [CONTRIBUTING.md](CONTRIBUTING.md) holds the naming scheme, the branch flow, the
