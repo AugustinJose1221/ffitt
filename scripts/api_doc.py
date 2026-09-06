@@ -8,9 +8,10 @@ cannot say two different things.
     python3 scripts/api_doc.py            write the files under docs/
     python3 scripts/api_doc.py --check    examine, and give 1 if something is wrong
 
-The program writes one file for each module in docs/api/, and an index in
-docs/API.md. One file for each module keeps each file short, and a reader who
-works with one module opens one file only.
+The program writes one file for each module in docs/api/, an index in
+docs/API.md, and a list of the drawings in docs/DIAGRAMS.md. One file for each
+module keeps each file short, and a reader who works with one module opens one
+file only.
 
 The check finds four faults:
 
@@ -29,6 +30,7 @@ import check_naming  # noqa: E402
 
 REPOSITORY = check_naming.REPOSITORY
 INDEX_PATH = os.path.join(REPOSITORY, "docs", "API.md")
+DIAGRAM_INDEX_PATH = os.path.join(REPOSITORY, "docs", "DIAGRAMS.md")
 MODULE_DIRECTORY = os.path.join(REPOSITORY, "docs", "api")
 
 # The order of the modules in the documentation. A reader meets the simple
@@ -436,9 +438,66 @@ def build_module_document(name, path, title):
     return "\n".join(parts).rstrip() + "\n"
 
 
+def build_diagram_index():
+    """Give the text of docs/DIAGRAMS.md, which lists every diagram there is.
+
+    The page is made from the diagrams that are on disk, and not from a list
+    that somebody keeps. A list kept by hand is wrong within a month.
+    """
+    note = ("This file comes from the diagrams under docs/diagrams. Do not "
+            "change it by hand.\nTo make it again, give:\n\n```bash\n"
+            "python3 scripts/api_doc.py\n```\n")
+
+    parts = ["# Diagrams\n", note]
+    parts.append(
+        "One page for each module, showing how that module does its work. Each "
+        "page holds\na few chapters that walk through it a step at a time.\n")
+    parts.append(
+        "**Preview** opens the page in a browser. **File** is the page itself, "
+        "which a\nreader with a clone can open with no service at all.\n")
+
+    drawn = 0
+    known = 0
+    body = []
+
+    for area, area_title, names in AREAS:
+        rows = []
+        for name in names:
+            if not any(name == module for module, _, _ in MODULES):
+                continue
+
+            known += 1
+            path = diagram_of(name)
+            if path is None:
+                rows.append("| [`%s`](api/%s.md) | not yet drawn | |" % (name, name))
+                continue
+
+            drawn += 1
+            preview = "%s%s/blob/%s/%s" % (PREVIEW_SERVICE, PREVIEW_REPOSITORY,
+                                           PREVIEW_BRANCH, path)
+            rows.append("| [`%s`](api/%s.md) | [preview](%s) | [%s](%s) |"
+                        % (name, name, preview, os.path.basename(path),
+                           os.path.relpath(path, "docs")))
+
+        if not rows:
+            continue
+
+        body.append("## %s\n" % area_title)
+        body.append("| Module | Diagram | File |")
+        body.append("|---|---|---|")
+        body.extend(rows)
+        body.append("")
+
+    parts.append("%d of the %d modules have a diagram.\n" % (drawn, known))
+    parts.extend(body)
+
+    return "\n".join(parts).rstrip() + "\n"
+
+
 def build_documents():
     """Give a dictionary of the path of each file and the text that belongs in it."""
-    documents = {INDEX_PATH: build_index()}
+    documents = {INDEX_PATH: build_index(),
+                 DIAGRAM_INDEX_PATH: build_diagram_index()}
 
     for name, path, title in MODULES:
         if not os.path.exists(os.path.join(REPOSITORY, path)):

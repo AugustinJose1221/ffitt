@@ -107,13 +107,14 @@ def test_the_program_writes_one_file_for_each_module_and_an_index():
     documents = api_doc.build_documents()
 
     assert api_doc.INDEX_PATH in documents
+    assert api_doc.DIAGRAM_INDEX_PATH in documents
 
     for name, path, title in api_doc.MODULES:
         expected = os.path.join(api_doc.MODULE_DIRECTORY, "%s.md" % name)
         assert expected in documents, "no file for the module %s" % name
 
-    # The index and one file for each module.
-    assert len(documents) == len(api_doc.MODULES) + 1
+    # Two indexes, the API and the diagrams, and one file for each module.
+    assert len(documents) == len(api_doc.MODULES) + 2
 
 
 def test_the_index_points_to_the_file_of_each_module():
@@ -407,3 +408,36 @@ def test_the_preview_branch_holds_the_diagrams():
     assert "docs/diagrams/" in listing.stdout, (
         "the branch %s holds no diagram, thus every preview link is dead"
         % api_doc.PREVIEW_BRANCH)
+
+
+def test_the_diagram_index_lists_every_module():
+    """Every module must stand in the index, drawn or not yet drawn."""
+    page = api_doc.build_diagram_index()
+
+    for name, path, _ in api_doc.MODULES:
+        if name in api_doc.HEADERS_WITHOUT_A_MODULE:
+            continue
+        assert "[`%s`](api/%s.md)" % (name, name) in page, (
+            "%s is missing from the diagram index" % name)
+
+
+def test_the_diagram_index_counts_what_is_really_there():
+    """The count at the top must be the number of diagrams on disk."""
+    page = api_doc.build_diagram_index()
+
+    drawn = sum(1 for name, _, _ in api_doc.MODULES
+                if api_doc.diagram_of(name) is not None)
+    known = sum(1 for name, _, _ in api_doc.MODULES
+                if api_doc.area_of(name) is not None)
+
+    assert "%d of the %d modules have a diagram." % (drawn, known) in page
+
+
+def test_a_module_with_no_diagram_says_so_rather_than_linking_nowhere():
+    """A row with no diagram must not carry a link that gives nothing."""
+    page = api_doc.build_diagram_index()
+
+    for line in page.splitlines():
+        if "not yet drawn" in line:
+            assert "htmlpreview" not in line
+            assert line.count("|") == 4, "the row must keep its three columns"
