@@ -114,6 +114,7 @@ TYPEDEF_START = re.compile(r"^\s*typedef\s+struct")
 TYPEDEF_END = re.compile(r"^\s*\}\s*(?P<name>\w+)\s*;")
 DEFINE = re.compile(r"^\s*#\s*define\s+(?P<name>[A-Z_][A-Z0-9_]*)")
 GUARD = re.compile(r"^\s*#\s*ifndef\s+(?P<name>\w+)")
+INLINE_CODE = re.compile(r"`[^`]*`")
 
 
 def comment_above(lines, index):
@@ -598,6 +599,34 @@ def find_functions_without_a_comment():
 MARKDOWN_LINK = re.compile(r"\[[^\]]*\]\(([^)#]+?)(?:#[^)]*)?\)")
 
 
+def without_code(text):
+    """Give the text with every piece of code taken out.
+
+    A link is a link only where Markdown reads one. Inside a fence, inside an
+    indented block, or between backticks, `name[index](argument)` is code and
+    means nothing. Reading those as links names faults that are not there, and
+    it did: an equation of the shape c[k](mu) was reported as a link to mu.
+    """
+    kept = []
+    fenced = False
+
+    for line in text.split("\n"):
+        if line.lstrip().startswith("```"):
+            fenced = not fenced
+            continue
+
+        if fenced:
+            continue
+
+        # Four spaces at the start of a line is a block of code in Markdown.
+        if line.startswith("    ") and line.strip():
+            continue
+
+        kept.append(INLINE_CODE.sub(" ", line))
+
+    return "\n".join(kept)
+
+
 def find_links_that_point_nowhere():
     """Name every link of a Markdown file that points at a file not there.
 
@@ -624,7 +653,7 @@ def find_links_that_point_nowhere():
             path = os.path.join(root, name)
 
             with open(path, encoding="utf-8", errors="replace") as handle:
-                text = handle.read()
+                text = without_code(handle.read())
 
             for match in MARKDOWN_LINK.finditer(text):
                 target = match.group(1).strip()

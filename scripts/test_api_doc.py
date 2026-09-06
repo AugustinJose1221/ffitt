@@ -480,3 +480,46 @@ def test_kalman_carries_its_method():
 
     assert method != [], "kalman writes a method block that never arrives"
     assert any("K is the whole idea" in line for line in method)
+
+
+def test_code_is_not_read_as_a_link(tmp_path):
+    """An equation between backticks or inside a block is not a link.
+
+    An equation of the shape c[k](mu) was reported as a link to mu, and it
+    stands inside a block of code where Markdown reads no link at all.
+    """
+    text = "\n".join([
+        "# Example",
+        "",
+        "Inline: `c[k](mu)` is code.",
+        "",
+        "    y[n] = sum over k of c[k](mu) * x[n-k]",
+        "",
+        "```",
+        "f[i][j](x)",
+        "```",
+        "",
+    ])
+    kept = api_doc.without_code(text)
+    assert "c[k](mu)" not in kept
+    assert "f[i][j](x)" not in kept
+
+
+def test_a_real_broken_link_is_still_found(tmp_path, monkeypatch):
+    """Taking code out must not blind the check to a link that is broken."""
+    page = tmp_path / "example.md"
+    page.write_text("See [the guide](guide-that-is-not-there.md).\n", encoding="utf-8")
+
+    monkeypatch.setattr(api_doc, "REPOSITORY", str(tmp_path))
+    faults = api_doc.find_links_that_point_nowhere()
+
+    assert any("guide-that-is-not-there.md" in fault for fault in faults)
+
+
+def test_a_link_that_is_there_is_not_named(tmp_path, monkeypatch):
+    page = tmp_path / "example.md"
+    page.write_text("See [the guide](guide.md).\n", encoding="utf-8")
+    (tmp_path / "guide.md").write_text("# Guide\n", encoding="utf-8")
+
+    monkeypatch.setattr(api_doc, "REPOSITORY", str(tmp_path))
+    assert api_doc.find_links_that_point_nowhere() == []
