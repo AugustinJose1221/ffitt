@@ -1,0 +1,231 @@
+{
+  "schema_version": 1,
+  "diagram_type": "architecture",
+  "meta": {
+    "title": "Inside psd",
+    "animation": "trace",
+    "quality_profile": "showcase",
+    "views": [
+      {
+        "id": "why-not",
+        "label": "Why not one transform",
+        "focus": [
+          "signal",
+          "noisy"
+        ],
+        "note": "One transform of a long signal gives many bins, each as noisy as the last. A longer signal buys finer bins and no more certainty."
+      },
+      {
+        "id": "cut-up",
+        "label": "Cut into blocks",
+        "focus": [
+          "blocks",
+          "windowed"
+        ],
+        "note": "The signal is cut into blocks that overlap, and each block is windowed before it is transformed."
+      },
+      {
+        "id": "averaged",
+        "label": "The mean of many",
+        "focus": [
+          "each",
+          "mean"
+        ],
+        "note": "The noise in a bin falls as the number of blocks grows, while the bins grow wider because a block is shorter than the signal."
+      },
+      {
+        "id": "scaled",
+        "label": "Putting the window back",
+        "focus": [
+          "scale",
+          "out"
+        ],
+        "note": "U is the sum of the squares of the window. Without it the answer would depend on which window was chosen."
+      }
+    ]
+  },
+  "layout": {
+    "mode": "grid",
+    "origin": [
+      40,
+      120
+    ],
+    "cols": 6,
+    "gapX": 28,
+    "gapY": 56,
+    "cellW": 124,
+    "cellH": 62
+  },
+  "components": [
+    {
+      "id": "signal",
+      "type": "external",
+      "label": "Your Signal",
+      "sublabel": "a long record",
+      "row": 1,
+      "col": 0
+    },
+    {
+      "id": "noisy",
+      "type": "security",
+      "label": "One Transform",
+      "sublabel": "as noisy as ever",
+      "row": 0,
+      "col": 1,
+      "tag": "the poor road"
+    },
+    {
+      "id": "blocks",
+      "type": "backend",
+      "label": "Cut Into Blocks",
+      "sublabel": "they overlap",
+      "row": 1,
+      "col": 1
+    },
+    {
+      "id": "windowed",
+      "type": "backend",
+      "label": "Window Each",
+      "sublabel": "no step at the ends",
+      "row": 1,
+      "col": 2
+    },
+    {
+      "id": "each",
+      "type": "backend",
+      "label": "Transform Each",
+      "sublabel": "|X[k]| squared",
+      "row": 1,
+      "col": 3
+    },
+    {
+      "id": "mean",
+      "type": "backend",
+      "label": "Take the Mean",
+      "sublabel": "over the blocks",
+      "row": 1,
+      "col": 4
+    },
+    {
+      "id": "scale",
+      "type": "database",
+      "label": "Divide by rate*U",
+      "sublabel": "U from the window",
+      "row": 2,
+      "col": 4
+    },
+    {
+      "id": "out",
+      "type": "cloud",
+      "label": "Power per Bin",
+      "sublabel": "steady now",
+      "row": 1,
+      "col": 5
+    }
+  ],
+  "boundaries": [
+    {
+      "kind": "region",
+      "label": "done for every block",
+      "wraps": [
+        "windowed",
+        "each"
+      ]
+    }
+  ],
+  "connections": [
+    {
+      "id": "bad",
+      "from": "signal",
+      "to": "noisy",
+      "label": "however long it is"
+    },
+    {
+      "id": "cut",
+      "from": "signal",
+      "to": "blocks",
+      "label": "the trade begins",
+      "variant": "emphasis",
+      "labelAt": [
+        176.0,
+        312.0
+      ]
+    },
+    {
+      "id": "into",
+      "from": "blocks",
+      "to": "windowed",
+      "label": "one block",
+      "variant": "emphasis",
+      "labelAt": [
+        328.0,
+        312.0
+      ]
+    },
+    {
+      "id": "sized",
+      "from": "windowed",
+      "to": "each",
+      "label": "the bins",
+      "variant": "emphasis",
+      "labelAt": [
+        480.0,
+        312.0
+      ]
+    },
+    {
+      "id": "added",
+      "from": "each",
+      "to": "mean",
+      "label": "one per block",
+      "variant": "emphasis",
+      "labelAt": [
+        632.0,
+        312.0
+      ]
+    },
+    {
+      "id": "puts",
+      "from": "scale",
+      "to": "mean",
+      "label": "what the window took"
+    },
+    {
+      "id": "done",
+      "from": "mean",
+      "to": "out",
+      "label": "P[k]",
+      "variant": "emphasis",
+      "labelDy": -24
+    }
+  ],
+  "cards": [
+    {
+      "dot": "cyan",
+      "title": "What it works out",
+      "items": [
+        "P[k] = (1/blocks) * sum over b of |X_b[k]|^2 / (rate * U)",
+        "The power a signal holds at each frequency, by the method of Welch",
+        "One transform alone gives a bin as noisy as the signal, however long it is"
+      ]
+    },
+    {
+      "dot": "emerald",
+      "title": "How the library gets there",
+      "items": [
+        "Fewer, longer blocks: fine in frequency and noisy in size",
+        "More, shorter blocks: coarse in frequency and steady in size",
+        "4096 samples in 8 blocks of 1024 gives bins 8 times as wide and an answer 3 times as steady"
+      ]
+    },
+    {
+      "dot": "rose",
+      "title": "The part usually got wrong",
+      "items": [
+        "U is the sum of the squares of the window, and it must be divided out",
+        "Without it the answer depends on the window and not on the signal",
+        "The scaling is what makes two measurements comparable at all"
+      ]
+    }
+  ]
+}

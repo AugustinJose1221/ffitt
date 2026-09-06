@@ -9,7 +9,7 @@ python3 scripts/api_doc.py
 
 What two signals have in common. Declared in `ffitt/transform/csd.h`.
 
-[Back to the index](../API.md) | [How the transform modules work](../../ffitt/transform/README.md)
+[Back to the index](../API.md) | [How the transform modules work](../../ffitt/transform/README.md) | [How it works](../diagrams/transform/csd.html) ([preview](https://htmlpreview.github.io/?https://github.com/AugustinJose1221/ffitt/blob/main/docs/diagrams/transform/csd.html))
 
 ## Overview
 
@@ -56,6 +56,31 @@ THE SIGNALS MUST BE MEASURED AT THE SAME MOMENTS. Two recordings started a
 second apart hold the same events at different sample numbers, and every
 answer here is then about a relation that is not there. Where a delay is
 what is being looked for, that is the point; where it is not, it is a fault.
+
+## Method
+
+The cross spectrum is one spectrum multiplied by the conjugate of the other,
+averaged over the blocks as psd averages its own:
+
+    S_xy[k] = (1/blocks) * sum over b of X_b[k] * conj(Y_b[k])
+
+Its size says how much the two share at that frequency, and its angle says
+how far one stands behind the other.
+
+Coherence is that, squared, against what each signal holds alone:
+
+    C[k] = |S_xy[k]|^2 / (S_xx[k] * S_yy[k])
+
+It reads from 0 to 1. Every correction for the window and for the rate
+stands both above and below in that ratio, thus all of them cancel and none
+is needed.
+
+A bin where one of the two signals holds nothing has nothing to share, and
+the answer there is set to zero rather than divided by almost nothing.
+
+COHERENCE OF ONE BLOCK IS ALWAYS 1, whatever the signals are, because a
+number divided by itself is one. The averaging over blocks is not an
+improvement here; it is the thing that makes the answer mean anything.
 
 ## Macros
 

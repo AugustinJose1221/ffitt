@@ -1,0 +1,222 @@
+{
+  "schema_version": 1,
+  "diagram_type": "architecture",
+  "meta": {
+    "title": "Inside slide",
+    "animation": "trace",
+    "quality_profile": "showcase",
+    "views": [
+      {
+        "id": "the-gap",
+        "label": "The case between",
+        "focus": [
+          "fft",
+          "goertzel"
+        ],
+        "note": "A block transform answers when the block is full. goertzel answers once per block. Neither answers at every sample."
+      },
+      {
+        "id": "one-step",
+        "label": "One step per sample",
+        "focus": [
+          "arrived",
+          "left",
+          "update"
+        ],
+        "note": "The new total differs from the old by the sample that arrived, the sample that fell off, and one bin of turn."
+      },
+      {
+        "id": "the-window",
+        "label": "Why the buffer stays",
+        "focus": [
+          "ring",
+          "left"
+        ],
+        "note": "The window is still kept, because the sample that left must be taken off. Nothing else grows with the size."
+      },
+      {
+        "id": "the-drift",
+        "label": "Why the turn shrinks",
+        "focus": [
+          "update",
+          "damp"
+        ],
+        "note": "A total added to for ever would drift as rounding piles up. Each turn is a little under one, thus an old error dies away."
+      }
+    ]
+  },
+  "layout": {
+    "mode": "grid",
+    "origin": [
+      40,
+      120
+    ],
+    "cols": 6,
+    "gapX": 28,
+    "gapY": 56,
+    "cellW": 124,
+    "cellH": 62
+  },
+  "components": [
+    {
+      "id": "fft",
+      "type": "security",
+      "label": "A Block Transform",
+      "sublabel": "answers when full",
+      "row": 0,
+      "col": 0,
+      "tag": "not this case"
+    },
+    {
+      "id": "goertzel",
+      "type": "security",
+      "label": "goertzel",
+      "sublabel": "once per block",
+      "row": 2,
+      "col": 0,
+      "tag": "not this case"
+    },
+    {
+      "id": "arrived",
+      "type": "external",
+      "label": "New Sample",
+      "sublabel": "one at a time",
+      "row": 1,
+      "col": 1
+    },
+    {
+      "id": "ring",
+      "type": "database",
+      "label": "Ring Buffer",
+      "sublabel": "holds the window",
+      "row": 0,
+      "col": 2
+    },
+    {
+      "id": "left",
+      "type": "backend",
+      "label": "The One That Left",
+      "sublabel": "taken off",
+      "row": 0,
+      "col": 3
+    },
+    {
+      "id": "update",
+      "type": "backend",
+      "label": "Turn and Add",
+      "sublabel": "1 multiply, 2 adds",
+      "row": 1,
+      "col": 3
+    },
+    {
+      "id": "damp",
+      "type": "database",
+      "label": "Turn Under One",
+      "sublabel": "the error dies",
+      "row": 2,
+      "col": 2
+    },
+    {
+      "id": "total",
+      "type": "cloud",
+      "label": "A Total per Bin",
+      "sublabel": "read at any sample",
+      "row": 1,
+      "col": 4
+    }
+  ],
+  "boundaries": [
+    {
+      "kind": "region",
+      "label": "for each frequency watched",
+      "wraps": [
+        "update",
+        "total"
+      ]
+    }
+  ],
+  "connections": [
+    {
+      "id": "neither1",
+      "from": "fft",
+      "to": "arrived",
+      "label": "neither serves"
+    },
+    {
+      "id": "neither2",
+      "from": "goertzel",
+      "to": "arrived",
+      "label": "neither serves"
+    },
+    {
+      "id": "added",
+      "from": "arrived",
+      "to": "update",
+      "label": "arrived",
+      "variant": "emphasis",
+      "labelDy": -24
+    },
+    {
+      "id": "kept",
+      "from": "ring",
+      "to": "left",
+      "label": "size samples back",
+      "labelAt": [
+        480.0,
+        194.0
+      ]
+    },
+    {
+      "id": "turned",
+      "from": "update",
+      "to": "total",
+      "label": "X[n]",
+      "variant": "emphasis"
+    },
+    {
+      "id": "shrunk",
+      "from": "damp",
+      "to": "update",
+      "label": "a little under one"
+    },
+    {
+      "id": "removed",
+      "from": "left",
+      "to": "update",
+      "label": "subtracted",
+      "labelAt": [
+        556.0,
+        194.0
+      ]
+    }
+  ],
+  "cards": [
+    {
+      "dot": "cyan",
+      "title": "What it works out",
+      "items": [
+        "X[k] = sum over n of x[n] * exp(-2*pi*i*k*n/size), answered at every sample",
+        "For a few known frequencies only, and not the whole spectrum",
+        "A watcher on a 1024 sample window holds a few dozen bytes for each frequency"
+      ]
+    },
+    {
+      "dot": "emerald",
+      "title": "How the library gets there",
+      "items": [
+        "X[n] = (X[n-1] + arrived - left) * turn",
+        "Nothing in that grows with the size of the window",
+        "One complex multiplication and two additions per sample, per frequency"
+      ]
+    },
+    {
+      "dot": "amber",
+      "title": "What it costs you",
+      "items": [
+        "The window itself is still held, so the sample that left can be taken off",
+        "The turn is made a little under one, thus rounding does not pile up for ever",
+        "Past about log2(size) frequencies, the whole transform is cheaper"
+      ]
+    }
+  ]
+}

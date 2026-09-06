@@ -86,6 +86,11 @@ Where the sample rate is fixed by the measurements, as it is for every
 filter in the estimate area, split one sample interval into several steps
 with propagate_state_over rather than taking one large step.
 
+The most states a model may hold.
+
+The methods keep a few copies of the state on the stack, so that no memory
+is taken and none is asked of the caller. This is what bounds those copies.
+
 ## Macros
 
 ### `PROPAGATE_LARGEST_STATE`

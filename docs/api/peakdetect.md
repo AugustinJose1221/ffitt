@@ -52,6 +52,13 @@ peak inside that is the same beat counted twice.
 A VALLEY IS A PEAK OF THE SIGNAL TURNED UPSIDE DOWN. There is no separate
 set of these rules for valleys; negate the signal and use these.
 
+A flat top counts as one peak, and its index is the middle of the flat part.
+
+This matters on real data. A reading from a converter is a whole number of
+counts, thus the top of a peak is often two or three samples of exactly the
+same value. Treating each of them as no peak at all, which a test of
+"larger than both neighbours" does, loses the peak completely.
+
 ## Types
 
 ### `peakdetect_options_t`

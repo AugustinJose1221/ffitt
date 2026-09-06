@@ -162,29 +162,41 @@ def read_module_comment(lines):
             current.append(body)
             continue
 
-        if current:
-            blocks.append(current)
-            current = []
-
         # An empty line and a line of the preprocessor stand between the guard,
         # the includes and the comment of the module. A declaration does not,
         # thus the first of those ends the search.
         if stripped == "" or stripped.startswith("#"):
+            if current:
+                blocks.append(current)
+                current = []
             continue
+
+        # A comment that stands directly above a declaration, with no empty
+        # line between, belongs to that declaration and not to the module.
+        # comment_above reads it there, and reading it here as well would say
+        # the same thing twice. Thus it is thrown away rather than kept.
+        current = []
         break
 
+    # Anything still gathered ran to the end of the file with no declaration
+    # after it, thus it belongs to the module.
     if current:
         blocks.append(current)
 
     overview = []
     method = []
     for block in blocks:
-        if block[0].lower().startswith("method:"):
-            if not method:
-                rest = block[0][len("method:"):].strip()
-                method = ([rest] if rest else []) + block[1:]
-        elif not overview:
-            overview = block
+        if block[0].lower().startswith("method:") and not method:
+            rest = block[0][len("method:"):].strip()
+            method = ([rest] if rest else []) + block[1:]
+            continue
+
+        # Every other block belongs to the overview, and not the first one
+        # alone. A header may say more after its method block, and what it says
+        # there must not be dropped.
+        if overview:
+            overview.append("")
+        overview.extend(block)
 
     for block in (overview, method):
         while block and block[0] == "":

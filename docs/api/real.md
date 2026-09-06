@@ -76,6 +76,26 @@ digits and does not.
 REAL_C writes the right one for the build. Use it for EVERY number in the
 source that is not a whole number used as a count.
 
+WHERE THE ARITHMETIC COMES FROM.
+
+Every call this library makes into the mathematics of the system passes
+through the macros below, and that is on purpose: it is one seam, thus one
+place to stand behind.
+
+FFITT_NO_LIBM puts ffitt/core/nolibm.c behind it, and the library then links
+with no mathematics library at all. That file says what the swap costs, with
+the error of every function measured against the system's own. A target
+whose toolchain ships no libm, or whose libm is large beside a small flash,
+or who must account for every line in the image, wants that switch.
+
+The two lists that follow are the same names either way, thus nothing else
+in the library knows or cares which is in use.
+
+A build in 64 bits must have a double that is really wider than a float.
+On some small targets the two are the same type, and there the 64 bit build
+would cost the memory and give none of the accuracy. Better to stop than to
+promise something the target cannot give.
+
 ## Macros
 
 ### `REAL_C`

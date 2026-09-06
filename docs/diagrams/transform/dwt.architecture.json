@@ -1,0 +1,215 @@
+{
+  "schema_version": 1,
+  "diagram_type": "architecture",
+  "meta": {
+    "title": "Inside dwt",
+    "animation": "trace",
+    "quality_profile": "showcase",
+    "views": [
+      {
+        "id": "two-halves",
+        "label": "Two halves",
+        "focus": [
+          "signal",
+          "low",
+          "high"
+        ],
+        "note": "One filter keeps the slow part and its mirror keeps the fast part."
+      },
+      {
+        "id": "half-each",
+        "label": "Half the samples each",
+        "focus": [
+          "drop",
+          "pair"
+        ],
+        "note": "Every second sample is kept, thus the two answers together hold exactly as many values as went in."
+      },
+      {
+        "id": "where-not-only-what",
+        "label": "Where, and not only what",
+        "focus": [
+          "pair",
+          "place"
+        ],
+        "note": "Each value of the detail belongs to one place of the signal, thus a step or a spike shows as a few large details."
+      },
+      {
+        "id": "denoise",
+        "label": "Taking noise out",
+        "focus": [
+          "place",
+          "clean"
+        ],
+        "note": "Noise is spread thinly over every detail while an edge is a few large ones. Setting the small ones to nothing leaves the edge."
+      }
+    ]
+  },
+  "layout": {
+    "mode": "grid",
+    "origin": [
+      40,
+      120
+    ],
+    "cols": 6,
+    "gapX": 28,
+    "gapY": 56,
+    "cellW": 124,
+    "cellH": 62
+  },
+  "components": [
+    {
+      "id": "signal",
+      "type": "external",
+      "label": "Your Signal",
+      "sublabel": "n samples",
+      "row": 1,
+      "col": 0
+    },
+    {
+      "id": "low",
+      "type": "backend",
+      "label": "Low Filter",
+      "sublabel": "keeps the slow",
+      "row": 0,
+      "col": 1
+    },
+    {
+      "id": "high",
+      "type": "backend",
+      "label": "High Filter",
+      "sublabel": "the mirror of it",
+      "row": 2,
+      "col": 1
+    },
+    {
+      "id": "drop",
+      "type": "backend",
+      "label": "Keep Every Second",
+      "sublabel": "half as many",
+      "row": 1,
+      "col": 2
+    },
+    {
+      "id": "pair",
+      "type": "database",
+      "label": "Two Halves",
+      "sublabel": "approximation, detail",
+      "row": 1,
+      "col": 3
+    },
+    {
+      "id": "place",
+      "type": "cloud",
+      "label": "Where It Happened",
+      "sublabel": "detail by place",
+      "row": 1,
+      "col": 4
+    },
+    {
+      "id": "clean",
+      "type": "backend",
+      "label": "Small to Nothing",
+      "sublabel": "the noise goes",
+      "row": 1,
+      "col": 5
+    }
+  ],
+  "boundaries": [
+    {
+      "kind": "region",
+      "label": "nothing is lost; dwt_inverse gives the signal back",
+      "wraps": [
+        "drop",
+        "pair"
+      ]
+    }
+  ],
+  "connections": [
+    {
+      "id": "slow",
+      "from": "signal",
+      "to": "low",
+      "label": "x[n]",
+      "variant": "emphasis"
+    },
+    {
+      "id": "fast",
+      "from": "signal",
+      "to": "high",
+      "label": "x[n]",
+      "variant": "emphasis"
+    },
+    {
+      "id": "kept",
+      "from": "low",
+      "to": "drop",
+      "label": "every second"
+    },
+    {
+      "id": "kept2",
+      "from": "high",
+      "to": "drop",
+      "label": "every second"
+    },
+    {
+      "id": "both",
+      "from": "drop",
+      "to": "pair",
+      "label": "half and half",
+      "variant": "emphasis",
+      "labelAt": [
+        480,
+        312
+      ]
+    },
+    {
+      "id": "located",
+      "from": "pair",
+      "to": "place",
+      "label": "one place each",
+      "variant": "emphasis",
+      "labelAt": [
+        632,
+        312
+      ]
+    },
+    {
+      "id": "denoised",
+      "from": "place",
+      "to": "clean",
+      "label": "the small ones",
+      "variant": "emphasis",
+      "labelDy": -24
+    }
+  ],
+  "cards": [
+    {
+      "dot": "cyan",
+      "title": "What it works out",
+      "items": [
+        "approximation[n] = sum over k of x[2n + k] * low[k]",
+        "detail[n] = sum over k of x[2n + k] * high[k]",
+        "Each holds half the samples, thus the two together hold as many as went in"
+      ]
+    },
+    {
+      "dot": "emerald",
+      "title": "How the library gets there",
+      "items": [
+        "The two filters are one filter and its mirror",
+        "The mirror is what makes the pair undoable at all",
+        "dwt_inverse puts the samples back between the answers and runs them the other way"
+      ]
+    },
+    {
+      "dot": "amber",
+      "title": "What it is for",
+      "items": [
+        "A Fourier transform says which frequencies, and not where they are",
+        "Each detail belongs to one place, thus a step shows as a few large details",
+        "Noise spreads thinly over every detail, and an edge does not"
+      ]
+    }
+  ]
+}

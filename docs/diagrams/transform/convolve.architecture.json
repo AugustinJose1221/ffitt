@@ -1,0 +1,65 @@
+{
+  "schema_version": 1,
+  "diagram_type": "architecture",
+  "meta": {
+    "title": "Inside convolve",
+    "animation": "trace",
+    "quality_profile": "showcase",
+    "views": [
+      { "id": "turned-round", "label": "The shape is turned", "focus": ["shape", "turn"], "note": "Turning the shape round is the whole difference from a correlation. For a shape that reads the same both ways, nothing changes." },
+      { "id": "the-sum", "label": "Multiply and add", "focus": ["signal", "slide"], "note": "At every place the overlapping samples are multiplied and added. That single sum is the whole operation." },
+      { "id": "the-ends", "label": "What the ends rest on", "focus": ["slide", "zero"], "note": "Outside itself the signal is taken to be nothing, thus the ends of the full and same answers are assumed rather than measured." },
+      { "id": "how-long", "label": "How long the answer is", "focus": ["mode", "out"], "note": "Full keeps every place, same lines up with the input, and valid keeps only what was measured." }
+    ]
+  },
+  "layout": { "mode": "grid", "origin": [40, 120], "cols": 5, "gapX": 28, "gapY": 56, "cellW": 124, "cellH": 62 },
+  "components": [
+    { "id": "shape", "type": "external", "label": "The Shape", "sublabel": "m samples", "row": 0, "col": 0 },
+    { "id": "signal", "type": "external", "label": "Your Signal", "sublabel": "n samples", "row": 2, "col": 0 },
+    { "id": "turn", "type": "backend", "label": "Turned Round", "sublabel": "x[n-k], not x[n+k]", "tag": "not correlation", "row": 0, "col": 1 },
+    { "id": "slide", "type": "backend", "label": "Multiply and Add", "sublabel": "at every place", "row": 1, "col": 2 },
+    { "id": "zero", "type": "security", "label": "Assumed Zero", "sublabel": "outside the signal", "row": 2, "col": 2 },
+    { "id": "mode", "type": "backend", "label": "Choose the Length", "sublabel": "full, same or valid", "row": 1, "col": 3 },
+    { "id": "out", "type": "cloud", "label": "The Answer", "sublabel": "n+m-1, n or n-m+1", "row": 1, "col": 4 }
+  ],
+  "boundaries": [
+    { "kind": "region", "label": "n+m-1 places are touched", "wraps": ["slide", "mode"] }
+  ],
+  "connections": [
+    { "id": "reversed", "from": "shape", "to": "turn", "label": "h[k]", "variant": "emphasis", "labelDy": -24 },
+    { "id": "into-sum", "from": "turn", "to": "slide", "label": "read backwards", "variant": "emphasis" },
+    { "id": "samples", "from": "signal", "to": "slide", "label": "x[n]", "variant": "emphasis" },
+    { "id": "ends", "from": "zero", "to": "slide", "label": "at both ends" },
+    { "id": "cut", "from": "slide", "to": "mode", "label": "every place", "variant": "emphasis", "labelAt": [508, 312] },
+    { "id": "given", "from": "mode", "to": "out", "label": "what is kept", "variant": "emphasis", "labelDy": -24 }
+  ],
+  "cards": [
+    {
+      "dot": "cyan",
+      "title": "What it works out",
+      "items": [
+        "y[n] = sum over k of x[n-k] * h[k]",
+        "Passing a signal through a filter is this operation",
+        "A mean over a window is this, with a shape of equal values"
+      ]
+    },
+    {
+      "dot": "emerald",
+      "title": "How the library gets there",
+      "items": [
+        "The minus in x[n-k] is the only difference from a correlation",
+        "For a long shape the bins are multiplied instead, which costs n*log(n) and not n*m",
+        "No conjugate is taken there, and that again is what parts it from a correlation"
+      ]
+    },
+    {
+      "dot": "rose",
+      "title": "What will catch you",
+      "items": [
+        "A shape that reads the same both ways hides the difference until one does not",
+        "Full and same build their ends from a signal taken to be zero outside itself",
+        "Valid assumes nothing, and is shorter than the input by m-1"
+      ]
+    }
+  ]
+}

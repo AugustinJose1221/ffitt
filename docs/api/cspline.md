@@ -11,18 +11,6 @@ Cubic splines. Declared in `ffitt/interpolate/cspline.h`.
 
 [Back to the index](../API.md) | [How the interpolate modules work](../../ffitt/interpolate/README.md)
 
-## Overview
-
-A cubic spline through a set of points.
-
-A spline gives a smooth curve through the given points. Between two
-neighbouring points it follows a polynomial of the third power, and at each
-point the curve has no step and no corner.
-
-The spline holds the points and the three coefficients of each interval. The
-arrays b, c and d hold one value for each interval, thus they hold one value
-less than the number of points.
-
 ## Types
 
 ### `cspline_t`

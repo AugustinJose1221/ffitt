@@ -37,6 +37,27 @@
 // A signal of 4096 samples cut into 8 overlapping blocks of 1024 gives bins 8
 // times as wide and an answer about 3 times as steady.
 //
+
+// Method:
+//
+// The power at a frequency is the size of its bin, squared:
+//
+//     P[k] = |X[k]|^2 / (rate * U)
+//
+// One transform of the whole signal gives that, and it is a poor measurement.
+// Welch takes the mean of many instead:
+//
+//     P[k] = (1/blocks) * sum over b of |X_b[k]|^2 / (rate * U)
+//
+// The signal is cut into blocks that overlap, each block is windowed and
+// transformed, and the results are averaged. The noise in a bin falls as the
+// number of blocks grows, while the bins grow wider because a block is
+// shorter than the signal. That is the whole of the trade.
+//
+// U is the sum of the squares of the window. It puts back what the window
+// took away, and without it the answer would depend on which window was
+// chosen rather than on the signal.
+
 // THE SCALING, WHICH IS THE PART THAT IS USUALLY WRONG
 //
 // A power spectral density is power for each hertz, thus its numbers do not

@@ -34,6 +34,60 @@ A longer filter gives a sharper edge between the band that passes and the
 band that stops. A length of about 4/width gives an edge of that width,
 where the width is also a part of the sample rate.
 
+How wide the change from the pass band to the stop band is, as a number
+divided by the length of the filter.
+
+A filter with a finite impulse response cannot turn from passing to stopping
+at once. The turn takes a band of frequencies, and that band is narrower only
+when the filter is longer. This is the width of that turn, and it is the
+reason a low cutoff needs a long filter.
+
+CHOOSING THE WINDOW, WHICH IS THE ONE DECISION THIS MODULE ASKS OF YOU
+
+The plain sinc is the perfect filter and it runs for ever. Cutting it to a
+finite length is what a window does, and the window decides two things that
+trade against each other:
+
+  HOW WIDE THE TURN IS from passing to stopping, which wants a narrow window
+  HOW FAR DOWN THE BAND THAT IS STOPPED LIES, which wants a gentle one
+
+Measured, for a low pass of 101 coefficients at a cutoff of 0.25. The turn
+is from where the answer last stands at 0.9 to where it first reaches 0.1:
+
+  window             turn is wide   times the length   band that is stopped
+  rectangular           0.0090            0.90              -26 dB
+  hamming               0.0182            1.84              -58 dB
+  hann                  0.0194            1.96              -55 dB
+  kaiser, beta 6        0.0198            1.99              -68 dB
+  blackman              0.0238            2.40              -75 dB
+  blackman-harris       0.0281            2.83             -104 dB
+
+READ BOTH ENDS TOGETHER. A rectangular window turns three times as sharply
+as a Blackman-Harris for the same length, and lets 26 dB through where the
+Blackman-Harris lets 104. Neither is better; they answer different
+questions.
+
+The third column is the second multiplied by the length, and it is the same
+at 101 coefficients and at 201. That is what says the turn belongs to the
+shape of the window and to the length, and to nothing else.
+
+  TAKE HAMMING where nothing else is known. It is the default of this module
+  and a reasonable answer to most questions.
+  TAKE BLACKMAN or BLACKMAN-HARRIS where a weak signal must be seen beside a
+  strong one, and the filter can afford to be longer.
+  TAKE KAISER where a number has been given for the stop band. Its parameter
+  follows from that number through window_kaiser_beta, thus it is the only
+  window here that can be asked for a specification rather than chosen by
+  name.
+
+A LONGER FILTER MAKES THE TURN NARROWER AND CHANGES NOTHING ELSE. The stop
+band of a window is a property of its shape alone, thus doubling the length
+halves the turn and leaves the depth exactly where it was. To go deeper,
+change the window; to turn faster, lengthen the filter.
+
+How far either side of a frequency the group delay is measured, for a filter
+that is not symmetric.
+
 ## Macros
 
 ### `FIR_TRANSITION`

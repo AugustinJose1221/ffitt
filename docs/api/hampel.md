@@ -63,6 +63,11 @@ A caller that reads a signal as it arrives must allow for that delay. A
 caller that has the whole signal in hand should use hampel_process_block,
 which puts the delay right and gives an output as long as its input.
 
+How many deviations away a sample must stand before it is called wrong.
+
+What the median absolute deviation must be multiplied by to stand beside a
+standard deviation, for samples that follow a normal spread.
+
 ## Macros
 
 ### `HAMPEL_THRESHOLD`

@@ -11,14 +11,6 @@ Intrinsic mode functions. Declared in `ffitt/decompose/imf.h`.
 
 [Back to the index](../API.md) | [How the decompose modules work](../../ffitt/decompose/README.md)
 
-## Overview
-
-An intrinsic mode function.
-
-The empirical mode decomposition takes a signal apart into such functions.
-Each one holds a part of the signal at one range of frequency. The module
-emd makes them, and this module holds one of them and writes it out.
-
 ## Types
 
 ### `imf_t`

@@ -9,7 +9,7 @@ python3 scripts/api_doc.py
 
 The Hilbert transform. Declared in `ffitt/transform/hilbert.h`.
 
-[Back to the index](../API.md) | [How the transform modules work](../../ffitt/transform/README.md)
+[Back to the index](../API.md) | [How the transform modules work](../../ffitt/transform/README.md) | [How it works](../diagrams/transform/hilbert.html) ([preview](https://htmlpreview.github.io/?https://github.com/AugustinJose1221/ffitt/blob/main/docs/diagrams/transform/hilbert.html))
 
 ## Overview
 
@@ -34,6 +34,30 @@ time. A signal that holds several frequencies together gives a mean of them,
 which describes nothing. For that reason the Hilbert transform goes together
 with the empirical mode decomposition, which takes a signal apart into such
 single frequency parts. The hht module joins the two.
+
+## Method
+
+The analytic signal is the signal itself, with its Hilbert transform put in
+the imaginary part:
+
+    z[n] = x[n] + i*H{x}[n]
+
+That transform is never worked out directly. In the frequency domain the
+whole operation is a weight on each bin:
+
+    Z[k] = 2*X[k]   for a positive frequency
+    Z[k] = X[k]     for bin 0 and for the middle bin
+    Z[k] = 0        for a negative frequency
+
+Thus the road is: transform, weigh the bins, transform back. The size must
+be a power of two, because the fft module asks for one.
+
+The two values follow from z at once:
+
+    amplitude = the distance of z[n] from zero, which is the envelope
+    phase     = the angle of z[n], and its change is the frequency
+
+Both mean something only where the signal holds one frequency at a time.
 
 ## Functions
 

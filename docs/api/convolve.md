@@ -9,7 +9,7 @@ python3 scripts/api_doc.py
 
 Sliding one signal along another. Declared in `ffitt/transform/convolve.h`.
 
-[Back to the index](../API.md) | [How the transform modules work](../../ffitt/transform/README.md)
+[Back to the index](../API.md) | [How the transform modules work](../../ffitt/transform/README.md) | [How it works](../diagrams/transform/convolve.html) ([preview](https://htmlpreview.github.io/?https://github.com/AugustinJose1221/ffitt/blob/main/docs/diagrams/transform/convolve.html))
 
 ## Overview
 
@@ -42,6 +42,7 @@ Take a convolution when a signal PASSES THROUGH something. Take a
 correlation when you are asking HOW ALIKE two things are. The correlate
 module answers the second.
 
+
 HOW LONG THE ANSWER IS
 
 Sliding a shape of m along a signal of n touches n+m-1 places, and at most
@@ -72,6 +73,26 @@ A convolution in time is a multiplication in frequency, thus the transform
 does the same work in three transforms. For those numbers that is about 400
 thousand, which is five times less. Below a shape of about 60 the plain way
 wins, because the transform has a fixed cost that it has not.
+
+## Method
+
+The shape is turned round, then slid along the signal, and at every place
+the overlapping samples are multiplied and added:
+
+    y[n] = sum over k of x[n-k] * h[k]
+
+The minus in x[n-k] is the whole difference from a correlation, which uses
+x[n+k]. For a shape that reads the same forwards and backwards the two give
+the same answer, and that is why the confusion survives.
+
+Outside itself the signal is taken to be nothing. Thus the ends of the full
+and the same answers are partly assumed rather than measured, and the valid
+answer holds only the places where nothing was assumed.
+
+A convolution in time is a multiplication in frequency, bin by bin. For a
+long shape the library therefore transforms both, multiplies the bins, and
+transforms back, which costs n*log(n) rather than n*m. No conjugate is taken
+there, and that again is what parts this from a correlation.
 
 ## Functions
 

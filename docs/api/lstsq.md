@@ -118,6 +118,46 @@ wildly between them. Where a table is what is wanted, the interp module
 reads between its points without inventing anything; where a curve is
 wanted, the third or the fourth order is nearly always enough.
 
+The smallest a diagonal of the factor may be, as a part of the largest one,
+before the answer is refused.
+
+The square root of the smallest step the width can tell, and a margin of
+two. The square of the ratio of the diagonals is how badly conditioned the
+small problem is, thus this holds that at about 1 divided by the smallest
+step: the last digit of the answer is rounding, and no digit beyond it is
+claimed. The margin is what catches a model whose columns are exactly alike;
+the header says why it is needed.
+
+How much more error a plain fit may leave than the same fit done with the
+places brought near zero, before it is refused.
+
+The two are worked out along different roads and neither lands exactly, thus
+a little room is needed. A fit that leaves a hundredth more error than
+another fit of the same order through the same readings is not the least
+squares answer at all.
+
+Measured over 20000 random sets of readings at 32 bits: at a hundredth, not
+one wrong answer was given back, and 1.6 in every 100 fits were refused. A
+wider room lets wrong answers through and a narrower one only refuses more.
+At 64 bits nothing was refused and nothing was wrong at any setting.
+
+The smallest error worth comparing, as a part of the size of the readings.
+
+Where the readings lie on the curve, both fits leave nothing but rounding.
+Two such numbers cannot be compared by their ratio: one may be ten times the
+other and both be zero to every digit that matters. This is the floor below
+which a difference is not a difference.
+
+The highest order of polynomial that the width of the build can carry.
+
+This is the best that was reached at each width, with x from -1 to 1, which
+is what lstsq_polyfit_scaled gives. It is a cap against a mistaken order and
+NOT a promise: a fit at this order through x that sits elsewhere is refused
+by the guard on the diagonal, and rightly.
+
+How many numbers a polynomial of the given order holds, which is one more
+than the order: a line is of the first order and holds two.
+
 ## Macros
 
 ### `LSTSQ_SMALLEST_PIVOT_PART`

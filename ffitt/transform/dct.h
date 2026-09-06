@@ -58,6 +58,25 @@
 // takes any size at all rather than a power of two, and it needs no memory
 // beyond what the caller gives.
 
+// Method:
+//
+// Each output is the signal weighed against one cosine, and against no sine
+// at all:
+//
+//     X[k] = weight * sum over n of x[n] * cos(pi*k*(n+0.5)/size)
+//
+// The half in (n+0.5) sets the samples between the ends of the cosine rather
+// than on them. That is what makes the signal even at both ends with no step,
+// and it is why a slow curve gathers into the first few numbers.
+//
+// The weight is sqrt(1/size) for the first output and sqrt(2/size) for the
+// rest. Scaled that way the transform and its undoing are mirrors, and taking
+// one and then the other gives back what went in.
+//
+// A real signal of n samples needs n complex numbers from a Fourier
+// transform, and half of those are the mirror of the other half. Here n
+// samples give n numbers, because the phase is not kept.
+
 #ifndef DCT_LARGEST_SIZE
 #define DCT_LARGEST_SIZE    1024u
 #endif

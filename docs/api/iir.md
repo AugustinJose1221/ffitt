@@ -33,6 +33,16 @@ Each section keeps its state in the form of Direct Form II transposed. That
 form needs two values for each section, and it holds the error of a float
 better than the plain form does.
 
+The number of coefficients of one section: b0, b1, b2, a1 and a2.
+
+The number of values of the state of one section.
+
+The number of float values that a filter with the given number of sections
+needs for its coefficients.
+
+The number of float values that a filter with the given number of sections
+needs for its state.
+
 ## Macros
 
 ### `IIR_COEFFICIENT_COUNT`

@@ -1,0 +1,211 @@
+{
+  "schema_version": 1,
+  "diagram_type": "architecture",
+  "meta": {
+    "title": "Inside bluestein",
+    "animation": "trace",
+    "quality_profile": "showcase",
+    "views": [
+      {
+        "id": "the-need",
+        "label": "Sizes that are facts",
+        "focus": [
+          "ask",
+          "wrong"
+        ],
+        "note": "A mains period of 60 samples is a fact. Rounding it up to 64 and filling with zeros moves every bin off the frequency that was wanted."
+      },
+      {
+        "id": "the-trick",
+        "label": "The trick",
+        "focus": [
+          "chirp",
+          "conv"
+        ],
+        "note": "Rewriting k*n as (k^2 + n^2 - (k-n)^2)/2 turns the sum into a convolution, and a convolution can be done at any length."
+      },
+      {
+        "id": "the-room",
+        "label": "Room for the wrap",
+        "focus": [
+          "room",
+          "fftpow"
+        ],
+        "note": "The convolution runs to 2*size-1 places. A transform repeats for ever, thus the room must be taken before the end wraps onto the start."
+      },
+      {
+        "id": "the-answer",
+        "label": "Any size at all",
+        "focus": [
+          "out"
+        ],
+        "note": "The bins fall where the caller asked, not where the next power of two would have put them."
+      }
+    ]
+  },
+  "layout": {
+    "mode": "grid",
+    "origin": [
+      40,
+      120
+    ],
+    "cols": 6,
+    "gapX": 28,
+    "gapY": 56,
+    "cellW": 124,
+    "cellH": 62
+  },
+  "components": [
+    {
+      "id": "ask",
+      "type": "external",
+      "label": "Any Size",
+      "sublabel": "60, 360, 1440",
+      "row": 1,
+      "col": 0
+    },
+    {
+      "id": "wrong",
+      "type": "security",
+      "label": "Round Up Instead",
+      "sublabel": "bins move off",
+      "row": 0,
+      "col": 1,
+      "tag": "the usual fault"
+    },
+    {
+      "id": "chirp",
+      "type": "database",
+      "label": "The Chirp",
+      "sublabel": "exp(-i*pi*j^2/size)",
+      "row": 2,
+      "col": 1
+    },
+    {
+      "id": "conv",
+      "type": "backend",
+      "label": "A Convolution",
+      "sublabel": "of any length",
+      "row": 1,
+      "col": 2
+    },
+    {
+      "id": "room",
+      "type": "backend",
+      "label": "Take the Room",
+      "sublabel": "2*size-1 places",
+      "row": 1,
+      "col": 3
+    },
+    {
+      "id": "fftpow",
+      "type": "backend",
+      "label": "Power-of-two fft",
+      "sublabel": "three of them",
+      "row": 1,
+      "col": 4
+    },
+    {
+      "id": "out",
+      "type": "cloud",
+      "label": "Bins Where Asked",
+      "sublabel": "size of them",
+      "row": 1,
+      "col": 5
+    }
+  ],
+  "boundaries": [
+    {
+      "kind": "region",
+      "label": "about four times the memory of the size asked for",
+      "wraps": [
+        "room",
+        "fftpow"
+      ]
+    }
+  ],
+  "connections": [
+    {
+      "id": "asked",
+      "from": "ask",
+      "to": "conv",
+      "label": "the size asked for",
+      "variant": "emphasis",
+      "labelAt": [
+        176,
+        312
+      ]
+    },
+    {
+      "id": "badroad",
+      "from": "ask",
+      "to": "wrong",
+      "label": "fill with zeros"
+    },
+    {
+      "id": "byfactor",
+      "from": "chirp",
+      "to": "conv",
+      "label": "multiplied in"
+    },
+    {
+      "id": "needs",
+      "from": "conv",
+      "to": "room",
+      "label": "must not wrap",
+      "variant": "emphasis",
+      "labelAt": [
+        480.0,
+        312.0
+      ]
+    },
+    {
+      "id": "uses",
+      "from": "room",
+      "to": "fftpow",
+      "label": "the next power of two",
+      "variant": "emphasis",
+      "labelAt": [
+        632.0,
+        312.0
+      ]
+    },
+    {
+      "id": "gives",
+      "from": "fftpow",
+      "to": "out",
+      "label": "X[k]",
+      "variant": "emphasis",
+      "labelDy": -24
+    }
+  ],
+  "cards": [
+    {
+      "dot": "cyan",
+      "title": "What it works out",
+      "items": [
+        "X[k] = sum over n of x[n] * exp(-2*pi*i*k*n/size), for ANY size",
+        "A mains period at 3000 samples a second is 60 samples, and 60 is not a power of two",
+        "A block that holds no whole period spreads the hum across every bin"
+      ]
+    },
+    {
+      "dot": "emerald",
+      "title": "How the library gets there",
+      "items": [
+        "k*n = (k^2 + n^2 - (k-n)^2)/2 turns the sum into a convolution",
+        "X[k] = conj(c[k]) * sum over n of (x[n]*conj(c[n])) * c[k-n]",
+        "The square of the index is folded by 2*size, so a large index keeps its accuracy"
+      ]
+    },
+    {
+      "dot": "amber",
+      "title": "What it costs you",
+      "items": [
+        "The convolution needs 2*size-1 places, or the end wraps onto the start",
+        "Thus the working transform is about four times the size asked for",
+        "Take fft when the size is a choice; take this when the size is a fact"
+      ]
+    }
+  ]
+}

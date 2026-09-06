@@ -95,6 +95,9 @@ Above this the dividing out has spent too many digits for the answer to be
 worth having, and the module says so rather than giving back roots that look
 like roots.
 
+How many numbers a polynomial of the given order holds, which is one more
+than the order.
+
 ## Macros
 
 ### `POLY_LARGEST_ROOT_ORDER`

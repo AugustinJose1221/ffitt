@@ -1,0 +1,221 @@
+{
+  "schema_version": 1,
+  "diagram_type": "architecture",
+  "meta": {
+    "title": "Inside cepstrum",
+    "animation": "trace",
+    "quality_profile": "showcase",
+    "views": [
+      {
+        "id": "the-idea",
+        "label": "A row of peaks repeats too",
+        "focus": [
+          "signal",
+          "harmonics"
+        ],
+        "note": "Harmonics stand evenly apart in the spectrum. A row of evenly spaced peaks is itself a thing that repeats."
+      },
+      {
+        "id": "the-log",
+        "label": "Why the logarithm",
+        "focus": [
+          "log",
+          "again"
+        ],
+        "note": "A source passing through a shape is a multiplication in the spectrum, and a logarithm turns that into a sum."
+      },
+      {
+        "id": "quefrency",
+        "label": "Quefrency is a time",
+        "focus": [
+          "peak",
+          "note"
+        ],
+        "note": "A peak at quefrency 80 says the harmonics stand rate/80 apart, thus the note repeats every 80 samples."
+      },
+      {
+        "id": "splitting",
+        "label": "Source from shape",
+        "focus": [
+          "slowfast"
+        ],
+        "note": "The slow part of the log spectrum is the shape it passed through, and the fast part is the source."
+      }
+    ]
+  },
+  "layout": {
+    "mode": "grid",
+    "origin": [
+      40,
+      120
+    ],
+    "cols": 6,
+    "gapX": 28,
+    "gapY": 56,
+    "cellW": 124,
+    "cellH": 62
+  },
+  "components": [
+    {
+      "id": "signal",
+      "type": "external",
+      "label": "Your Sound",
+      "sublabel": "a note with harmonics",
+      "row": 1,
+      "col": 0
+    },
+    {
+      "id": "spectrum",
+      "type": "backend",
+      "label": "Its Spectrum",
+      "sublabel": "|X[k]|",
+      "row": 1,
+      "col": 1
+    },
+    {
+      "id": "harmonics",
+      "type": "database",
+      "label": "Evenly Spaced",
+      "sublabel": "a row of peaks",
+      "row": 0,
+      "col": 2
+    },
+    {
+      "id": "log",
+      "type": "backend",
+      "label": "Take the Logarithm",
+      "sublabel": "product becomes sum",
+      "row": 1,
+      "col": 2
+    },
+    {
+      "id": "again",
+      "type": "backend",
+      "label": "Transform Again",
+      "sublabel": "of the spectrum",
+      "row": 1,
+      "col": 3
+    },
+    {
+      "id": "peak",
+      "type": "cloud",
+      "label": "One Peak",
+      "sublabel": "at a quefrency",
+      "row": 1,
+      "col": 4
+    },
+    {
+      "id": "note",
+      "type": "backend",
+      "label": "rate / quefrency",
+      "sublabel": "the note in hertz",
+      "row": 0,
+      "col": 5
+    },
+    {
+      "id": "slowfast",
+      "type": "backend",
+      "label": "Cut by Quefrency",
+      "sublabel": "source or shape",
+      "row": 2,
+      "col": 5
+    }
+  ],
+  "boundaries": [
+    {
+      "kind": "region",
+      "label": "a transform of a spectrum, not of a signal",
+      "wraps": [
+        "log",
+        "again"
+      ]
+    }
+  ],
+  "connections": [
+    {
+      "id": "spectred",
+      "from": "signal",
+      "to": "spectrum",
+      "label": "the sound",
+      "variant": "emphasis",
+      "labelDy": -24
+    },
+    {
+      "id": "rowof",
+      "from": "spectrum",
+      "to": "harmonics",
+      "label": "evenly apart"
+    },
+    {
+      "id": "logged",
+      "from": "spectrum",
+      "to": "log",
+      "label": "|X[k]|",
+      "variant": "emphasis",
+      "labelAt": [
+        328.0,
+        312.0
+      ]
+    },
+    {
+      "id": "summed",
+      "from": "log",
+      "to": "again",
+      "label": "now a sum",
+      "variant": "emphasis",
+      "labelAt": [
+        480.0,
+        312.0
+      ]
+    },
+    {
+      "id": "found",
+      "from": "again",
+      "to": "peak",
+      "label": "c[q]",
+      "variant": "emphasis",
+      "labelDy": -24
+    },
+    {
+      "id": "hertz",
+      "from": "peak",
+      "to": "note",
+      "label": "its place"
+    },
+    {
+      "id": "split",
+      "from": "peak",
+      "to": "slowfast",
+      "label": "slow or fast"
+    }
+  ],
+  "cards": [
+    {
+      "dot": "cyan",
+      "title": "What it works out",
+      "items": [
+        "c[q] = inverse transform of log(|X[k]|)",
+        "A row of harmonics standing evenly apart comes out as ONE peak",
+        "The place of that peak is a time, and it is called quefrency"
+      ]
+    },
+    {
+      "dot": "emerald",
+      "title": "Why the logarithm is the whole trick",
+      "items": [
+        "A source passing through a shape is a MULTIPLICATION in the spectrum",
+        "A logarithm turns a multiplication into a SUM",
+        "The two can then be added apart, which no other road here offers"
+      ]
+    },
+    {
+      "dot": "amber",
+      "title": "How to read the answer",
+      "items": [
+        "period in samples = quefrency",
+        "note in hertz = rate / quefrency",
+        "The slow part is the shape it passed through; the fast part is the source"
+      ]
+    }
+  ]
+}
