@@ -92,6 +92,30 @@ is far below anything a measurement can reach at either width, thus the
 floor cannot hide a real reading, and it keeps the answer to numbers that
 arithmetic and pictures can use.
 
+## Types
+
+### `spectrogram_kind_t`
+
+Which unit the answer is in.
+
+```c
+typedef enum{
+    // How large the wave at that bin is, in the unit of the signal.
+    SPECTROGRAM_AMPLITUDE = 0,
+
+    // The mean power of that wave, which is the amplitude squared and halved.
+    SPECTROGRAM_POWER,
+
+    // Power for each hertz. The only unit here that does not change when the
+    // block gets longer.
+    SPECTROGRAM_DENSITY,
+
+    // The power in decibels against a reference of 1, held at
+    // SPECTROGRAM_FLOOR_DECIBEL from below.
+    SPECTROGRAM_DECIBEL
+}spectrogram_kind_t;
+```
+
 ## Functions
 
 ### `spectrogram_is_valid_kind`

@@ -87,6 +87,16 @@ grows upward cannot see a reading that has dropped.
 
 ## Types
 
+### `changepoint_way_t`
+
+```c
+typedef enum{
+    CHANGEPOINT_NONE = 0,       // Nothing has changed
+    CHANGEPOINT_ROSE,           // The reading has run above where it should be
+    CHANGEPOINT_FELL            // And below
+}changepoint_way_t;
+```
+
 ### `changepoint_t`
 
 ```c

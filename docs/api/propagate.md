@@ -123,6 +123,26 @@ model that is dear should take a shorter step and a cheaper rule.
 #define PROPAGATE_LARGEST_STATE     16u
 ```
 
+## Types
+
+### `propagate_method_t`
+
+Which method carries the state forward.
+
+```c
+typedef enum{
+    // One ask for the rate. The error halves when the step halves.
+    PROPAGATE_EULER = 0,
+
+    // Two asks. The error quarters when the step halves.
+    PROPAGATE_MIDPOINT,
+
+    // Four asks, by the method of Runge and Kutta. The error falls to a
+    // sixteenth when the step halves, and this is what to use.
+    PROPAGATE_RUNGE
+}propagate_method_t;
+```
+
 ## Functions
 
 ### `propagate_is_valid_method`

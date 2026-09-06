@@ -88,6 +88,17 @@ How many values the working list must hold for delay_by_correlation at this
 largest lag. Both signs of lag are needed, thus the count is twice the lag
 and one more for the lag of nothing.
 
+## Types
+
+### `delay_way_t`
+
+```c
+typedef enum{
+    DELAY_CORRELATE = 0,        // From the peak of the cross correlation
+    DELAY_PHASE                 // From the slope of the phase
+}delay_way_t;
+```
+
 ## Functions
 
 ### `delay_is_valid_way`
