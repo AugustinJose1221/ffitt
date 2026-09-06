@@ -53,7 +53,7 @@ that stands far away but is weak.
 
 The main lobe is in bins, against the rectangular window.
 
-Method:
+## Method
 
 The block is multiplied by the window before the transform reads it:
 

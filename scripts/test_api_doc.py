@@ -361,3 +361,26 @@ def test_a_module_whose_comment_sits_on_its_declaration_keeps_it():
     # No Overview section, because the words stand beside the type instead.
     assert "## Overview" not in document
     assert "A point on a plane." in document
+
+
+def test_a_method_written_in_a_header_reaches_its_document():
+    """A header that writes `Method:` must get a Method section.
+
+    A method block needs an empty line above it, or it joins the block before
+    it and becomes part of the overview. That happened twice, and both times
+    the block sat in the header saying nothing to anybody.
+    """
+    for name, path, title in api_doc.MODULES:
+        if name in api_doc.HEADERS_WITHOUT_A_MODULE:
+            continue
+
+        with open(os.path.join(api_doc.REPOSITORY, path), encoding="utf-8") as handle:
+            text = handle.read()
+
+        if "// Method:" not in text:
+            continue
+
+        document = api_doc.build_module_document(name, path, title)
+        assert "## Method" in document, (
+            "%s writes a method block that never reaches its document; "
+            "an empty line above it is what that needs" % name)

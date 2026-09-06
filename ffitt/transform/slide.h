@@ -85,6 +85,29 @@
 // less than N of these. The crossover is the same one goertzel names: past
 // about log2(N) frequencies the whole transform is cheaper.
 
+// Method:
+//
+// The bin of a block transform is:
+//
+//     X[k] = sum over n of x[n] * exp(-2*pi*i*k*n/size)
+//
+// Working that out again at every sample would cost the whole window every
+// time. It is not worked out again. When the window moves on by one sample,
+// the new total differs from the old one by the sample that arrived, the
+// sample that fell off the end, and one bin's worth of turn:
+//
+//     X[n] = (X[n-1] + arrived - left) * turn
+//
+// Nothing in that grows with the size of the window. Each sample costs one
+// complex multiplication and two additions for each frequency watched.
+//
+// The window is still kept, so that the sample which left can be taken off,
+// and that is what the ring buffer is for.
+//
+// A total that is added to for ever would drift as the rounding piles up.
+// Each turn is therefore made a little smaller than one, thus an old error
+// dies away instead of standing for ever.
+
 // The bins are of a transform of this many samples, thus the size decides both
 // the window and where the bins fall. It must be at least two.
 bool slide_is_valid_size(uint32_t size);

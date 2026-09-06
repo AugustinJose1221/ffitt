@@ -1,0 +1,218 @@
+{
+  "schema_version": 1,
+  "diagram_type": "architecture",
+  "meta": {
+    "title": "Inside hilbert",
+    "animation": "trace",
+    "quality_profile": "showcase",
+    "views": [
+      {
+        "id": "forward",
+        "label": "Into the bins",
+        "focus": [
+          "signal",
+          "fwd"
+        ],
+        "note": "The transform is never worked out in time. The signal goes to the frequency domain first."
+      },
+      {
+        "id": "weighed",
+        "label": "One weight per bin",
+        "focus": [
+          "weigh",
+          "rule"
+        ],
+        "note": "Double the positive frequencies, keep bin zero and the middle, and throw the negative ones away."
+      },
+      {
+        "id": "back",
+        "label": "Back to time",
+        "focus": [
+          "inv",
+          "analytic"
+        ],
+        "note": "The inverse transform gives a complex signal: the original in the real part, its Hilbert transform in the imaginary part."
+      },
+      {
+        "id": "reads",
+        "label": "What you can read",
+        "focus": [
+          "amp",
+          "phase"
+        ],
+        "note": "The distance from zero is the envelope, and the change of the angle is the frequency."
+      }
+    ]
+  },
+  "layout": {
+    "mode": "grid",
+    "origin": [
+      40,
+      120
+    ],
+    "cols": 6,
+    "gapX": 28,
+    "gapY": 56,
+    "cellW": 124,
+    "cellH": 62
+  },
+  "components": [
+    {
+      "id": "signal",
+      "type": "external",
+      "label": "Real Signal",
+      "sublabel": "a power of two",
+      "row": 1,
+      "col": 0
+    },
+    {
+      "id": "fwd",
+      "type": "backend",
+      "label": "fft_forward",
+      "sublabel": "to the bins",
+      "row": 1,
+      "col": 1
+    },
+    {
+      "id": "rule",
+      "type": "database",
+      "label": "The Weights",
+      "sublabel": "2, 1, 0",
+      "row": 0,
+      "col": 2
+    },
+    {
+      "id": "weigh",
+      "type": "backend",
+      "label": "Weigh Each Bin",
+      "sublabel": "negatives to zero",
+      "row": 1,
+      "col": 2
+    },
+    {
+      "id": "inv",
+      "type": "backend",
+      "label": "fft_inverse",
+      "sublabel": "back to time",
+      "row": 1,
+      "col": 3
+    },
+    {
+      "id": "analytic",
+      "type": "cloud",
+      "label": "Analytic Signal",
+      "sublabel": "complex now",
+      "row": 1,
+      "col": 4
+    },
+    {
+      "id": "amp",
+      "type": "backend",
+      "label": "Amplitude",
+      "sublabel": "the envelope",
+      "row": 0,
+      "col": 5
+    },
+    {
+      "id": "phase",
+      "type": "backend",
+      "label": "Phase",
+      "sublabel": "its change is hertz",
+      "row": 2,
+      "col": 5
+    }
+  ],
+  "boundaries": [
+    {
+      "kind": "region",
+      "label": "the whole operation is a weight on each bin",
+      "wraps": [
+        "weigh",
+        "inv"
+      ]
+    }
+  ],
+  "connections": [
+    {
+      "id": "into",
+      "from": "signal",
+      "to": "fwd",
+      "label": "x[n]",
+      "variant": "emphasis",
+      "labelDy": -24
+    },
+    {
+      "id": "bins",
+      "from": "fwd",
+      "to": "weigh",
+      "label": "X[k]",
+      "variant": "emphasis"
+    },
+    {
+      "id": "which",
+      "from": "rule",
+      "to": "weigh",
+      "label": "by the sign of k",
+      "labelAt": [
+        404.0,
+        194.0
+      ]
+    },
+    {
+      "id": "kept",
+      "from": "weigh",
+      "to": "inv",
+      "label": "Z[k]",
+      "variant": "emphasis"
+    },
+    {
+      "id": "timed",
+      "from": "inv",
+      "to": "analytic",
+      "label": "z[n]",
+      "variant": "emphasis",
+      "labelDy": -24
+    },
+    {
+      "id": "size",
+      "from": "analytic",
+      "to": "amp",
+      "label": "distance from zero"
+    },
+    {
+      "id": "angle",
+      "from": "analytic",
+      "to": "phase",
+      "label": "the angle"
+    }
+  ],
+  "cards": [
+    {
+      "dot": "cyan",
+      "title": "What it works out",
+      "items": [
+        "z[n] = x[n] + i*H{x}[n], the analytic signal",
+        "The amplitude follows the envelope of the signal",
+        "The change of the phase from sample to sample is the frequency"
+      ]
+    },
+    {
+      "dot": "emerald",
+      "title": "How the library gets there",
+      "items": [
+        "Z[k] = 2*X[k] for a positive frequency, X[k] at bin 0 and the middle, 0 below",
+        "Transform, weigh the bins, transform back; nothing is worked out in time",
+        "The size must be a power of two, because the fft module asks for one"
+      ]
+    },
+    {
+      "dot": "rose",
+      "title": "What will catch you",
+      "items": [
+        "Both values mean something only where the signal holds one frequency at a time",
+        "A signal of several frequencies gives a mean of them, which describes nothing",
+        "That is why this goes together with emd, and hht joins the two"
+      ]
+    }
+  ]
+}

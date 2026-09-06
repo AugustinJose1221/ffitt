@@ -9,7 +9,7 @@ python3 scripts/api_doc.py
 
 Power at each frequency. Declared in `ffitt/transform/psd.h`.
 
-[Back to the index](../API.md) | [How the transform modules work](../../ffitt/transform/README.md)
+[Back to the index](../API.md) | [How the transform modules work](../../ffitt/transform/README.md) | [How it works](../diagrams/transform/psd.html) ([preview](https://htmlpreview.github.io/?https://github.com/AugustinJose1221/ffitt/blob/main/docs/diagrams/transform/psd.html))
 
 ## Overview
 
@@ -33,6 +33,7 @@ blocks grows, and THAT is the trade this module offers:
 
 A signal of 4096 samples cut into 8 overlapping blocks of 1024 gives bins 8
 times as wide and an answer about 3 times as steady.
+
 
 THE SCALING, WHICH IS THE PART THAT IS USUALLY WRONG
 
@@ -63,6 +64,26 @@ signal is wasted. Half the block is the usual choice and suits every window
 here. More than that costs work and gains little, because blocks that
 overlap heavily hold much the same samples and their noise no longer
 averages away.
+
+## Method
+
+The power at a frequency is the size of its bin, squared:
+
+    P[k] = |X[k]|^2 / (rate * U)
+
+One transform of the whole signal gives that, and it is a poor measurement.
+Welch takes the mean of many instead:
+
+    P[k] = (1/blocks) * sum over b of |X_b[k]|^2 / (rate * U)
+
+The signal is cut into blocks that overlap, each block is windowed and
+transformed, and the results are averaged. The noise in a bin falls as the
+number of blocks grows, while the bins grow wider because a block is
+shorter than the signal. That is the whole of the trade.
+
+U is the sum of the squares of the window. It puts back what the window
+took away, and without it the answer would depend on which window was
+chosen rather than on the signal.
 
 ## Types
 
