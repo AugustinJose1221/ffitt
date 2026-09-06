@@ -11,6 +11,50 @@ The fast Fourier transform. Declared in `ffitt/transform/fft.h`.
 
 [Back to the index](../API.md) | [How the transform modules work](../../ffitt/transform/README.md) | [How it works](../diagrams/transform/fft.html) ([preview](https://htmlpreview.github.io/?https://github.com/AugustinJose1221/ffitt/blob/main/docs/diagrams/transform/fft.html))
 
+## Overview
+
+The fast Fourier transform.
+
+The transform changes a signal in the time domain into a signal in the
+frequency domain. Element k of the result says how much of the signal turns
+at the frequency of the bin k. Use fft_bin_frequency to get that frequency
+in hertz.
+
+The module takes a size that is a power of two, such as 64, 256 or 1024.
+This is the radix-2 method of Cooley and Tukey. A size that is not a power
+of two needs another method with much more code, and that method holds less
+accuracy in a float. Use fft_is_valid_size to examine a size.
+
+The transform needs two tables that depend on the size only: the turning
+factors and the order of the bit reversal. The module calculates them one
+time at the allocation, thus a transform itself gets no memory. A program
+that transforms the same size again and again makes the fft_t one time.
+
+A float holds about 7 digits. The error of the transform grows with the
+logarithm of the size. Up to about 4096 points the result keeps at least 4
+digits. Above that, examine whether the accuracy is still enough for your
+work.
+
+## Method
+
+Bin k of the result is the whole signal weighed against one turning rate:
+
+    X[k] = sum over n of x[n] * exp(-2*pi*i*k*n/size)
+
+Worked out as it stands, that is size steps for each of size bins, thus
+size*size steps in all.
+
+The library does not work it out as it stands. The sum splits into the
+samples at even places and the samples at odd places, and each half is a
+transform of half the size. Splitting again and again leaves log2(size)
+passes over the array, which is why the size must be a power of two.
+
+The splitting leaves the samples wanted in the order of the bits of the
+index, read backwards. The module therefore exchanges the pairs first, and
+then works the passes over the array in place. The turning factors and that
+order depend on the size alone, thus both are worked out at the allocation
+and never again.
+
 ## Macros
 
 ### `FFT_TWIDDLE_COUNT`

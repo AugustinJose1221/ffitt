@@ -11,6 +11,21 @@ Matrices of complex numbers. Declared in `ffitt/linalg/cmatrix.h`.
 
 [Back to the index](../API.md) | [How the linalg modules work](../../ffitt/linalg/README.md)
 
+## Overview
+
+A matrix of complex numbers.
+
+This module is a separate module and not a part of the matrix module. A
+matrix of complex numbers holds another type of element, thus every
+operation needs another calculation. One module for both types would need a
+second copy of each function, or a union in the structure and a check of the
+type in each loop. Both make the matrix module larger and slower for the
+user who only needs real numbers, and that user is the common one on a small
+target.
+
+The two modules give the same names for the same operations, thus a user who
+knows the matrix module knows this module as well.
+
 ## Types
 
 ### `cmatrix_t`

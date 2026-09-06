@@ -11,6 +11,67 @@ Changing the rate of a signal. Declared in `ffitt/filter/resample.h`.
 
 [Back to the index](../API.md) | [How the filter modules work](../../ffitt/filter/README.md)
 
+## Overview
+
+Changing the rate at which a signal is sampled.
+
+WHY THIS IS A MODULE AND NOT A LINE OF CODE
+
+Keeping every fourth sample looks like the whole of it, and it is the half
+that goes wrong. A signal sampled at 32 kHz may hold frequencies up to
+16 kHz. Keep every 64th sample and the new rate is 500 Hz, which can hold
+nothing above 250. Every frequency above 250 does not disappear: it comes
+back somewhere else, at a frequency it never had, and once it is there
+NOTHING can take it out again, because it now sits on top of the signal and
+looks exactly like part of it.
+
+A hum at 4 kHz decimated by 64 arrives at 0 Hz and looks like a drift. A
+noise at 300 Hz arrives at 200 Hz and looks like a signal. The reading looks
+perfectly reasonable and is wrong, and no later step can find out.
+
+The answer is a filter BEFORE the samples are thrown away, and this module
+puts the two together so that they cannot be separated by accident.
+
+GOING UP HAS THE MIRROR OF THE SAME PROBLEM. Putting zeros between the
+samples leaves copies of the signal at every multiple of the old rate. The
+filter after them takes the copies away, and without it the answer holds
+tones that were never in the signal.
+
+THE TWO THINGS THIS MODULE DOES
+
+  resample_decimate     one sample kept for each factor, filter first
+  resample_interpolate  factor samples made for each one, filter after
+
+A rate that changes by a ratio rather than by a whole number, such as 44100
+to 48000, is an interpolator by 160 followed by a decimator by 147. Build
+the two and put the output of the first into the second. This module gives
+no single function for that, because the two filters can be joined into one
+only when both factors are known at the time the filter is designed, and
+then the joined filter is what the caller wants and not this module.
+
+WHAT IT COSTS, AND THE ONE THING THAT MAKES IT CHEAP
+
+A filter that runs at the high rate and then throws most of its answers away
+is doing work for nothing. Going down by 64, sixty-three of every sixty-four
+answers are never used.
+
+This module works out only the answers it keeps. The filtering costs the
+same as the OUTPUT rate and not the input rate, thus decimating by 64 with a
+filter of 128 coefficients costs 2 multiplications for each input sample and
+not 128. That is the whole reason a long filter is affordable here.
+
+HOW LONG A FILTER
+
+The filter must pass what is wanted and stop everything above half the new
+rate. Those two edges lie close together when the factor is large, and a
+close pair of edges needs a long filter: the width of the turn is about
+4/length of the rate it runs at. resample_advised_length gives a length that
+works, and a caller who wants a sharper edge gives a longer one.
+
+A LARGE FACTOR IS BETTER DONE IN STAGES. Going from 32 kHz to 500 Hz in one
+step needs a filter of about 2000 coefficients. Doing it as 8 then 8 needs
+two filters of about 40, and the two together cost far less than the one.
+
 ## Macros
 
 ### `RESAMPLE_DECIMATOR_MEMPOOL_SIZE`

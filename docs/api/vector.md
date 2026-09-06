@@ -11,6 +11,14 @@ Vectors of float values. Declared in `ffitt/linalg/vector.h`.
 
 [Back to the index](../API.md) | [How the linalg modules work](../../ffitt/linalg/README.md)
 
+## Overview
+
+A vector of float values.
+
+Two functions give a vector. vector_alloc takes the memory from the heap,
+and the caller must give the vector to vector_free. vector_static_alloc
+takes memory that the caller holds, and vector_free then does nothing.
+
 ## Types
 
 ### `vector_t`

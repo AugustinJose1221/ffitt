@@ -11,6 +11,11 @@ Empirical mode decomposition. Declared in `ffitt/decompose/emd.h`.
 
 [Back to the index](../API.md) | [How the decompose modules work](../../ffitt/decompose/README.md)
 
+## Overview
+
+A signal with fewer than three samples holds no peak and no valley, thus
+the decomposition cannot take anything out of it.
+
 ## Macros
 
 ### `EMD_MINIMUM_SIZE`

@@ -11,6 +11,47 @@ How far one reading stands behind another. Declared in `ffitt/detect/delay.h`.
 
 [Back to the index](../API.md) | [How the detect modules work](../../ffitt/detect/README.md)
 
+## Overview
+
+Find how far one reading stands behind another, to below a sample.
+
+Two microphones hear the same sound and one hears it later. Two coils see the
+same pulse pass. A sounder sends and hears back. In each of them the delay IS
+the measurement: it gives the direction the sound came from, the speed the
+metal moved at, the depth of the water.
+
+A delay of a whole number of samples is easy, and correlate_best_lag already
+gives it. THE WHOLE NUMBER IS RARELY THE ANSWER. At 48 000 samples a second,
+one sample of delay between two microphones a hand apart is the difference
+between one bearing and another seven degrees away. Rounding the delay to a
+sample throws that away, and nothing in the answer says it was thrown away.
+
+TWO WAYS, AND THEY FAIL DIFFERENTLY.
+
+  FROM THE CORRELATION. Slide one reading along the other, find where they
+  agree best, and fit a curve through that point and its two neighbours. It
+  works on anything, it needs no transform, and it is only as fine as the
+  curve fits: a peak that is not shaped like the curve leans the answer
+  towards the nearer neighbour, and that lean does not go away with more
+  samples.
+
+  FROM THE PHASE. A delay turns into a slope of phase across the spectrum,
+  thus measuring that slope measures the delay. It uses every frequency the
+  two readings share instead of three points, thus it is finer and it settles
+  as the reading grows. It asks that the two readings really be the same
+  thing delayed. Where the path colours one of them, the slope leans.
+
+  AND IT ASKS FOR A READING THAT FILLS A BAND. The slope is read from how far
+  the phase turns from ONE BIN TO THE NEXT, thus a bin whose neighbour is
+  quiet contributes nothing. A handful of tones far apart leaves every step
+  saying nothing and the answer is then the rounding: measured on nine tones
+  spread across the band, a delay of 7 samples came back as 1.6. A rush of
+  noise, a chirp, a knock, or anything else that fills a band works. A few
+  loud tones do not, and the correlation is the way to reach for there.
+
+USE BOTH WHERE IT MATTERS. They agree when the reading suits them and part
+company when it does not, and that parting is the only warning either gives.
+
 ## Macros
 
 ### `DELAY_WORK_COUNT`

@@ -11,6 +11,67 @@ Making the signals to test with. Declared in `ffitt/util/generate.h`.
 
 [Back to the index](../API.md) | [How the util modules work](../../ffitt/util/README.md)
 
+## Overview
+
+Making the signals to test with, without making the faults that come free
+with them.
+
+Every test and every example in this library used to write its own sine
+wave. That is fine for a sine, and it is a trap for anything else.
+
+WHY A SQUARE WAVE IS NOT A ROW OF ONES AND MINUS ONES
+
+Write a square wave the obvious way, by taking the sign of a sine, and it
+holds every odd harmonic of its frequency, out to infinity. A sampled signal
+cannot hold anything above half the sample rate, so every harmonic above
+that FOLDS BACK and lands somewhere below it. Where it lands has nothing to
+do with the note being played.
+
+Measured, a square wave at 8000 samples in a second: the loudest thing in
+the answer that is NOT a harmonic of the tone, against the tone itself.
+
+    tone Hz        100     300     700    1300    1900    3100
+    samples a turn  80      27      11     6.2     4.2     2.6
+    naive        -39.3   -23.9   -17.3   -13.9    -9.2    -9.2  dB
+    this module  -49.3   -33.7   -29.6   -39.6   -25.7   -39.6  dB
+
+READ THE NAIVE ROW ACROSS. The fewer samples there are to a turn, the worse
+it gets, until at 1900 Hz the loudest false tone is only 9 dB below the one
+that was asked for. A filter tested with that wave is being tested against a
+signal nobody meant to make.
+
+This module holds the folding between 26 and 50 dB down across the whole
+range, which is 10 to 26 dB better than the naive one at every frequency.
+
+HOW IT IS HELD DOWN
+
+The fold comes from the corner. A square wave steps from one value to the
+other between two samples, and a step between samples is a thing a sampled
+signal cannot hold. The module works out WHERE BETWEEN THE TWO SAMPLES the
+step really falls and smooths the corner across them by that much, which is
+the method of the polynomial band-limited step.
+
+It costs a handful of operations at each corner and nothing anywhere else,
+thus a square wave costs about what the naive one costs.
+
+IT DOES NOT REMOVE THE FOLDING ALTOGETHER, and the table above is honest
+about that: the best it reaches is about 50 dB down and the worst about 26.
+Nothing that runs in constant time does better. A TEST THAT NEEDS BETTER
+THAN THAT WANTS A SINE, which folds nothing because it holds one frequency
+and no other.
+
+THE PHASE IS CARRIED AND NOT WORKED OUT FROM THE SAMPLE NUMBER
+
+Working out sin(2*pi*f*n/rate) from the sample number n looks simpler and
+goes wrong in two ways. The angle grows without bound, so a long run loses
+its digits exactly as the bluestein module records. And a frequency that
+changes cannot be written that way at all: the phase would jump every time
+the frequency did.
+
+This module carries the phase from one sample to the next and folds it into
+one turn each time, thus it runs for ever without losing digits and its
+frequency may be changed at any sample without a jump.
+
 ## Macros
 
 ### `GENERATE_BROWN_KEEP`

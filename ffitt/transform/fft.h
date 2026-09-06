@@ -34,6 +34,26 @@
 // digits. Above that, examine whether the accuracy is still enough for your
 // work.
 
+// Method:
+//
+// Bin k of the result is the whole signal weighed against one turning rate:
+//
+//     X[k] = sum over n of x[n] * exp(-2*pi*i*k*n/size)
+//
+// Worked out as it stands, that is size steps for each of size bins, thus
+// size*size steps in all.
+//
+// The library does not work it out as it stands. The sum splits into the
+// samples at even places and the samples at odd places, and each half is a
+// transform of half the size. Splitting again and again leaves log2(size)
+// passes over the array, which is why the size must be a power of two.
+//
+// The splitting leaves the samples wanted in the order of the bits of the
+// index, read backwards. The module therefore exchanges the pairs first, and
+// then works the passes over the array in place. The turning factors and that
+// order depend on the size alone, thus both are worked out at the allocation
+// and never again.
+
 typedef struct{
     uint32_t size;              // The number of points, a power of two
     cnum_t* twiddle;            // The turning factors, size/2 of them

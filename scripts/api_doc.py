@@ -139,6 +139,62 @@ def line_of_offset(text, offset):
     return text.count("\n", 0, offset)
 
 
+def read_module_comment(lines):
+    """Give the overview and the method that the top of a header holds.
+
+    The overview is the first block of comment that stands above the first
+    declaration. The method is the block that opens with `Method:`, and it
+    holds the simplified equation of what the module works out.
+
+    Exactly one space after the two slashes is taken away. What is left of the
+    indent stays, thus an equation that is written indented reaches the
+    documentation as a block of code and keeps its shape.
+    """
+    blocks = []
+    current = []
+
+    for line in lines:
+        stripped = line.strip()
+        if stripped.startswith("//"):
+            body = stripped[2:]
+            if body.startswith(" "):
+                body = body[1:]
+            current.append(body)
+            continue
+
+        if current:
+            blocks.append(current)
+            current = []
+
+        # An empty line and a line of the preprocessor stand between the guard,
+        # the includes and the comment of the module. A declaration does not,
+        # thus the first of those ends the search.
+        if stripped == "" or stripped.startswith("#"):
+            continue
+        break
+
+    if current:
+        blocks.append(current)
+
+    overview = []
+    method = []
+    for block in blocks:
+        if block[0].lower().startswith("method:"):
+            if not method:
+                rest = block[0][len("method:"):].strip()
+                method = ([rest] if rest else []) + block[1:]
+        elif not overview:
+            overview = block
+
+    for block in (overview, method):
+        while block and block[0] == "":
+            block.pop(0)
+        while block and block[-1] == "":
+            block.pop()
+
+    return overview, method
+
+
 def read_header(path):
     """Give the declarations of one header with the comment of each."""
     with open(path, encoding="utf-8") as handle:
@@ -313,6 +369,8 @@ def build_module_document(name, path, title):
     """Give the text of the file of one module."""
     full_path = os.path.join(REPOSITORY, path)
     types, macros, functions = read_header(full_path)
+    with open(full_path, encoding="utf-8") as handle:
+        overview, method = read_module_comment(handle.read().splitlines())
 
     parts = ["# %s\n" % name, GENERATED_NOTE]
     parts.append("%s. Declared in `%s`.\n" % (title, path))
@@ -323,6 +381,14 @@ def build_module_document(name, path, title):
                      % (area, area, diagram_links(name)))
     else:
         parts.append("[Back to the index](../API.md)%s\n" % diagram_links(name))
+
+    if overview:
+        parts.append("## Overview\n")
+        parts.append("\n".join(overview) + "\n")
+
+    if method:
+        parts.append("## Method\n")
+        parts.append("\n".join(method) + "\n")
 
     if macros:
         parts.append("## Macros\n")

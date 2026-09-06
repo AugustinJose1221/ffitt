@@ -11,6 +11,30 @@ The Hilbert transform. Declared in `ffitt/transform/hilbert.h`.
 
 [Back to the index](../API.md) | [How the transform modules work](../../ffitt/transform/README.md)
 
+## Overview
+
+The Hilbert transform and the analytic signal.
+
+The analytic signal of a real signal holds the signal itself in the real
+part and the Hilbert transform of the signal in the imaginary part. The
+analytic signal gives two values at each point of time:
+
+- the instantaneous amplitude, which is the distance of the point from zero.
+  It follows the envelope of the signal.
+- the instantaneous phase, which is the angle of the point. The change of
+  the phase from one sample to the next gives the instantaneous frequency.
+
+The module builds the analytic signal with the fast Fourier transform. It
+takes the spectrum of the signal, sets every negative frequency to zero,
+doubles every positive frequency, and takes the inverse transform. Thus the
+size of the signal must be a power of two, as the fft module asks.
+
+These values only have a meaning for a signal that holds one frequency at a
+time. A signal that holds several frequencies together gives a mean of them,
+which describes nothing. For that reason the Hilbert transform goes together
+with the empirical mode decomposition, which takes a signal apart into such
+single frequency parts. The hht module joins the two.
+
 ## Functions
 
 ### `hilbert_analytic_signal`

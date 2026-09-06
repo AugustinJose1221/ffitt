@@ -11,6 +11,29 @@ Filters with a finite impulse response. Declared in `ffitt/filter/fir.h`.
 
 [Back to the index](../API.md) | [How the filter modules work](../../ffitt/filter/README.md)
 
+## Overview
+
+A filter with a finite impulse response.
+
+The filter multiplies the last few samples of the signal by a set of
+coefficients and adds the products. It holds no feedback, thus it is always
+stable, and it moves every frequency by the same time. That second point
+matters when the shape of the signal must stay as it is.
+
+The cost is the length: such a filter needs many more coefficients than an
+IIR filter for the same sharpness. Use the iir module when the number of
+operations for each sample matters more than the shape.
+
+The design functions build the coefficients with the method of the windowed
+sinc, with the window of Hamming. Give the cutoff as a part of the sample
+rate, thus 0.25 means one quarter of the sample rate. The value must lie
+between 0 and 0.5, because half the sample rate is the highest frequency
+that a sampled signal can hold.
+
+A longer filter gives a sharper edge between the band that passes and the
+band that stops. A length of about 4/width gives an edge of that width,
+where the width is also a part of the sample rate.
+
 ## Macros
 
 ### `FIR_TRANSITION`

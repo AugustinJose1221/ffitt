@@ -11,6 +11,47 @@ The shapes a peak can have. Declared in `ffitt/util/curve.h`.
 
 [Back to the index](../API.md) | [How the util modules work](../../ffitt/util/README.md)
 
+## Overview
+
+The shapes a peak can have, read at a place.
+
+These are not waves. A wave has a frequency and a phase and goes on for ever,
+and generate makes those. THESE HAPPEN ONCE: a bump on a baseline, read at
+whatever place is asked for. Nothing here carries state and nothing here has
+a sample rate.
+
+WHAT THEY ARE FOR.
+
+A peak in a real measurement has a SHAPE, and which shape it has decides what
+may be read off it. A chromatograph gives peaks close to gaussian; a
+resonance gives peaks close to lorentzian; a peak that arrives slowly and
+leaves quickly is neither. Every module in this library that finds a peak or
+refines one -- peakdetect, delay_refine_peak, the fitting in lstsq -- gives
+an answer that depends on the shape it was given, and the only honest way to
+measure that dependence is against a shape that is KNOWN.
+
+THE ONE THING THAT MATTERS MOST, AND IT IS NOT WHICH SHAPE IS PRETTIEST.
+
+delay_refine_peak fits a curve of the second order through a peak and its two
+neighbours. That curve is exact for a peak that IS of the second order and
+wrong for every other, and how wrong depends on the shape:
+
+  shape                 how far the refined top stands from the true one
+  -------------------   ------------------------------------------------
+  gaussian              small, and it leans the same way each time
+  lorentzian            larger, because the top is sharper than a curve
+  skewed gaussian       larger again, and it leans towards the long side
+
+A refinement measured only against a gaussian looks better than it is. That
+is what the skewed and the lorentzian shapes are here for.
+
+WHERE THE WIDTH IS MEASURED. Every shape here takes its width as the distance
+from the middle at which it has fallen to the same share of its top as a
+normal spread has at one standard deviation, which is about 0.6065. Written
+that way the widths of two different shapes may be set beside each other and
+mean the same thing, which they do not if one is given as a standard
+deviation and another as a half width at half the top.
+
 ## Functions
 
 ### `curve_is_valid_width`

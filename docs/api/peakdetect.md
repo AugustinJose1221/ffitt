@@ -11,6 +11,47 @@ Peak detection. Declared in `ffitt/util/peakdetect.h`.
 
 [Back to the index](../API.md) | [How the util modules work](../../ffitt/util/README.md)
 
+## Overview
+
+Finding the peaks of a signal, and finding out which of them are real.
+
+EVERY LOCAL MAXIMUM IS NOT A PEAK
+
+A sample larger than the two beside it is a local maximum. On a clean signal
+that is what a peak means. On a real one it is not: noise puts a local
+maximum every few samples, and a recording of a heart at 500 samples in a
+second holds about a hundred of them for every beat.
+
+peakdetect_get_peaks gives every one of them, which is what a caller wants
+when the signal is already clean, and what the emd module wants. On live
+data a caller needs to say which ones count, and peakdetect_find takes four
+rules for that.
+
+THE FOUR RULES, AND WHICH ONE MATTERS MOST
+
+HEIGHT is the obvious one and the weakest. It cannot tell a small peak
+standing alone from a small wobble on the side of a large one, and a signal
+whose level drifts defeats it entirely.
+
+PROMINENCE is the one to reach for. It asks: how far must you descend from
+this peak before you can climb to a higher one? A wobble on the side of a
+large peak has almost no prominence however high it stands, because you need
+only step down a little to reach the larger peak. A small peak standing
+alone in a valley has a large prominence.
+
+Prominence does not care where the signal sits, thus a drifting level does
+not defeat it. That is why it is the rule that works on real data.
+
+WIDTH throws away what is too narrow to be real. A spike one sample wide is
+noise; a heartbeat is thirty samples wide.
+
+DISTANCE says no two peaks may stand closer than so many samples. Where two
+do, the taller is kept. A heart cannot beat twice in 200 ms, thus a second
+peak inside that is the same beat counted twice.
+
+A VALLEY IS A PEAK OF THE SIGNAL TURNED UPSIDE DOWN. There is no separate
+set of these rules for valleys; negate the signal and use these.
+
 ## Types
 
 ### `peakdetect_options_t`

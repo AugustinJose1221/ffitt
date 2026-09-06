@@ -11,6 +11,17 @@ Complex numbers. Declared in `ffitt/linalg/cnum.h`.
 
 [Back to the index](../API.md) | [How the linalg modules work](../../ffitt/linalg/README.md)
 
+## Overview
+
+A complex number.
+
+The C standard gives <complex.h> and the type float _Complex. This library
+does not use them for two reasons. Many small compilers do not give them.
+And <complex.h> gives the macro `complex`, thus a module of this library
+could not carry that name. A structure with two float members works on every
+compiler, and it holds the values in the same way as the rest of the
+library.
+
 ## Types
 
 ### `cnum_t`

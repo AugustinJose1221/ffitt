@@ -11,6 +11,10 @@ A point on a plane. Declared in `ffitt/core/point2d.h`.
 
 [Back to the index](../API.md) | [How the core modules work](../../ffitt/core/README.md)
 
+## Overview
+
+A point on a plane.
+
 ## Types
 
 ### `point2d_t`

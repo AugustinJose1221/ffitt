@@ -11,6 +11,58 @@ Replacing only the samples that are wrong. Declared in `ffitt/filter/hampel.h`.
 
 [Back to the index](../API.md) | [How the filter modules work](../../ffitt/filter/README.md)
 
+## Overview
+
+Find the samples that are wrong and replace only those.
+
+WHAT IT IS FOR, AND WHY A MEDIAN ALONE IS NOT ENOUGH
+
+A median filter removes a spike, and it also changes every other sample it
+touches. Give it a clean signal and it gives back a different clean signal:
+every peak narrower than half its window is gone, and the rest is flattened
+a little. That is a heavy price to pay for a fault that happens once a
+second.
+
+This filter does not touch a sample unless it has a reason to. For each
+sample it asks one question: how far does this sample stand from the middle
+of its neighbours, measured against how far they usually stand from it? A
+sample that stands far outside is replaced by the middle. Every other sample
+is passed through EXACTLY as it arrived.
+
+Thus a recording with three bad samples in a minute comes back with three
+samples changed, and the heart, the peak or the edge in it is untouched.
+
+HOW FAR IS TOO FAR
+
+The measure of how far the neighbours usually stand is the median absolute
+deviation, not the standard deviation, and that choice is the whole of why
+this works.
+
+A deviation is moved by the very samples it is meant to catch. One spike
+raises it, the threshold rises with it, and the spike then sits inside the
+threshold that was put there to catch it. A detector built that way lets
+through exactly the faults it was built for, and the worse the fault the
+more surely it is missed.
+
+The median absolute deviation does not move for a spike. Half the window
+would have to be wrong before it moved at all.
+
+HAMPEL_THRESHOLD is how many deviations count as too far. Three is the usual
+choice: for samples that follow a normal spread it leaves about 997 in 1000
+alone. A lower number replaces more and risks flattening the signal; a
+higher number replaces less and lets small faults through.
+
+THE WINDOW LOOKS BOTH WAYS, THUS THE ANSWER COMES LATE
+
+A sample can only be judged against its neighbours on BOTH sides. The filter
+therefore holds the newest samples back until it has seen enough of what
+comes after them, and hampel_delay says how many. For a window of 2*half+1
+the answer for a sample arrives half samples later.
+
+A caller that reads a signal as it arrives must allow for that delay. A
+caller that has the whole signal in hand should use hampel_process_block,
+which puts the delay right and gives an output as long as its input.
+
 ## Macros
 
 ### `HAMPEL_THRESHOLD`

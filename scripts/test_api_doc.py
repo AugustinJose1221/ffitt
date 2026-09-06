@@ -214,3 +214,68 @@ def test_the_preview_link_names_the_file_that_is_there():
     path = os.path.join(api_doc.REPOSITORY, "docs", "diagrams", "transform", "fft.html")
     assert os.path.isfile(path)
     assert "docs/diagrams/transform/fft.html" in links
+
+
+HEADER_WITH_A_METHOD = """#ifndef EXAMPLE_H
+#define EXAMPLE_H
+
+#include <stdint.h>
+
+// The example module.
+//
+// It stands here to be read by the test.
+
+// Method:
+//
+// The value is the mean of the samples:
+//
+//     y = sum over n of x[n] / count
+//
+// The library keeps a running total, thus each sample costs one addition.
+
+typedef struct{
+    uint32_t size;
+}example_t;
+"""
+
+
+def test_the_overview_of_a_module_is_read():
+    lines = HEADER_WITH_A_METHOD.splitlines()
+    overview, _ = api_doc.read_module_comment(lines)
+    assert overview[0] == "The example module."
+    assert overview[-1] == "It stands here to be read by the test."
+
+
+def test_the_method_of_a_module_is_read_and_keeps_its_shape():
+    """An equation is written indented, and the indent must survive."""
+    lines = HEADER_WITH_A_METHOD.splitlines()
+    _, method = api_doc.read_module_comment(lines)
+    assert method[0] == "The value is the mean of the samples:"
+    assert "    y = sum over n of x[n] / count" in method
+    assert method[-1].startswith("The library keeps a running total")
+
+
+def test_the_method_is_not_taken_into_the_overview():
+    lines = HEADER_WITH_A_METHOD.splitlines()
+    overview, _ = api_doc.read_module_comment(lines)
+    assert not any("mean of the samples" in line for line in overview)
+
+
+def test_a_module_with_no_method_gives_none(tmp_path):
+    text = HEADER_WITH_A_METHOD.split("// Method:")[0] + "typedef struct{\n    int a;\n}example_t;\n"
+    overview, method = api_doc.read_module_comment(text.splitlines())
+    assert overview != []
+    assert method == []
+
+
+def test_every_module_of_the_repository_carries_its_overview():
+    """The prose at the top of a header must reach the documentation.
+
+    It did not, for every module, until the generator learned to carry it.
+    """
+    for name, path, _ in api_doc.MODULES:
+        if name in api_doc.HEADERS_WITHOUT_A_MODULE:
+            continue
+        with open(os.path.join(api_doc.REPOSITORY, path), encoding="utf-8") as handle:
+            overview, _ = api_doc.read_module_comment(handle.read().splitlines())
+        assert overview != [], "%s has no overview at the top of its header" % name

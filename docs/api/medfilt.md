@@ -11,6 +11,64 @@ The median of the last samples. Declared in `ffitt/filter/medfilt.h`.
 
 [Back to the index](../API.md) | [How the filter modules work](../../ffitt/filter/README.md)
 
+## Overview
+
+The median of the last samples.
+
+This filter gives, for each sample, the middle value of the window that ends
+there. It is the answer to a fault that no mean and no low pass can answer.
+
+WHAT IT IS FOR
+
+A sample can be wrong rather than noisy. A knock on an electrode, a sample
+lost on a wire, a spike from a switching supply: each puts one value in the
+signal that has nothing to do with the signal. Such a value is not small,
+and it does not average away.
+
+A mean SPREADS it. One sample that is a thousand times too large, in a
+window of 50, moves every one of the 50 answers that the window touches by
+twenty times the true signal. The fault goes in as one bad sample and comes
+out as fifty.
+
+A median REMOVES it. The middle of the window does not move at all while
+fewer than half of the samples are wrong. One spike in a window of 50 has no
+effect whatever, and the signal on both sides of it is untouched.
+
+WHAT IT COSTS
+
+A median is not a filter of frequency. It does not pass one band and stop
+another, and it cannot be described by a gain at each frequency, because it
+is not linear. Two signals filtered and added do not give the same answer as
+the two added and filtered.
+
+It also removes any peak that is narrower than half the window, whether that
+peak is a fault or not. THIS IS THE TRAP. A window long enough to take out a
+wide spike also takes out a real QRS, a real pulse, a real edge. Choose the
+window from the width of the fault and not from the width of the signal:
+long enough to cover the spike, and shorter than anything worth keeping.
+
+It costs one pass over the window for each sample, and no more. The filter
+holds the window in order, thus a new sample is put into its place and the
+old one taken out of its place, and neither needs a sort.
+
+WHERE IT SITS BESIDE THE OTHERS
+
+  movavg   the mean of the window        smooth, and spreads a bad sample
+  medfilt  the middle of the window      removes a bad sample, keeps an edge
+  savgol   a polynomial through the window   keeps the height of a peak
+  fir, iir a band of frequencies         the right tool when frequency is
+                                         what parts the signal from the noise
+
+A common chain is a median first to take the spikes out, then a filter of
+frequency to take the noise out. The other order does not work, because the
+filter of frequency spreads each spike before the median can reach it.
+
+AN ODD WINDOW IS BETTER
+
+A window of an odd size has a true middle sample. A window of an even size
+has two, and the filter gives their mean. That mean is no longer one of the
+samples, thus a little of the spreading of a mean comes back.
+
 ## Types
 
 ### `medfilt_t`

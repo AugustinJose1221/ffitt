@@ -11,6 +11,113 @@ Fitting a curve through readings. Declared in `ffitt/linalg/lstsq.h`.
 
 [Back to the index](../API.md) | [How the linalg modules work](../../ffitt/linalg/README.md)
 
+## Overview
+
+Fitting a line, a curve or a model through more readings than it has room
+for.
+
+A calibration takes twenty readings to fix three numbers. There is no answer
+that passes through all twenty, and looking for one is the wrong question.
+The right one is: which three numbers leave the smallest total error, and
+this module answers it.
+
+WHAT THIS IS FOR
+
+  A CALIBRATION CURVE. Twenty readings of a sensor against a reference, and
+  a polynomial of the third order to turn one into the other.
+  TAKING A TREND OUT. Fit a straight line and subtract it, which is what the
+  detrend module does with this underneath.
+  FITTING A MODEL. Anything of the form "the reading is this much of one
+  thing plus that much of another", where the amounts are wanted.
+
+HOW IT IS DONE, AND WHAT THAT COSTS
+
+The normal equations. The problem of many readings and few numbers becomes a
+small square problem: the model turned round and multiplied by itself, and
+solved with the factor of Cholesky, which is half the work of a general
+elimination because the small problem is always symmetric.
+
+THE PRICE IS PRECISION, AND IT MUST BE STATED. Turning the model round and
+multiplying it by itself SQUARES how badly conditioned it is. A fit that
+would need seven digits by a careful method needs fourteen by this one.
+
+WHAT STOPS A BAD ANSWER FROM BEING GIVEN BACK, AND WHAT DOES NOT
+
+A factor exists long after the answer has stopped meaning anything, thus the
+factor alone is not the test. The module looks at the diagonal of the factor
+instead: two columns that say almost the same thing leave one diagonal tiny
+beside the others, and above what the width can hold the fit is refused.
+
+THAT GUARD CATCHES ONE FAULT AND NOT THE OTHER, THUS THERE IS A SECOND ONE.
+
+  IT CATCHES columns of the model that say the same thing, or nearly so.
+  That is a fault of the MODEL, and the factor shows it plainly.
+
+  IT DOES NOT CATCH the digits lost in FORMING the normal equations. Turning
+  the model round and multiplying it by itself is where the loss happens,
+  and by the time the factor is taken the loss has already happened. The
+  factor of a matrix built from spent digits looks perfectly healthy,
+  because it is: it is the healthy factor of the wrong matrix.
+
+READING THE ANSWER BACK DOES NOT FIND IT EITHER, and it is worth saying so
+because it is the first thing anyone tries. A fit that is right leaves an
+error holding nothing of any column of the model. Measured over 20000 random
+sets at 32 bits, the answers that were RIGHT leaned on a column by as much
+as 8.6 parts in ten thousand, and the answers that were WRONG by as little
+as 1.2 parts in a hundred thousand. The two ranges lie across each other.
+No rule about the error left behind can part them.
+
+WHAT DOES PART THEM is the same fit done with the places brought near zero,
+which does not lose the digits. Where the two disagree it is the plain one
+that is wrong. Thus lstsq_polyfit DOES BOTH and gives nothing back where the
+plain fit leaves more error than the other. Measured, at 32 bits: not one
+wrong answer in 20000 sets, and 1.6 fits in every 100 refused. At 64 bits
+nothing is refused, because nothing is wrong.
+
+THE PRICE IS TWICE THE WORK, and it is affordable here and nowhere else: a
+fit is worked out once when a calibration is made, and not while a device
+runs. WHERE THE COST IS NOT WANTED, CALL lstsq_polyfit_scaled, which does
+the right fit once and needs no comparison at all.
+
+Measured, on 14 readings whose x runs from 2 to 6, at 32 bits. A curve of a
+higher order can always do whatever a lower one did, thus the quality must
+never fall as the order rises:
+
+    order            1       2       3       4       5
+    plain fit     0.171   0.482   0.769  refused  refused
+    scaled fit    0.171   0.482   0.769   0.930    0.983
+
+Before this check the plain fit gave back 0.527 at order 4 and said nothing
+was wrong. Now it refuses, and the scaled fit answers 0.930 on the same data
+at the same width.
+
+WHERE X SITS MATTERS AS MUCH AS THE ORDER, AND THIS IS THE TRAP
+
+Read the two rows of that table against each other. THE SAME READINGS AND
+THE SAME WIDTH REACH MORE THAN TWICE THE ORDER when x is moved to -1 to 1.
+Nothing about the readings changed; only where their x sits.
+
+It gets worse than the table shows. Move 50 points to x from 1000 to 1001
+and EVEN A CUBIC IS REFUSED, at 64 bits, on data that fits perfectly.
+
+The reason is that 1000 to the sixth is a number near 10 to the eighteenth,
+and the small problem holds sums of such numbers beside sums of numbers near
+1. Nothing is left of the small ones.
+
+A calibration is exactly where this bites. A thermistor read in ohms runs
+from 1000 to 70000, and a plain fit through it fails whatever the order.
+
+THE ANSWER IS lstsq_polyfit_scaled, which brings x to a range about -1 to 1
+first and gives back the centre and the width it used. Use it unless the x
+of the readings already runs about -1 to 1. It costs one subtraction and one
+division for each reading and it removes the whole trouble.
+
+A HIGH ORDER IS USUALLY THE WRONG ANSWER ANYWAY. A polynomial of the ninth
+order through twelve calibration points passes through all of them and swings
+wildly between them. Where a table is what is wanted, the interp module
+reads between its points without inventing anything; where a curve is
+wanted, the third or the fourth order is nearly always enough.
+
 ## Macros
 
 ### `LSTSQ_SMALLEST_PIVOT_PART`

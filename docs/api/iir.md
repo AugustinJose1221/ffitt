@@ -11,6 +11,28 @@ Filters with an infinite impulse response. Declared in `ffitt/filter/iir.h`.
 
 [Back to the index](../API.md) | [How the filter modules work](../../ffitt/filter/README.md)
 
+## Overview
+
+A filter with an infinite impulse response, as a chain of biquad sections.
+
+Such a filter feeds its own output back into itself. Thus it gives a sharp
+edge with very few operations for each sample: a section of two poles needs
+five multiplications, where an FIR filter of the same sharpness needs
+dozens. The cost is that the filter moves the different frequencies by
+different times, and that a filter with bad coefficients can run away.
+
+One section holds two poles. The order of the whole filter is two times the
+number of sections, thus a filter of the order 4 needs two sections. The
+design functions build the coefficients of a filter of Butterworth, whose
+band that passes is as flat as it can be.
+
+Give the cutoff as a part of the sample rate, thus 0.25 means one quarter of
+the sample rate. The value must lie between 0 and 0.5.
+
+Each section keeps its state in the form of Direct Form II transposed. That
+form needs two values for each section, and it holds the error of a float
+better than the plain form does.
+
 ## Macros
 
 ### `IIR_COEFFICIENT_COUNT`

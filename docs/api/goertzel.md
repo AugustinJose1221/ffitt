@@ -11,6 +11,28 @@ Detection of one frequency. Declared in `ffitt/transform/goertzel.h`.
 
 [Back to the index](../API.md) | [How the transform modules work](../../ffitt/transform/README.md)
 
+## Overview
+
+The algorithm of Goertzel.
+
+The algorithm says how much of one frequency a signal holds. A fast Fourier
+transform gives every frequency at one time and needs memory for the whole
+block. This algorithm gives one frequency and holds three float values only.
+Thus it suits a small target that watches for a few known tones, such as the
+tones of a telephone keypad.
+
+The cost for one frequency is one multiplication and two additions for each
+sample. For a few frequencies that is much less work than a transform. When
+you need more than about log2(n) frequencies, the transform costs less.
+
+The algorithm reads a block of a fixed number of samples. Give each sample
+to goertzel_process_sample, and then read the result. The block size and the
+sample rate decide which frequencies the algorithm can see clearly: a
+frequency that holds a whole number of turns inside the block gives the
+clearest answer.
+
+Call goertzel_reset before each new block.
+
 ## Types
 
 ### `goertzel_t`

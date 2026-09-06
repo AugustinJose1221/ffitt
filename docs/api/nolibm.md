@@ -11,6 +11,60 @@ The arithmetic, without a maths library. Declared in `ffitt/core/nolibm.h`.
 
 [Back to the index](../API.md) | [How the core modules work](../../ffitt/core/README.md)
 
+## Overview
+
+THE ARITHMETIC THAT real.h NEEDS, WORKED OUT HERE INSTEAD OF BY THE SYSTEM.
+
+Every call this library makes into the mathematics of the system goes
+through one seam: the REAL_ macros of real.h. This file stands behind that
+seam when FFITT_NO_LIBM is defined, and then the library links with no
+mathematics library at all.
+
+WHO WANTS THIS. A target whose toolchain ships no libm; one whose libm is
+large enough to matter beside a flash of tens of kilobytes; one whose
+licence for it is awkward; and anyone who must be able to point at every
+line that went into the image.
+
+WHAT IT COSTS IN ACCURACY, AND THIS IS THE THING TO READ FIRST.
+
+These are not the system's functions and they do not pretend to be. Each is
+a reduction of the argument and then a series. MEASURED against the system's
+own functions over the ranges named, 200000 points each, as the worst
+RELATIVE error seen:
+
+  floor  ceil  fmod            exact
+  sqrt   hypot                 2.2e-16
+  log    log10  tan            2.3e-15
+  acosh                        3.5e-14
+  asinh                        1.7e-13
+  atan   atan2  asin           3.8e-12
+  exp    pow    cosh  sinh     1.2e-11
+  cos                          4.2e-10
+  sin                          4.2e-09
+  erf                          1.5e-07
+
+AT 32 BITS EVERY ONE OF THOSE IS BELOW WHAT A FLOAT HOLDS, which is about 7
+digits. The profile costs nothing that can be seen at that width.
+
+AT 64 BITS MOST OF THEM ARE STILL FAR BELOW WHAT A DOUBLE HOLDS, and two are
+not: sin and cos lose a little to the reduction of a large angle, and erf is
+held at what the approximation of Abramowitz and Stegun can do. A caller at
+64 bits who leans on the last digits of those two should keep the system's
+library; everything else in the table is honest to eleven digits or better.
+
+WHY sin IS THE WORST OF THE TRIGONOMETRY. The angle is brought within a
+quarter turn by taking away a multiple of half of pi, and that multiple is
+worked out at the width in hand. For an angle of a hundred radians the
+taking away has already lost a few digits before the series begins. An angle
+that large is unusual in signal processing, where a phase is kept wrapped,
+and the measurement above runs to a hundred on purpose so that the number
+shown is the bad case and not the easy one.
+
+WHAT IS NOT HERE. Nothing rounds the way the system's functions round, no
+function raises a flag, and nothing here is written for speed. The library's
+own tests are run against these as well as against the system's, thus the
+table above is a tested number and not a hope.
+
 ## Functions
 
 ### `nolibm_sqrt`

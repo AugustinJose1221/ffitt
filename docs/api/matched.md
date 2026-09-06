@@ -11,6 +11,35 @@ Looking for a known shape. Declared in `ffitt/detect/matched.h`.
 
 [Back to the index](../API.md) | [How the detect modules work](../../ffitt/detect/README.md)
 
+## Overview
+
+Look for a known shape in a noisy reading.
+
+A radar sends a chirp and waits for it to come back. A depth sounder sends a
+ping. A tag reader sends a code. In each of them the shape that will come
+back is KNOWN, and the only questions are whether it came back and when. The
+answer is not a filter of frequency: the shape covers the same band as the
+noise, thus no band can be kept or thrown away.
+
+What parts them is SHAPE. Slide the known shape along the reading and add up
+the products at each offset. Where the reading holds the shape, every product
+is positive at once and the sum is large. Where it holds only noise, the
+products cancel. Of everything that can be done to a reading with a known
+shape in it, this gives the largest answer for the noise it lets through, and
+nothing else does better.
+
+THE SCORE IS IN UNITS OF THE NOISE. The sum is divided by the square root of
+the energy of the shape, thus a reading of pure noise of standard deviation
+s gives a score whose standard deviation is also s. Divide the score by the
+noise of the reading and the answer says HOW MANY STANDARD DEVIATIONS this
+offset stands out by, whatever the shape was and however loud it was. That is
+the number a threshold can be set on, and matched_threshold_for gives it.
+
+THE ONE WAY THIS FAILS QUIETLY: the shape must be the shape that will arrive,
+not the shape that was sent. A path that stretches, delays or colours it
+leaves a matched filter matched to something else, and the score falls away
+with no sign of why.
+
 ## Macros
 
 ### `MATCHED_LARGEST_LENGTH`

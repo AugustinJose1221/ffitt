@@ -11,6 +11,43 @@ A buffer of the last samples. Declared in `ffitt/core/ringbuf.h`.
 
 [Back to the index](../API.md) | [How the core modules work](../../ffitt/core/README.md)
 
+## Overview
+
+A buffer that holds the last samples and forgets the rest.
+
+A program that reads a signal as it arrives needs the samples that came
+before the one in hand. A filter needs them, a detector that looks back for a
+peak needs them, and a transform needs a whole block of them. But the signal
+never ends, thus the program cannot keep it all.
+
+This buffer holds a fixed number of the newest samples. When it is full, a
+new sample takes the place of the oldest one. Nothing is copied and nothing
+is moved: only one position changes. Thus putting a sample in costs the same
+whether the buffer holds ten samples or ten thousand.
+
+WHAT IT IS FOR
+
+As a DELAY LINE. Put the sample that arrived, then take the sample from a
+number of steps ago:
+
+    ringbuf_put(&line, sample);
+    float delayed = ringbuf_get(&line, 48u);
+
+As a WINDOW for a block. A transform, a filter of Savitzky and Golay, and a
+median all want a flat list of samples in order. ringbuf_copy writes one,
+oldest first.
+
+As HISTORY to look back over. A detector that fires on one sample often has
+to find where the event really stood, which is a number of samples behind.
+
+THE AGE OF A SAMPLE
+
+ringbuf_get takes an age and not a position. An age of 0 is the newest
+sample, 1 the one before it, and so on. That way the meaning of a number
+does not change as the buffer fills, which a position would.
+
+The size is any number above zero. It does not have to be a power of two.
+
 ## Types
 
 ### `ringbuf_t`

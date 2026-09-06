@@ -11,6 +11,57 @@ Which way something points. Declared in `ffitt/linalg/quaternion.h`.
 
 [Back to the index](../API.md) | [How the linalg modules work](../../ffitt/linalg/README.md)
 
+## Overview
+
+Which way something is pointing, held as four numbers.
+
+WHY NOT THREE ANGLES
+
+Three angles are the obvious way and they have a fault that cannot be
+designed around. At one attitude two of the three axes line up, and from
+that moment the three angles no longer describe three separate turns: a turn
+about one axis and a turn about another do the same thing, and the third
+number is lost. This is gimbal lock. It is not a rounding trouble that a
+wider number would fix; the description itself has a hole in it.
+
+The hole is not in some odd corner. For the usual roll, pitch and yaw it
+stands at a pitch of straight up or straight down, which is where an
+aircraft, a robot arm and a camera all go on purpose.
+
+Four numbers with one rule holding them together have no such hole. Every
+attitude has a description, and every description is an attitude.
+
+WHY NOT A ROTATION MATRIX
+
+A matrix has no hole either, and it is the right thing to hold when a
+rotation is about to be applied to many vectors at once. But it holds nine
+numbers where four will do, and those nine must keep six rules between them.
+Arithmetic wears those rules away: after a few thousand small turns the rows
+are no longer quite at right angles and no longer quite of unit length, and
+what was a rotation has quietly become a rotation with a stretch in it.
+
+Four numbers keep ONE rule, that the four together are of unit length, and
+quaternion_normalise puts it back in one line.
+
+WHAT THE FOUR NUMBERS MEAN
+
+A turn of an angle about an axis becomes:
+
+    w = cos(angle/2)
+    x, y, z = the axis, times sin(angle/2)
+
+The half is not a mistake and it has a visible result: turning by a whole
+circle gives w = -1 and not w = 1. Thus q and -q are the SAME attitude,
+reached by turning one way or the other way round. Any code that compares
+two attitudes must allow for that, and quaternion_is_same_attitude does.
+
+HOW TO MULTIPLY, AND IN WHICH ORDER
+
+Multiplying two of them gives the turn that is one followed by the other,
+and THE ORDER MATTERS: a turn about x then about y is not a turn about y then
+about x. quaternion_multiply(a, b) gives a applied AFTER b, which is the
+order that matches multiplying rotation matrices.
+
 ## Macros
 
 ### `QUATERNION_TOLERANCE`

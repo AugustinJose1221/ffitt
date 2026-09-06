@@ -11,6 +11,48 @@ What the short pieces mean. Declared in `ffitt/transform/spectrogram.h`.
 
 [Back to the index](../API.md) | [How the transform modules work](../../ffitt/transform/README.md)
 
+## Overview
+
+What the frames of a short-time transform mean, in a unit that can be read.
+
+stft_forward gives complex numbers, and a complex number is not something to
+look at. This module turns those frames into one real number for each bin of
+each frame, in whichever of four units the question asks for.
+
+THE SCALING IS THE PART THAT IS USUALLY WRONG, and the wrong answer looks
+perfectly reasonable. A transform of a longer block gives larger numbers for
+the same signal; a window makes them smaller; and half of the power sits in
+the mirrored half that is not there. Left uncorrected, the same tone reads
+differently for every choice of block and window, and the number means
+nothing outside the one program that made it.
+
+This module corrects all three, thus:
+
+  A WAVE OF AMPLITUDE A READS AS A, in SPECTROGRAM_AMPLITUDE, whatever the
+  block, the window or the hop.
+
+The four units:
+
+  SPECTROGRAM_AMPLITUDE  how large the wave at that bin is, in the unit of
+                         the signal. A wave of amplitude 2 reads 2.
+  SPECTROGRAM_POWER      the mean power of that wave, which is A*A/2. This
+                         is what adds up across bins.
+  SPECTROGRAM_DENSITY    power for each hertz, which is what psd gives, and
+                         the only one of the four that does not change when
+                         the block gets longer.
+  SPECTROGRAM_DECIBEL    the power in decibels against a reference of 1.
+
+WHICH ONE TO ASK FOR. To read the size of a tone off a picture, amplitude.
+To add the power of a band together, density. To draw the picture at all,
+decibels, because a spectrogram of anything real covers so many factors of
+ten that a linear scale shows one bright line and black everywhere else.
+
+THE FLOOR UNDER THE DECIBELS IS NOT A DETAIL. The logarithm of nothing has
+no value, and a bin that holds nothing is a thing that happens: a silent
+stretch of recording, or a bin above the cutoff of a filter. Without a floor
+the answer holds values that no arithmetic and no picture can use.
+SPECTROGRAM_FLOOR_DECIBEL is where this module stops.
+
 ## Macros
 
 ### `SPECTROGRAM_FLOOR_DECIBEL`
