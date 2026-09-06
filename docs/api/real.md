@@ -9,7 +9,7 @@ python3 scripts/api_doc.py
 
 The one type that holds every number. Declared in `ffitt/core/real.h`.
 
-[Back to the index](../API.md) | [How the core modules work](../../ffitt/core/README.md)
+[Back to the index](../API.md) | [How the core modules work](../../ffitt/core/README.md) | [How it works](../diagrams/core/real.html) ([preview](https://htmlpreview.github.io/?https://github.com/AugustinJose1221/ffitt/blob/development/docs/diagrams/core/real.html))
 
 ## Overview
 
@@ -95,6 +95,28 @@ A build in 64 bits must have a double that is really wider than a float.
 On some small targets the two are the same type, and there the 64 bit build
 would cost the memory and give none of the accuracy. Better to stop than to
 promise something the target cannot give.
+
+## Method
+
+There is no arithmetic in this header. What it holds is one decision, made
+once for the whole build:
+
+    real_t          is float, or double when FFITT_REAL_64 is defined
+    REAL_C(1.5)     writes a constant at that width
+    REAL_SQRT(x)    calls the square root of that width
+    REAL_EPSILON    the smallest step the width can tell near one
+
+Nothing anywhere else in the library spells float or double. Every sample,
+every coefficient and every result is a real_t, thus the width is chosen one
+time and never module by module.
+
+That is what makes the two widths testable. The same sources are built twice
+and the same tests are run twice, and a fault that lives at one width and not
+the other is found rather than shipped.
+
+It also makes the seam. Every call into the arithmetic of the system passes
+through a REAL_ macro, thus one definition of those macros replaces the whole
+of it, which is what nolibm does.
 
 ## Macros
 

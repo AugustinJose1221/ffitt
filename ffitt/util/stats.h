@@ -67,6 +67,31 @@
 // deviation is 0.6745 of the deviation.
 #define STATS_MAD_TO_DEVIATION      REAL_C(1.4826)
 
+// Method:
+// The plain measures each read the list once:
+//
+//     mean     = sum over i of x[i] / n
+//     variance = sum over i of (x[i] - mean)^2 / n
+//     rms      = sqrt(sum over i of x[i]^2 / n)
+//
+// Every one of those follows every sample, and that is their weakness. One
+// sample that is wrong moves all of them, and moves them by more the further
+// wrong it is.
+//
+// The robust measures do not:
+//
+//     median = the middle value once the list is in order
+//     mad    = the median of |x[i] - median|
+//
+// Nearly half the list may be wrong before a median moves at all. The cost is
+// the ordering, which is why they are not free.
+//
+// STATS_MAD_TO_DEVIATION is 1.4826. Multiplying the median absolute deviation
+// by it gives a number that means what a standard deviation means for samples
+// of the usual shape, thus a threshold written in deviations can be set from
+// data that already holds faults.
+
+
 // Give the sum of the samples.
 real_t stats_sum(const real_t* data, uint32_t size);
 

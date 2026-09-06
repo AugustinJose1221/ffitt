@@ -9,7 +9,7 @@ python3 scripts/api_doc.py
 
 A buffer of the last samples. Declared in `ffitt/core/ringbuf.h`.
 
-[Back to the index](../API.md) | [How the core modules work](../../ffitt/core/README.md)
+[Back to the index](../API.md) | [How the core modules work](../../ffitt/core/README.md) | [How it works](../diagrams/core/ringbuf.html) ([preview](https://htmlpreview.github.io/?https://github.com/AugustinJose1221/ffitt/blob/development/docs/diagrams/core/ringbuf.html))
 
 ## Overview
 
@@ -47,6 +47,27 @@ sample, 1 the one before it, and so on. That way the meaning of a number
 does not change as the buffer fills, which a position would.
 
 The size is any number above zero. It does not have to be a power of two.
+
+## Method
+
+The buffer holds a fixed number of the newest samples in one block, with an
+index that walks round it:
+
+    put:  data[head] = sample;  head = (head + 1) mod size
+    get:  data[(head - 1 - k) mod size]
+
+Nothing is moved when a sample arrives. The oldest is overwritten where it
+stands, and the index moves on by one. Thus a put costs the same whether the
+buffer holds four samples or four thousand.
+
+A buffer written as a list that shifts would cost the size of the buffer at
+every sample. That is the whole reason this exists as a module: a signal
+never ends, thus the program cannot keep it all, and the keeping must not
+cost more as the window grows.
+
+Everything that looks back is built on this: a filter looks back for its
+last samples, a detector looks back for a peak, and a transform needs a whole
+block of them.
 
 ## Types
 

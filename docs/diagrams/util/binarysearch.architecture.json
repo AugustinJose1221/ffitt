@@ -1,0 +1,195 @@
+{
+  "schema_version": 1,
+  "diagram_type": "architecture",
+  "meta": {
+    "title": "Inside binarysearch",
+    "animation": "trace",
+    "quality_profile": "showcase",
+    "views": [
+      {
+        "id": "halving",
+        "label": "Halve, and halve again",
+        "focus": [
+          "half"
+        ],
+        "note": "The list is halved until one place is left, thus the cost is log2(n) reads and not n."
+      },
+      {
+        "id": "the-cost",
+        "label": "Twenty steps for a million",
+        "focus": [
+          "cost"
+        ],
+        "note": "A list of a million values is found in about twenty reads."
+      },
+      {
+        "id": "the-promise",
+        "label": "The list must rise",
+        "focus": [
+          "rising"
+        ],
+        "note": "Nothing here checks that, because checking would cost the n reads the search exists to avoid."
+      },
+      {
+        "id": "safe-answer",
+        "label": "Always a usable index",
+        "focus": [
+          "safe"
+        ],
+        "note": "Where every value is less than the one asked for, the answer is the last index and not one past the end."
+      }
+    ]
+  },
+  "layout": {
+    "mode": "grid",
+    "origin": [
+      40,
+      120
+    ],
+    "cols": 6,
+    "gapX": 28,
+    "gapY": 56,
+    "cellW": 124,
+    "cellH": 62
+  },
+  "components": [
+    {
+      "id": "list",
+      "type": "external",
+      "label": "A Rising List",
+      "sublabel": "n values",
+      "row": 1,
+      "col": 0
+    },
+    {
+      "id": "rising",
+      "type": "security",
+      "label": "Never Checked",
+      "sublabel": "that would cost n",
+      "row": 0,
+      "col": 1
+    },
+    {
+      "id": "half",
+      "type": "backend",
+      "label": "Take the Middle",
+      "sublabel": "and drop a half",
+      "row": 1,
+      "col": 1
+    },
+    {
+      "id": "cost",
+      "type": "cloud",
+      "label": "log2(n) Reads",
+      "sublabel": "twenty for a million",
+      "row": 0,
+      "col": 3
+    },
+    {
+      "id": "one",
+      "type": "backend",
+      "label": "One Place Left",
+      "sublabel": "low meets high",
+      "row": 1,
+      "col": 2
+    },
+    {
+      "id": "safe",
+      "type": "cloud",
+      "label": "A Usable Index",
+      "sublabel": "never past the end",
+      "row": 1,
+      "col": 3
+    }
+  ],
+  "boundaries": [
+    {
+      "kind": "region",
+      "label": "the list is halved until one place is left",
+      "wraps": [
+        "half",
+        "one"
+      ]
+    }
+  ],
+  "connections": [
+    {
+      "id": "given",
+      "from": "list",
+      "to": "half",
+      "label": "and a value",
+      "variant": "emphasis",
+      "labelAt": [
+        176,
+        312
+      ]
+    },
+    {
+      "id": "assumed",
+      "from": "rising",
+      "to": "half",
+      "label": "taken on trust",
+      "labelAt": [
+        252.0,
+        194.0
+      ]
+    },
+    {
+      "id": "again",
+      "from": "half",
+      "to": "one",
+      "label": "until they meet",
+      "variant": "emphasis",
+      "labelAt": [
+        328.0,
+        312.0
+      ]
+    },
+    {
+      "id": "counted",
+      "from": "one",
+      "to": "cost",
+      "label": "how many reads"
+    },
+    {
+      "id": "answer",
+      "from": "one",
+      "to": "safe",
+      "label": "the index",
+      "variant": "emphasis",
+      "labelAt": [
+        480.0,
+        312.0
+      ]
+    }
+  ],
+  "cards": [
+    {
+      "dot": "cyan",
+      "title": "What it works out",
+      "items": [
+        "The index of the first value that is not less than the one asked for",
+        "middle = (low + high) / 2, then drop the half that cannot hold it",
+        "Thus the cost is log2(n) reads and not n"
+      ]
+    },
+    {
+      "dot": "emerald",
+      "title": "What it takes on trust",
+      "items": [
+        "The list must rise, and nothing here checks that",
+        "Checking would cost the n reads the search exists to avoid",
+        "A list that does not rise gives an answer, and it means nothing"
+      ]
+    },
+    {
+      "dot": "amber",
+      "title": "Why the answer is always usable",
+      "items": [
+        "Where every value is less than the one asked for, the answer is the last index",
+        "It is not one past the end",
+        "Thus a caller that reads the list at the answer never reads past it"
+      ]
+    }
+  ]
+}

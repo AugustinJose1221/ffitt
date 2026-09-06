@@ -1,0 +1,215 @@
+{
+  "schema_version": 1,
+  "diagram_type": "architecture",
+  "meta": {
+    "title": "Inside nolibm",
+    "animation": "trace",
+    "quality_profile": "showcase",
+    "views": [
+      {
+        "id": "the-seam",
+        "label": "Behind one seam",
+        "focus": [
+          "seam"
+        ],
+        "note": "Every call into the arithmetic of the system goes through the REAL_ macros. This stands behind them when no libm is wanted."
+      },
+      {
+        "id": "range",
+        "label": "Bring it in first",
+        "focus": [
+          "reduce"
+        ],
+        "note": "A series is accurate near where it is written and nowhere else, thus every function here brings its argument into that range first."
+      },
+      {
+        "id": "the-series",
+        "label": "Then a short series",
+        "focus": [
+          "series"
+        ],
+        "note": "Inside that small range a few terms are enough."
+      },
+      {
+        "id": "the-cost",
+        "label": "What it is not",
+        "focus": [
+          "worse"
+        ],
+        "note": "The accuracy is measured and written down, and it is not what the system offers. Where the last digit matters, use the system."
+      }
+    ]
+  },
+  "layout": {
+    "mode": "grid",
+    "origin": [
+      40,
+      120
+    ],
+    "cols": 6,
+    "gapX": 28,
+    "gapY": 56,
+    "cellW": 124,
+    "cellH": 62
+  },
+  "components": [
+    {
+      "id": "call",
+      "type": "external",
+      "label": "REAL_SQRT, REAL_EXP",
+      "sublabel": "and the rest",
+      "row": 1,
+      "col": 0
+    },
+    {
+      "id": "seam",
+      "type": "backend",
+      "label": "The Seam",
+      "sublabel": "one set of macros",
+      "row": 1,
+      "col": 1
+    },
+    {
+      "id": "reduce",
+      "type": "backend",
+      "label": "Bring It In",
+      "sublabel": "fold, or take out ln(2)",
+      "row": 1,
+      "col": 2
+    },
+    {
+      "id": "series",
+      "type": "backend",
+      "label": "A Short Series",
+      "sublabel": "accurate there",
+      "row": 1,
+      "col": 3
+    },
+    {
+      "id": "restore",
+      "type": "backend",
+      "label": "Put It Back",
+      "sublabel": "scale the exponent",
+      "row": 1,
+      "col": 4
+    },
+    {
+      "id": "worse",
+      "type": "security",
+      "label": "Not the System",
+      "sublabel": "the table says how far",
+      "row": 0,
+      "col": 4
+    },
+    {
+      "id": "out",
+      "type": "cloud",
+      "label": "No libm at All",
+      "sublabel": "nothing to link",
+      "row": 1,
+      "col": 5
+    }
+  ],
+  "boundaries": [
+    {
+      "kind": "region",
+      "label": "a range reduction with a short series inside it",
+      "wraps": [
+        "reduce",
+        "series"
+      ]
+    }
+  ],
+  "connections": [
+    {
+      "id": "goes",
+      "from": "call",
+      "to": "seam",
+      "label": "every call",
+      "variant": "emphasis",
+      "labelAt": [
+        176,
+        312
+      ]
+    },
+    {
+      "id": "first",
+      "from": "seam",
+      "to": "reduce",
+      "label": "into a small range",
+      "variant": "emphasis",
+      "labelAt": [
+        328.0,
+        312.0
+      ]
+    },
+    {
+      "id": "then",
+      "from": "reduce",
+      "to": "series",
+      "label": "a few terms",
+      "variant": "emphasis",
+      "labelAt": [
+        480.0,
+        312.0
+      ]
+    },
+    {
+      "id": "after",
+      "from": "series",
+      "to": "restore",
+      "label": "what was taken",
+      "variant": "emphasis",
+      "labelAt": [
+        632.0,
+        312.0
+      ]
+    },
+    {
+      "id": "done",
+      "from": "restore",
+      "to": "out",
+      "label": "the answer",
+      "variant": "emphasis",
+      "labelAt": [
+        784.0,
+        312.0
+      ]
+    },
+    {
+      "id": "differs",
+      "from": "worse",
+      "to": "out",
+      "label": "measured, and less"
+    }
+  ],
+  "cards": [
+    {
+      "dot": "cyan",
+      "title": "How each one is built",
+      "items": [
+        "sqrt: Newton's step, x = (x + a/x)/2, from an estimate off the exponent",
+        "exp: take out the whole multiples of ln(2), then a series on the remainder",
+        "sin: fold the angle into a quarter turn, then a short series"
+      ]
+    },
+    {
+      "dot": "emerald",
+      "title": "Why it is always the same shape",
+      "items": [
+        "A series is accurate near where it is written and nowhere else",
+        "Thus every function here brings its argument into that range first",
+        "Then it puts back whatever the bringing in took away"
+      ]
+    },
+    {
+      "dot": "rose",
+      "title": "What you are trading",
+      "items": [
+        "The accuracy is measured, and the table in the header holds it",
+        "It is not the same as the system offers",
+        "Where the last digit matters, use the system and link its library"
+      ]
+    }
+  ]
+}

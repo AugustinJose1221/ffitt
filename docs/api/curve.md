@@ -9,7 +9,7 @@ python3 scripts/api_doc.py
 
 The shapes a peak can have. Declared in `ffitt/util/curve.h`.
 
-[Back to the index](../API.md) | [How the util modules work](../../ffitt/util/README.md)
+[Back to the index](../API.md) | [How the util modules work](../../ffitt/util/README.md) | [How it works](../diagrams/util/curve.html) ([preview](https://htmlpreview.github.io/?https://github.com/AugustinJose1221/ffitt/blob/development/docs/diagrams/util/curve.html))
 
 ## Overview
 
@@ -51,6 +51,22 @@ normal spread has at one standard deviation, which is about 0.6065. Written
 that way the widths of two different shapes may be set beside each other and
 mean the same thing, which they do not if one is given as a standard
 deviation and another as a half width at half the top.
+
+## Method
+
+Each shape is one line, read at whatever place is asked for:
+
+    gaussian(x)   = height * exp(-(x - centre)^2 / (2*width^2))
+    lorentzian(x) = height / (1 + ((x - centre)/width)^2)
+
+Nothing here holds state and nothing here has a sample rate. A wave goes on
+for ever and has a frequency; these HAPPEN ONCE, and are read at a place.
+
+The difference between the two matters. A gaussian falls away as the
+exponential of a square, thus it is nothing a few widths out. A lorentzian
+falls away as one over a square, thus it still has something left far from
+its centre. Fitting a gaussian to a peak that really has long tails
+underestimates its area, and that is the usual fault.
 
 ## Functions
 

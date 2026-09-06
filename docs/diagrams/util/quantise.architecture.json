@@ -1,0 +1,221 @@
+{
+  "schema_version": 1,
+  "diagram_type": "architecture",
+  "meta": {
+    "title": "Inside quantise",
+    "animation": "trace",
+    "quality_profile": "showcase",
+    "views": [
+      {
+        "id": "the-step",
+        "label": "One line, and one loss",
+        "focus": [
+          "round"
+        ],
+        "note": "What falls between two steps has to go to one of them, and the difference is thrown away."
+      },
+      {
+        "id": "same-size",
+        "label": "The error does not shrink",
+        "focus": [
+          "size"
+        ],
+        "note": "The error is the same size whatever is done. The choices only decide what it sounds like."
+      },
+      {
+        "id": "dither",
+        "label": "Dither makes it noise",
+        "focus": [
+          "dith"
+        ],
+        "note": "Noise added before the rounding stops the error following the signal, thus averaging can remove it."
+      },
+      {
+        "id": "shaping",
+        "label": "Shaping only moves it",
+        "focus": [
+          "shape",
+          "full"
+        ],
+        "note": "Noise shaping does not remove noise. A signal that already fills the band has nowhere to move it to."
+      }
+    ]
+  },
+  "layout": {
+    "mode": "grid",
+    "origin": [
+      40,
+      120
+    ],
+    "cols": 6,
+    "gapX": 28,
+    "gapY": 56,
+    "cellW": 124,
+    "cellH": 62
+  },
+  "components": [
+    {
+      "id": "signal",
+      "type": "external",
+      "label": "Your Signal",
+      "sublabel": "between the steps",
+      "row": 1,
+      "col": 0
+    },
+    {
+      "id": "dith",
+      "type": "backend",
+      "label": "Add Dither",
+      "sublabel": "before rounding",
+      "row": 0,
+      "col": 1
+    },
+    {
+      "id": "round",
+      "type": "backend",
+      "label": "Round to a Step",
+      "sublabel": "step * round(x/step)",
+      "row": 1,
+      "col": 1
+    },
+    {
+      "id": "size",
+      "type": "security",
+      "label": "Same Size Error",
+      "sublabel": "nothing shrinks it",
+      "row": 0,
+      "col": 2
+    },
+    {
+      "id": "shape",
+      "type": "backend",
+      "label": "Feed It Forward",
+      "sublabel": "moves the noise",
+      "row": 2,
+      "col": 1
+    },
+    {
+      "id": "plain",
+      "type": "cloud",
+      "label": "Distortion",
+      "sublabel": "follows the signal",
+      "row": 1,
+      "col": 2
+    },
+    {
+      "id": "noise",
+      "type": "cloud",
+      "label": "Noise",
+      "sublabel": "averaging removes it",
+      "row": 1,
+      "col": 3
+    },
+    {
+      "id": "full",
+      "type": "security",
+      "label": "A Full Band",
+      "sublabel": "nowhere to move it",
+      "row": 2,
+      "col": 3
+    }
+  ],
+  "boundaries": [
+    {
+      "kind": "region",
+      "label": "the choices decide what the error sounds like",
+      "wraps": [
+        "round",
+        "plain"
+      ]
+    }
+  ],
+  "connections": [
+    {
+      "id": "in",
+      "from": "signal",
+      "to": "round",
+      "label": "x[n]",
+      "variant": "emphasis",
+      "labelAt": [
+        176,
+        312
+      ]
+    },
+    {
+      "id": "first",
+      "from": "dith",
+      "to": "round",
+      "label": "noise added",
+      "labelAt": [
+        252.0,
+        194.0
+      ]
+    },
+    {
+      "id": "fed",
+      "from": "shape",
+      "to": "round",
+      "label": "the last error"
+    },
+    {
+      "id": "always",
+      "from": "round",
+      "to": "size",
+      "label": "whatever is done"
+    },
+    {
+      "id": "without",
+      "from": "round",
+      "to": "plain",
+      "label": "if nothing is added",
+      "variant": "emphasis",
+      "labelAt": [
+        328.0,
+        312.0
+      ]
+    },
+    {
+      "id": "with",
+      "from": "plain",
+      "to": "noise",
+      "label": "dither makes it noise",
+      "variant": "emphasis",
+      "labelDy": -24
+    },
+    {
+      "id": "limit",
+      "from": "full",
+      "to": "noise",
+      "label": "if the band is full"
+    }
+  ],
+  "cards": [
+    {
+      "dot": "cyan",
+      "title": "What it works out",
+      "items": [
+        "y[n] = step * round(x[n] / step)",
+        "A converter of 12 bits holds 4096 steps and nothing between them",
+        "The error that makes is the same size whatever else is done"
+      ]
+    },
+    {
+      "dot": "emerald",
+      "title": "The three bargains",
+      "items": [
+        "Plain: -19.8 dB, and the error follows the signal, thus it is distortion",
+        "Dither: -30.9 dB in band, and the error becomes noise that averaging removes",
+        "Dither and shape: -25.4 dB, moved out of the band that matters"
+      ]
+    },
+    {
+      "dot": "rose",
+      "title": "What shaping cannot do",
+      "items": [
+        "Noise shaping does not remove noise, it MOVES it",
+        "A signal that already fills the band has nowhere to move it to",
+        "There, shaping makes matters worse rather than better"
+      ]
+    }
+  ]
+}

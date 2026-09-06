@@ -1,0 +1,193 @@
+{
+  "schema_version": 1,
+  "diagram_type": "architecture",
+  "meta": {
+    "title": "Inside real",
+    "animation": "trace",
+    "quality_profile": "showcase",
+    "views": [
+      {
+        "id": "one-decision",
+        "label": "One decision, one time",
+        "focus": [
+          "decide"
+        ],
+        "note": "The width of a number is chosen once for the whole build, and never module by module."
+      },
+      {
+        "id": "no-spelling",
+        "label": "Nothing spells float",
+        "focus": [
+          "everywhere"
+        ],
+        "note": "Every sample, every coefficient and every result is a real_t. Nothing anywhere else names a width."
+      },
+      {
+        "id": "both-widths",
+        "label": "Built and tested twice",
+        "focus": [
+          "both"
+        ],
+        "note": "The same sources are built at both widths and the same tests are run twice, thus a fault at one width is found."
+      },
+      {
+        "id": "the-seam",
+        "label": "The seam nolibm stands behind",
+        "focus": [
+          "macros",
+          "seam"
+        ],
+        "note": "Every call into the arithmetic of the system passes through a REAL_ macro, thus one set of definitions replaces all of it."
+      }
+    ]
+  },
+  "layout": {
+    "mode": "grid",
+    "origin": [
+      40,
+      120
+    ],
+    "cols": 6,
+    "gapX": 28,
+    "gapY": 56,
+    "cellW": 124,
+    "cellH": 62
+  },
+  "components": [
+    {
+      "id": "build",
+      "type": "external",
+      "label": "One Build Flag",
+      "sublabel": "FFITT_REAL_64",
+      "row": 1,
+      "col": 0
+    },
+    {
+      "id": "decide",
+      "type": "backend",
+      "label": "real_t",
+      "sublabel": "float, or double",
+      "row": 1,
+      "col": 1
+    },
+    {
+      "id": "macros",
+      "type": "database",
+      "label": "REAL_ Macros",
+      "sublabel": "constants and calls",
+      "row": 1,
+      "col": 2
+    },
+    {
+      "id": "everywhere",
+      "type": "cloud",
+      "label": "Every Number",
+      "sublabel": "sample to result",
+      "row": 0,
+      "col": 3
+    },
+    {
+      "id": "seam",
+      "type": "backend",
+      "label": "nolibm",
+      "sublabel": "stands behind it",
+      "row": 2,
+      "col": 3
+    },
+    {
+      "id": "both",
+      "type": "cloud",
+      "label": "Two Widths Tested",
+      "sublabel": "the same sources",
+      "row": 1,
+      "col": 4
+    }
+  ],
+  "boundaries": [
+    {
+      "kind": "region",
+      "label": "no module anywhere spells float or double",
+      "wraps": [
+        "decide",
+        "macros"
+      ]
+    }
+  ],
+  "connections": [
+    {
+      "id": "sets",
+      "from": "build",
+      "to": "decide",
+      "label": "chooses once",
+      "variant": "emphasis",
+      "labelAt": [
+        176,
+        312
+      ]
+    },
+    {
+      "id": "through",
+      "from": "decide",
+      "to": "macros",
+      "label": "every call",
+      "variant": "emphasis",
+      "labelAt": [
+        328.0,
+        312.0
+      ]
+    },
+    {
+      "id": "used",
+      "from": "macros",
+      "to": "everywhere",
+      "label": "held as real_t",
+      "variant": "emphasis"
+    },
+    {
+      "id": "replaced",
+      "from": "macros",
+      "to": "seam",
+      "label": "when no libm"
+    },
+    {
+      "id": "tested",
+      "from": "everywhere",
+      "to": "both",
+      "label": "twice over",
+      "variant": "emphasis",
+      "labelAt": [
+        632.0,
+        194.0
+      ]
+    }
+  ],
+  "cards": [
+    {
+      "dot": "cyan",
+      "title": "What it holds",
+      "items": [
+        "real_t is float, or double when FFITT_REAL_64 is defined",
+        "REAL_C(1.5) writes a constant at that width",
+        "REAL_EPSILON is the smallest step the width can tell near one"
+      ]
+    },
+    {
+      "dot": "emerald",
+      "title": "Why one place",
+      "items": [
+        "Nothing anywhere else in the library spells float or double",
+        "Thus the width is chosen one time and never module by module",
+        "The same sources build at both widths, and the tests run twice"
+      ]
+    },
+    {
+      "dot": "amber",
+      "title": "The seam it makes",
+      "items": [
+        "Every call into the arithmetic of the system passes through a REAL_ macro",
+        "One set of definitions therefore replaces the whole of it",
+        "That is what nolibm does, and why it needs no change anywhere else"
+      ]
+    }
+  ]
+}

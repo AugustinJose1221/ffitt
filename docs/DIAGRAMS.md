@@ -13,7 +13,7 @@ a few chapters that walk through it a step at a time.
 **Preview** opens the page in a browser. **File** is the page itself, which a
 reader with a clone can open with no service at all.
 
-40 of the 64 modules have a diagram.
+52 of the 64 modules have a diagram.
 
 ## Transforms
 
@@ -106,20 +106,20 @@ reader with a clone can open with no service at all.
 
 | Module | Diagram | File |
 |---|---|---|
-| [`generate`](api/generate.md) | not yet drawn | |
-| [`curve`](api/curve.md) | not yet drawn | |
-| [`quantise`](api/quantise.md) | not yet drawn | |
-| [`stats`](api/stats.md) | not yet drawn | |
-| [`binarysearch`](api/binarysearch.md) | not yet drawn | |
-| [`peakdetect`](api/peakdetect.md) | not yet drawn | |
-| [`valleydetect`](api/valleydetect.md) | not yet drawn | |
+| [`generate`](api/generate.md) | [preview](https://htmlpreview.github.io/?https://github.com/AugustinJose1221/ffitt/blob/development/docs/diagrams/util/generate.html) | [generate.html](diagrams/util/generate.html) |
+| [`curve`](api/curve.md) | [preview](https://htmlpreview.github.io/?https://github.com/AugustinJose1221/ffitt/blob/development/docs/diagrams/util/curve.html) | [curve.html](diagrams/util/curve.html) |
+| [`quantise`](api/quantise.md) | [preview](https://htmlpreview.github.io/?https://github.com/AugustinJose1221/ffitt/blob/development/docs/diagrams/util/quantise.html) | [quantise.html](diagrams/util/quantise.html) |
+| [`stats`](api/stats.md) | [preview](https://htmlpreview.github.io/?https://github.com/AugustinJose1221/ffitt/blob/development/docs/diagrams/util/stats.html) | [stats.html](diagrams/util/stats.html) |
+| [`binarysearch`](api/binarysearch.md) | [preview](https://htmlpreview.github.io/?https://github.com/AugustinJose1221/ffitt/blob/development/docs/diagrams/util/binarysearch.html) | [binarysearch.html](diagrams/util/binarysearch.html) |
+| [`peakdetect`](api/peakdetect.md) | [preview](https://htmlpreview.github.io/?https://github.com/AugustinJose1221/ffitt/blob/development/docs/diagrams/util/peakdetect.html) | [peakdetect.html](diagrams/util/peakdetect.html) |
+| [`valleydetect`](api/valleydetect.md) | [preview](https://htmlpreview.github.io/?https://github.com/AugustinJose1221/ffitt/blob/development/docs/diagrams/util/valleydetect.html) | [valleydetect.html](diagrams/util/valleydetect.html) |
 
 ## Core
 
 | Module | Diagram | File |
 |---|---|---|
-| [`real`](api/real.md) | not yet drawn | |
-| [`nolibm`](api/nolibm.md) | not yet drawn | |
-| [`ringbuf`](api/ringbuf.md) | not yet drawn | |
-| [`point2d`](api/point2d.md) | not yet drawn | |
-| [`callback`](api/callback.md) | not yet drawn | |
+| [`real`](api/real.md) | [preview](https://htmlpreview.github.io/?https://github.com/AugustinJose1221/ffitt/blob/development/docs/diagrams/core/real.html) | [real.html](diagrams/core/real.html) |
+| [`nolibm`](api/nolibm.md) | [preview](https://htmlpreview.github.io/?https://github.com/AugustinJose1221/ffitt/blob/development/docs/diagrams/core/nolibm.html) | [nolibm.html](diagrams/core/nolibm.html) |
+| [`ringbuf`](api/ringbuf.md) | [preview](https://htmlpreview.github.io/?https://github.com/AugustinJose1221/ffitt/blob/development/docs/diagrams/core/ringbuf.html) | [ringbuf.html](diagrams/core/ringbuf.html) |
+| [`point2d`](api/point2d.md) | [preview](https://htmlpreview.github.io/?https://github.com/AugustinJose1221/ffitt/blob/development/docs/diagrams/core/point2d.html) | [point2d.html](diagrams/core/point2d.html) |
+| [`callback`](api/callback.md) | [preview](https://htmlpreview.github.io/?https://github.com/AugustinJose1221/ffitt/blob/development/docs/diagrams/core/callback.html) | [callback.html](diagrams/core/callback.html) |
