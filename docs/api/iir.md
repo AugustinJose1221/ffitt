@@ -9,7 +9,7 @@ python3 scripts/api_doc.py
 
 Filters with an infinite impulse response. Declared in `ffitt/filter/iir.h`.
 
-[Back to the index](../API.md) | [How the filter modules work](../../ffitt/filter/README.md)
+[Back to the index](../API.md) | [How the filter modules work](../../ffitt/filter/README.md) | [How it works](../diagrams/filter/iir.html) ([preview](https://htmlpreview.github.io/?https://github.com/AugustinJose1221/ffitt/blob/main/docs/diagrams/filter/iir.html))
 
 ## Overview
 
@@ -42,6 +42,30 @@ needs for its coefficients.
 
 The number of float values that a filter with the given number of sections
 needs for its state.
+
+## Method
+
+One section of two poles carries two values of state, and each sample costs
+five multiplications:
+
+    y     = b0*x + s0
+    s0    = b1*x - a1*y + s1
+    s1    = b2*x - a2*y
+
+That is the transposed direct form II. The output y is fed back into the
+state, and that feedback is what buys the sharpness: an answer that never
+quite ends, from five multiplications a sample.
+
+The whole filter is a chain of such sections, thus the order is two times
+the number of sections and a filter of order 4 is two sections.
+
+The feedback is also the whole of the risk. A coefficient that is a little
+wrong moves a pole, and a pole outside the circle is a filter that runs
+away. Working in sections of two rather than one long recursion is what
+keeps that from happening at a high order.
+
+The design gives a filter of Butterworth, whose band that passes is as flat
+as it can be made.
 
 ## Macros
 

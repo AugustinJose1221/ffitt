@@ -9,7 +9,7 @@ python3 scripts/api_doc.py
 
 The median of the last samples. Declared in `ffitt/filter/medfilt.h`.
 
-[Back to the index](../API.md) | [How the filter modules work](../../ffitt/filter/README.md)
+[Back to the index](../API.md) | [How the filter modules work](../../ffitt/filter/README.md) | [How it works](../diagrams/filter/medfilt.html) ([preview](https://htmlpreview.github.io/?https://github.com/AugustinJose1221/ffitt/blob/main/docs/diagrams/filter/medfilt.html))
 
 ## Overview
 
@@ -68,6 +68,25 @@ AN ODD WINDOW IS BETTER
 A window of an odd size has a true middle sample. A window of an even size
 has two, and the filter gives their mean. That mean is no longer one of the
 samples, thus a little of the spreading of a mean comes back.
+
+## Method
+
+The output is the middle value of the window that ends at this sample:
+
+    y[n] = median of x[n-N+1] .. x[n]
+
+There is no arithmetic on the samples at all. Nothing is added, nothing is
+multiplied, and the answer is always a value that really appeared in the
+signal.
+
+That is what parts it from every mean and every low pass. A mean of a window
+holding one wild value moves towards that value; a median does not move at
+all until half the window is wrong. One bad sample in a window of five
+changes the answer by nothing.
+
+The cost is the ordering. The window must be put in order to find its
+middle, thus the work for each sample grows with the size of the window, and
+this is not the filter for a long one.
 
 ## Types
 

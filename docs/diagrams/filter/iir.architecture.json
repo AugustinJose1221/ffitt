@@ -1,0 +1,223 @@
+{
+  "schema_version": 1,
+  "diagram_type": "architecture",
+  "meta": {
+    "title": "Inside iir",
+    "animation": "trace",
+    "quality_profile": "showcase",
+    "views": [
+      {
+        "id": "the-feedback",
+        "label": "The output comes back",
+        "focus": [
+          "step",
+          "state"
+        ],
+        "note": "The output is fed back into the state. That feedback is what buys an answer that never quite ends, from five multiplications."
+      },
+      {
+        "id": "one-section",
+        "label": "One section, two poles",
+        "focus": [
+          "step",
+          "five"
+        ],
+        "note": "A section carries two values of state and costs five multiplications a sample, in the transposed direct form II."
+      },
+      {
+        "id": "the-chain",
+        "label": "A chain of sections",
+        "focus": [
+          "chain",
+          "order"
+        ],
+        "note": "The order is two times the number of sections, thus a filter of order 4 is two sections."
+      },
+      {
+        "id": "the-risk",
+        "label": "Where it can run away",
+        "focus": [
+          "risk"
+        ],
+        "note": "A coefficient a little wrong moves a pole, and a pole outside the circle is a filter that runs away."
+      }
+    ]
+  },
+  "layout": {
+    "mode": "grid",
+    "origin": [
+      40,
+      120
+    ],
+    "cols": 6,
+    "gapX": 28,
+    "gapY": 56,
+    "cellW": 124,
+    "cellH": 62
+  },
+  "components": [
+    {
+      "id": "sample",
+      "type": "external",
+      "label": "Your Samples",
+      "sublabel": "one at a time",
+      "row": 1,
+      "col": 0
+    },
+    {
+      "id": "step",
+      "type": "backend",
+      "label": "One Biquad",
+      "sublabel": "5 multiplies",
+      "row": 1,
+      "col": 1
+    },
+    {
+      "id": "state",
+      "type": "database",
+      "label": "Two Values",
+      "sublabel": "s0 and s1",
+      "row": 0,
+      "col": 2
+    },
+    {
+      "id": "five",
+      "type": "database",
+      "label": "Five Coefficients",
+      "sublabel": "b0 b1 b2 a1 a2",
+      "row": 2,
+      "col": 1
+    },
+    {
+      "id": "chain",
+      "type": "backend",
+      "label": "The Next Section",
+      "sublabel": "and the next",
+      "row": 1,
+      "col": 2
+    },
+    {
+      "id": "order",
+      "type": "cloud",
+      "label": "Order 2 per Section",
+      "sublabel": "4 needs two",
+      "row": 1,
+      "col": 3
+    },
+    {
+      "id": "risk",
+      "type": "security",
+      "label": "A Pole Outside",
+      "sublabel": "runs away",
+      "row": 0,
+      "col": 4
+    },
+    {
+      "id": "outp",
+      "type": "cloud",
+      "label": "The Output",
+      "sublabel": "sharp, and shifted",
+      "row": 1,
+      "col": 4
+    }
+  ],
+  "boundaries": [
+    {
+      "kind": "region",
+      "label": "the output is fed back into the state",
+      "wraps": [
+        "step",
+        "state"
+      ]
+    }
+  ],
+  "connections": [
+    {
+      "id": "fed",
+      "from": "sample",
+      "to": "step",
+      "label": "x[n]",
+      "variant": "emphasis",
+      "labelDy": -24
+    },
+    {
+      "id": "coefs",
+      "from": "five",
+      "to": "step",
+      "label": "b and a"
+    },
+    {
+      "id": "carried",
+      "from": "step",
+      "to": "state",
+      "label": "fed back",
+      "variant": "emphasis"
+    },
+    {
+      "id": "onward",
+      "from": "step",
+      "to": "chain",
+      "label": "y of this one",
+      "variant": "emphasis",
+      "labelAt": [
+        328.0,
+        312.0
+      ]
+    },
+    {
+      "id": "stacked",
+      "from": "chain",
+      "to": "order",
+      "label": "two poles each",
+      "variant": "emphasis",
+      "labelDy": -24
+    },
+    {
+      "id": "done",
+      "from": "order",
+      "to": "outp",
+      "label": "y[n]",
+      "variant": "emphasis",
+      "labelDy": -24
+    },
+    {
+      "id": "danger",
+      "from": "risk",
+      "to": "outp",
+      "label": "if a pole moves",
+      "labelAt": [
+        708.0,
+        194.0
+      ]
+    }
+  ],
+  "cards": [
+    {
+      "dot": "cyan",
+      "title": "What it works out",
+      "items": [
+        "y  = b0*x + s0",
+        "s0 = b1*x - a1*y + s1, and s1 = b2*x - a2*y",
+        "That is the transposed direct form II, five multiplications a sample"
+      ]
+    },
+    {
+      "dot": "emerald",
+      "title": "How the library gets there",
+      "items": [
+        "The output y is fed back into the state, and that feedback buys the sharpness",
+        "The whole filter is a chain of such sections, two poles in each",
+        "The design gives Butterworth, whose band that passes is as flat as it can be"
+      ]
+    },
+    {
+      "dot": "rose",
+      "title": "What will catch you",
+      "items": [
+        "A coefficient a little wrong moves a pole, and a pole outside the circle runs away",
+        "Sections of two poles, rather than one long recursion, is what holds that off",
+        "The filter moves different frequencies by different times, thus the shape changes"
+      ]
+    }
+  ]
+}

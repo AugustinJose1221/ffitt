@@ -1,0 +1,215 @@
+{
+  "schema_version": 1,
+  "diagram_type": "architecture",
+  "meta": {
+    "title": "Inside medfilt",
+    "animation": "trace",
+    "quality_profile": "showcase",
+    "views": [
+      {
+        "id": "the-fault",
+        "label": "A sample can be wrong",
+        "focus": [
+          "spike",
+          "mean"
+        ],
+        "note": "A knock, a lost sample, a spike from a supply: one value that has nothing to do with the signal. It does not average away."
+      },
+      {
+        "id": "no-arithmetic",
+        "label": "No arithmetic at all",
+        "focus": [
+          "order",
+          "middle"
+        ],
+        "note": "Nothing is added and nothing is multiplied. The answer is always a value that really appeared in the signal."
+      },
+      {
+        "id": "half-wrong",
+        "label": "Half the window may be wrong",
+        "focus": [
+          "middle",
+          "out"
+        ],
+        "note": "A mean moves towards a wild value. A median does not move until half the window is wrong."
+      },
+      {
+        "id": "the-cost",
+        "label": "What it costs",
+        "focus": [
+          "order"
+        ],
+        "note": "The window must be put in order to find its middle, thus the work grows with the size of the window."
+      }
+    ]
+  },
+  "layout": {
+    "mode": "grid",
+    "origin": [
+      40,
+      120
+    ],
+    "cols": 6,
+    "gapX": 28,
+    "gapY": 56,
+    "cellW": 124,
+    "cellH": 62
+  },
+  "components": [
+    {
+      "id": "sample",
+      "type": "external",
+      "label": "Your Samples",
+      "sublabel": "one may be wrong",
+      "row": 1,
+      "col": 0
+    },
+    {
+      "id": "spike",
+      "type": "security",
+      "label": "One Wild Value",
+      "sublabel": "not noise, wrong",
+      "row": 0,
+      "col": 1
+    },
+    {
+      "id": "window",
+      "type": "database",
+      "label": "The Last N",
+      "sublabel": "held as they came",
+      "row": 1,
+      "col": 1
+    },
+    {
+      "id": "mean",
+      "type": "security",
+      "label": "A Mean Would Move",
+      "sublabel": "towards the wild one",
+      "row": 0,
+      "col": 2
+    },
+    {
+      "id": "order",
+      "type": "backend",
+      "label": "Put in Order",
+      "sublabel": "the cost is here",
+      "row": 1,
+      "col": 2
+    },
+    {
+      "id": "middle",
+      "type": "backend",
+      "label": "Take the Middle",
+      "sublabel": "no arithmetic",
+      "row": 1,
+      "col": 3
+    },
+    {
+      "id": "out",
+      "type": "cloud",
+      "label": "A Real Sample",
+      "sublabel": "one that appeared",
+      "row": 1,
+      "col": 4
+    }
+  ],
+  "boundaries": [
+    {
+      "kind": "region",
+      "label": "the answer is always a value from the signal",
+      "wraps": [
+        "order",
+        "middle"
+      ]
+    }
+  ],
+  "connections": [
+    {
+      "id": "in",
+      "from": "sample",
+      "to": "window",
+      "label": "x[n]",
+      "variant": "emphasis",
+      "labelDy": -24
+    },
+    {
+      "id": "bad",
+      "from": "spike",
+      "to": "window",
+      "label": "and one wrong",
+      "labelAt": [
+        252.0,
+        194.0
+      ]
+    },
+    {
+      "id": "sorted",
+      "from": "window",
+      "to": "order",
+      "label": "the whole window",
+      "variant": "emphasis",
+      "labelAt": [
+        328.0,
+        312.0
+      ]
+    },
+    {
+      "id": "moved",
+      "from": "spike",
+      "to": "mean",
+      "label": "what a mean does",
+      "labelAt": [
+        328.0,
+        194.0
+      ]
+    },
+    {
+      "id": "picked",
+      "from": "order",
+      "to": "middle",
+      "label": "the middle one",
+      "variant": "emphasis",
+      "labelAt": [
+        480.0,
+        312.0
+      ]
+    },
+    {
+      "id": "given",
+      "from": "middle",
+      "to": "out",
+      "label": "y[n]",
+      "variant": "emphasis",
+      "labelDy": -24
+    }
+  ],
+  "cards": [
+    {
+      "dot": "cyan",
+      "title": "What it works out",
+      "items": [
+        "y[n] = the median of x[n-N+1] .. x[n]",
+        "Nothing is added and nothing is multiplied",
+        "The answer is always a value that really appeared in the signal"
+      ]
+    },
+    {
+      "dot": "emerald",
+      "title": "Why a mean cannot do this",
+      "items": [
+        "A mean of a window holding one wild value moves towards that value",
+        "A median does not move at all until half the window is wrong",
+        "One bad sample in a window of five changes the answer by nothing"
+      ]
+    },
+    {
+      "dot": "amber",
+      "title": "What it costs you",
+      "items": [
+        "The window must be put in order to find its middle",
+        "Thus the work for each sample grows with the size of the window",
+        "This is not the filter for a long window"
+      ]
+    }
+  ]
+}

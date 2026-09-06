@@ -62,6 +62,30 @@
 // nothing to read. The deviation cannot be held that way without losing its
 // accuracy, and the header of that function says why.
 
+// Method:
+// The mean of the last N samples is:
+//
+//     y[n] = (1/N) * sum over k of x[n-k]
+//
+// Worked out that way it costs N operations for each sample. This module does
+// not work it out that way. The window that ends at n differs from the window
+// before it by two samples only:
+//
+//     total = total + arrived - left
+//     y[n]  = total / N
+//
+// Thus each sample costs one addition, one subtraction and one division,
+// whatever N is. A window of 500 costs the same as a window of 5.
+//
+// The window itself is still held in a ring buffer, because the sample that
+// left must be known to take it off.
+//
+// A total that is added to for ever gathers the rounding of every sample that
+// ever passed. That is the price of the running total, and it is why the
+// module also keeps the total of the squares, so that the spread of the window
+// comes at the same cost.
+
+
 typedef struct{
     ringbuf_t window;           // The samples of the window
     real_t total;               // The running sum of the samples
