@@ -1,0 +1,210 @@
+{
+  "schema_version": 1,
+  "diagram_type": "architecture",
+  "meta": {
+    "title": "Inside savgol",
+    "animation": "trace",
+    "quality_profile": "showcase",
+    "views": [
+      {
+        "id": "the-fault",
+        "label": "What a mean does to a peak",
+        "focus": [
+          "mean"
+        ],
+        "note": "A mean can only give a flat answer over its window, thus it makes a peak lower and wider and the height is lost."
+      },
+      {
+        "id": "the-fit",
+        "label": "A polynomial, not a flat line",
+        "focus": [
+          "fit",
+          "middle"
+        ],
+        "note": "A polynomial can follow the curve of a peak, thus the height and the width come through the filter."
+      },
+      {
+        "id": "once-only",
+        "label": "Fitted once, not per sample",
+        "focus": [
+          "weights",
+          "apply"
+        ],
+        "note": "A window and an order always give the same weights, thus they are worked out at the design and used for ever after."
+      },
+      {
+        "id": "derivative",
+        "label": "The slope for free",
+        "focus": [
+          "slope"
+        ],
+        "note": "The first derivative is the same fit read from another row. No new fitting is needed for it."
+      }
+    ]
+  },
+  "layout": {
+    "mode": "grid",
+    "origin": [
+      40,
+      120
+    ],
+    "cols": 6,
+    "gapX": 28,
+    "gapY": 56,
+    "cellW": 124,
+    "cellH": 62
+  },
+  "components": [
+    {
+      "id": "signal",
+      "type": "external",
+      "label": "Your Signal",
+      "sublabel": "peaks matter",
+      "row": 1,
+      "col": 0
+    },
+    {
+      "id": "mean",
+      "type": "security",
+      "label": "A Plain Mean",
+      "sublabel": "lower and wider",
+      "row": 0,
+      "col": 1,
+      "tag": "loses the peak"
+    },
+    {
+      "id": "fit",
+      "type": "backend",
+      "label": "Least Squares Fit",
+      "sublabel": "a polynomial",
+      "row": 1,
+      "col": 1
+    },
+    {
+      "id": "weights",
+      "type": "database",
+      "label": "Fixed Weights",
+      "sublabel": "worked out once",
+      "row": 1,
+      "col": 2
+    },
+    {
+      "id": "apply",
+      "type": "backend",
+      "label": "One Weighed Sum",
+      "sublabel": "y = sum x*h",
+      "row": 1,
+      "col": 3
+    },
+    {
+      "id": "middle",
+      "type": "cloud",
+      "label": "Value at the Middle",
+      "sublabel": "the peak survives",
+      "row": 1,
+      "col": 4
+    },
+    {
+      "id": "slope",
+      "type": "backend",
+      "label": "Another Row",
+      "sublabel": "the derivative",
+      "row": 0,
+      "col": 4
+    }
+  ],
+  "boundaries": [
+    {
+      "kind": "region",
+      "label": "the fitting is never done again",
+      "wraps": [
+        "weights",
+        "apply"
+      ]
+    }
+  ],
+  "connections": [
+    {
+      "id": "bad",
+      "from": "signal",
+      "to": "mean",
+      "label": "what most reach for"
+    },
+    {
+      "id": "into",
+      "from": "signal",
+      "to": "fit",
+      "label": "the window",
+      "variant": "emphasis",
+      "labelAt": [
+        176.0,
+        312.0
+      ]
+    },
+    {
+      "id": "solved",
+      "from": "fit",
+      "to": "weights",
+      "label": "h from the fit",
+      "variant": "emphasis",
+      "labelAt": [
+        328.0,
+        312.0
+      ]
+    },
+    {
+      "id": "used",
+      "from": "weights",
+      "to": "apply",
+      "label": "the same every time",
+      "variant": "emphasis",
+      "labelAt": [
+        480.0,
+        312.0
+      ]
+    },
+    {
+      "id": "read",
+      "from": "apply",
+      "to": "middle",
+      "label": "y[n]",
+      "variant": "emphasis",
+      "labelDy": -24
+    },
+    {
+      "id": "other",
+      "from": "weights",
+      "to": "slope",
+      "label": "a second row"
+    }
+  ],
+  "cards": [
+    {
+      "dot": "cyan",
+      "title": "What it works out",
+      "items": [
+        "y[n] = sum over k of x[n+k] * h[k], one weighed sum",
+        "A polynomial is laid through the window and read at the middle",
+        "A mean can only be flat over the window, thus it flattens the peak"
+      ]
+    },
+    {
+      "dot": "emerald",
+      "title": "How the library gets there",
+      "items": [
+        "h = the middle row of (A' * A)^-1 * A', with a power of the offset in each column",
+        "A window and an order always give the same weights, thus they are found once",
+        "The first derivative is the second row of the same fit, and costs nothing more"
+      ]
+    },
+    {
+      "dot": "amber",
+      "title": "What it is for",
+      "items": [
+        "A signal where the height and the width of a peak carry the information",
+        "The result of a spectrometer, or of a chromatograph",
+        "Anywhere a plain mean would smooth away the very thing being measured"
+      ]
+    }
+  ]
+}

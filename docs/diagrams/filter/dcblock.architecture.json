@@ -1,0 +1,210 @@
+{
+  "schema_version": 1,
+  "diagram_type": "architecture",
+  "meta": {
+    "title": "Inside dcblock",
+    "animation": "trace",
+    "quality_profile": "showcase",
+    "views": [
+      {
+        "id": "the-digits",
+        "label": "Where the digits go",
+        "focus": [
+          "converter",
+          "digits"
+        ],
+        "note": "A 24 bit converter near mid range gives eight million counts. Six of seven digits are then spent on a level that carries nothing."
+      },
+      {
+        "id": "one-pole",
+        "label": "One pole follows it",
+        "focus": [
+          "track",
+          "level"
+        ],
+        "note": "The tracker moves towards the sample by a fraction of the distance, thus it follows the level and not the signal."
+      },
+      {
+        "id": "primed",
+        "label": "Primed, not started at zero",
+        "focus": [
+          "prime"
+        ],
+        "note": "Starting at zero would make the first answer a step of the whole level, larger than the signal, and slow to die away."
+      },
+      {
+        "id": "first",
+        "label": "Subtracted first of all",
+        "focus": [
+          "out"
+        ],
+        "note": "The subtraction happens before anything else, thus the rest of the chain spends its digits on the small signal alone."
+      }
+    ]
+  },
+  "layout": {
+    "mode": "grid",
+    "origin": [
+      40,
+      120
+    ],
+    "cols": 6,
+    "gapX": 28,
+    "gapY": 56,
+    "cellW": 124,
+    "cellH": 62
+  },
+  "components": [
+    {
+      "id": "converter",
+      "type": "external",
+      "label": "Your Reading",
+      "sublabel": "level plus signal",
+      "row": 1,
+      "col": 0
+    },
+    {
+      "id": "digits",
+      "type": "security",
+      "label": "Seven Digits",
+      "sublabel": "six spent on level",
+      "row": 0,
+      "col": 1,
+      "tag": "the whole reason"
+    },
+    {
+      "id": "track",
+      "type": "backend",
+      "label": "Follow the Level",
+      "sublabel": "by one pole",
+      "row": 1,
+      "col": 1
+    },
+    {
+      "id": "prime",
+      "type": "database",
+      "label": "First Sample",
+      "sublabel": "primes the level",
+      "row": 2,
+      "col": 1
+    },
+    {
+      "id": "level",
+      "type": "database",
+      "label": "The Level",
+      "sublabel": "one value",
+      "row": 1,
+      "col": 2
+    },
+    {
+      "id": "out",
+      "type": "backend",
+      "label": "Subtract It",
+      "sublabel": "x - level",
+      "row": 1,
+      "col": 3
+    },
+    {
+      "id": "small",
+      "type": "cloud",
+      "label": "The Signal Alone",
+      "sublabel": "digits spent on it",
+      "row": 1,
+      "col": 4
+    }
+  ],
+  "boundaries": [
+    {
+      "kind": "region",
+      "label": "one pole, one value of state",
+      "wraps": [
+        "track",
+        "level"
+      ]
+    }
+  ],
+  "connections": [
+    {
+      "id": "in",
+      "from": "converter",
+      "to": "track",
+      "label": "x[n]",
+      "variant": "emphasis",
+      "labelAt": [
+        176,
+        312
+      ]
+    },
+    {
+      "id": "why",
+      "from": "converter",
+      "to": "digits",
+      "label": "large and useless"
+    },
+    {
+      "id": "start",
+      "from": "prime",
+      "to": "track",
+      "label": "not zero"
+    },
+    {
+      "id": "moved",
+      "from": "track",
+      "to": "level",
+      "label": "towards the sample",
+      "variant": "emphasis",
+      "labelAt": [
+        328.0,
+        312.0
+      ]
+    },
+    {
+      "id": "taken",
+      "from": "level",
+      "to": "out",
+      "label": "take it away",
+      "variant": "emphasis",
+      "labelAt": [
+        480.0,
+        312.0
+      ]
+    },
+    {
+      "id": "left",
+      "from": "out",
+      "to": "small",
+      "label": "y[n]",
+      "variant": "emphasis",
+      "labelDy": -24
+    }
+  ],
+  "cards": [
+    {
+      "dot": "cyan",
+      "title": "What it works out",
+      "items": [
+        "level = level + pole * (x[n] - level)",
+        "y[n] = x[n] - level",
+        "The level is primed with the first sample, and not with zero"
+      ]
+    },
+    {
+      "dot": "emerald",
+      "title": "Why not a high pass",
+      "items": [
+        "A high pass from iir would do it, and for most signals it should",
+        "At the default width a number holds about seven digits",
+        "A converter of 24 bits near mid range spends six of them on the level"
+      ]
+    },
+    {
+      "dot": "amber",
+      "title": "What it costs you",
+      "items": [
+        "One multiplication and two additions a sample, and one value of state",
+        "The subtraction happens first, thus the chain after it sees the small signal",
+        "Priming with the first sample is what keeps the first answer from being a step"
+      ]
+    }
+  ]
+}

@@ -9,7 +9,7 @@ python3 scripts/api_doc.py
 
 A filter that solves least squares at every sample. Declared in `ffitt/filter/rls.h`.
 
-[Back to the index](../API.md) | [How the filter modules work](../../ffitt/filter/README.md)
+[Back to the index](../API.md) | [How the filter modules work](../../ffitt/filter/README.md) | [How it works](../diagrams/filter/rls.html) ([preview](https://htmlpreview.github.io/?https://github.com/AugustinJose1221/ffitt/blob/development/docs/diagrams/filter/rls.html))
 
 ## Overview
 
@@ -110,6 +110,32 @@ The fading is what makes the matrix lose its footing faster, and the table
 above is that in numbers: the same filter written the careless way lasts
 7230 samples at 0.999 and 216 at 0.95. Roughly, the filter holds about
 1/(1-factor) samples: 0.99 holds a hundred, 0.999 holds a thousand.
+
+## Method
+
+Where the adaptive module takes one small step downhill with each sample,
+this one solves the whole least squares problem at every sample, over
+everything it has heard so far:
+
+    gain  = P*x / (forgetting + x'*P*x)
+    error = wanted[n] - h'*x
+    h     = h + gain * error
+    P     = (P - gain*x'*P) / forgetting
+
+P is the inverse of the correlation matrix, carried forward rather than
+worked out again. That is what makes this affordable at all: a fresh
+solution would cost the cube of the length at every sample, and carrying P
+costs the square.
+
+The forgetting factor fades the past, thus the filter follows a response
+that changes instead of averaging over all time.
+
+Measured on a filter of 16 coefficients learning an unknown response, the
+samples needed to come 40 dB towards the truth: 163 for the normalised least
+mean squares, and about twice the number of coefficients here.
+
+The cost is that square. A long filter costs a great deal more memory and
+work here than the adaptive module asks for.
 
 ## Macros
 

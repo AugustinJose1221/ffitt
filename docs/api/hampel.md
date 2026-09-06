@@ -9,7 +9,7 @@ python3 scripts/api_doc.py
 
 Replacing only the samples that are wrong. Declared in `ffitt/filter/hampel.h`.
 
-[Back to the index](../API.md) | [How the filter modules work](../../ffitt/filter/README.md)
+[Back to the index](../API.md) | [How the filter modules work](../../ffitt/filter/README.md) | [How it works](../diagrams/filter/hampel.html) ([preview](https://htmlpreview.github.io/?https://github.com/AugustinJose1221/ffitt/blob/development/docs/diagrams/filter/hampel.html))
 
 ## Overview
 
@@ -67,6 +67,28 @@ How many deviations away a sample must stand before it is called wrong.
 
 What the median absolute deviation must be multiplied by to stand beside a
 standard deviation, for samples that follow a normal spread.
+
+## Method
+
+For each sample the filter asks one question: how far does this sample stand
+from the middle of its window, measured in a spread that a wild value cannot
+move?
+
+    centre = median of the window
+    spread = 1.4826 * median of |x[k] - centre|
+    replace x[n] with centre when |x[n] - centre| > 3 * spread
+
+The spread is the median of the distances, not their mean, and that is the
+whole idea. One wild value moves a mean and cannot move a median, thus the
+measure of what is normal is not itself bent by the fault it is looking for.
+
+The 1.4826 makes that median of distances equal the standard deviation for
+noise of the usual shape, thus the threshold of 3 means what it would mean
+there.
+
+A median filter would replace EVERY sample it touched, flattening the signal
+and losing every peak narrower than half its window. This one replaces only
+the samples that failed the test, and gives the rest back untouched.
 
 ## Macros
 

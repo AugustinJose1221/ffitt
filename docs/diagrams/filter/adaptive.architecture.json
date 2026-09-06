@@ -1,0 +1,251 @@
+{
+  "schema_version": 1,
+  "diagram_type": "architecture",
+  "meta": {
+    "title": "Inside adaptive",
+    "animation": "trace",
+    "quality_profile": "showcase",
+    "views": [
+      {
+        "id": "no-design",
+        "label": "Given no design at all",
+        "focus": [
+          "wanted",
+          "error"
+        ],
+        "note": "Every other filter here is designed and then applied. This one is given an answer to aim at and finds its own coefficients."
+      },
+      {
+        "id": "the-step",
+        "label": "One step per sample",
+        "focus": [
+          "step",
+          "coeffs"
+        ],
+        "note": "Each coefficient moves a little towards whatever would have been right, in proportion to the sample that drove it."
+      },
+      {
+        "id": "which-rule",
+        "label": "Which rule to take",
+        "focus": [
+          "rules"
+        ],
+        "note": "Plain moves further when the signal is loud. Normalised divides that out. Sign takes a fixed step and needs no multiplication."
+      },
+      {
+        "id": "the-leak",
+        "label": "Why coefficients leak",
+        "focus": [
+          "leak"
+        ],
+        "note": "A coefficient that nothing is driving would wander away over hours. The leak pulls every one gently towards nothing."
+      }
+    ]
+  },
+  "layout": {
+    "mode": "grid",
+    "origin": [
+      40,
+      120
+    ],
+    "cols": 6,
+    "gapX": 28,
+    "gapY": 56,
+    "cellW": 124,
+    "cellH": 62
+  },
+  "components": [
+    {
+      "id": "signal",
+      "type": "external",
+      "label": "Your Signal",
+      "sublabel": "x[n]",
+      "row": 1,
+      "col": 0
+    },
+    {
+      "id": "coeffs",
+      "type": "database",
+      "label": "Coefficients",
+      "sublabel": "h[k], moving",
+      "row": 0,
+      "col": 1
+    },
+    {
+      "id": "filterit",
+      "type": "backend",
+      "label": "Weighed Sum",
+      "sublabel": "y = sum x*h",
+      "row": 1,
+      "col": 1
+    },
+    {
+      "id": "wanted",
+      "type": "external",
+      "label": "What You Wanted",
+      "sublabel": "the aim",
+      "row": 2,
+      "col": 1
+    },
+    {
+      "id": "error",
+      "type": "backend",
+      "label": "The Error",
+      "sublabel": "wanted minus y",
+      "row": 1,
+      "col": 2
+    },
+    {
+      "id": "rules",
+      "type": "database",
+      "label": "Three Rules",
+      "sublabel": "plain, normalised, sign",
+      "row": 0,
+      "col": 3
+    },
+    {
+      "id": "step",
+      "type": "backend",
+      "label": "Move Each One",
+      "sublabel": "by the step",
+      "row": 1,
+      "col": 3
+    },
+    {
+      "id": "leak",
+      "type": "security",
+      "label": "The Leak",
+      "sublabel": "pulls towards nothing",
+      "row": 2,
+      "col": 3
+    },
+    {
+      "id": "out",
+      "type": "cloud",
+      "label": "It Settles",
+      "sublabel": "after thousands",
+      "row": 1,
+      "col": 4
+    }
+  ],
+  "boundaries": [
+    {
+      "kind": "region",
+      "label": "the coefficients are changed at every sample",
+      "wraps": [
+        "step",
+        "out"
+      ]
+    }
+  ],
+  "connections": [
+    {
+      "id": "in",
+      "from": "signal",
+      "to": "filterit",
+      "label": "x[n]",
+      "variant": "emphasis",
+      "labelAt": [
+        176,
+        312
+      ]
+    },
+    {
+      "id": "using",
+      "from": "coeffs",
+      "to": "filterit",
+      "label": "h[k]",
+      "labelAt": [
+        252.0,
+        194.0
+      ]
+    },
+    {
+      "id": "aim",
+      "from": "wanted",
+      "to": "error",
+      "label": "the aim"
+    },
+    {
+      "id": "made",
+      "from": "filterit",
+      "to": "error",
+      "label": "y[n]",
+      "variant": "emphasis"
+    },
+    {
+      "id": "drives",
+      "from": "error",
+      "to": "step",
+      "label": "how wrong",
+      "variant": "emphasis",
+      "labelAt": [
+        480.0,
+        312.0
+      ]
+    },
+    {
+      "id": "which",
+      "from": "rules",
+      "to": "step",
+      "label": "sets the step",
+      "labelAt": [
+        556.0,
+        194.0
+      ]
+    },
+    {
+      "id": "pulls",
+      "from": "leak",
+      "to": "step",
+      "label": "towards nothing"
+    },
+    {
+      "id": "moved",
+      "from": "step",
+      "to": "coeffs",
+      "label": "h[k] moves",
+      "variant": "emphasis"
+    },
+    {
+      "id": "done",
+      "from": "step",
+      "to": "out",
+      "label": "again and again",
+      "variant": "emphasis",
+      "labelAt": [
+        784,
+        312
+      ]
+    }
+  ],
+  "cards": [
+    {
+      "dot": "cyan",
+      "title": "What it works out",
+      "items": [
+        "y[n] = sum over k of x[n-k] * h[k], as any finite filter does",
+        "error = wanted[n] - y[n]",
+        "h[k] = (1 - leak) * h[k] + step * x[n-k]"
+      ]
+    },
+    {
+      "dot": "emerald",
+      "title": "The three rules",
+      "items": [
+        "Plain: step = rate * error, thus a loud signal moves the coefficients further",
+        "Normalised: the step is divided by the loudness, thus the rate behaves the same way always",
+        "Sign: a fixed step in the direction of the error, with no multiplication at all"
+      ]
+    },
+    {
+      "dot": "rose",
+      "title": "What the module refuses",
+      "items": [
+        "The normalised rule is stable for any signal while the rate lies between 0 and 2",
+        "Outside that it runs away whatever the signal is",
+        "That is arithmetic and not judgement, thus a rate of 2 or more is refused"
+      ]
+    }
+  ]
+}

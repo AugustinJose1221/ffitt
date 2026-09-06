@@ -1,0 +1,201 @@
+{
+  "schema_version": 1,
+  "diagram_type": "architecture",
+  "meta": {
+    "title": "Inside hampel",
+    "animation": "trace",
+    "quality_profile": "showcase",
+    "views": [
+      {
+        "id": "the-price",
+        "label": "What a median costs",
+        "focus": [
+          "medroad"
+        ],
+        "note": "A median filter replaces every sample it touches. Every peak narrower than half its window is gone and the rest is flattened."
+      },
+      {
+        "id": "one-question",
+        "label": "One question per sample",
+        "focus": [
+          "centre",
+          "spread",
+          "test"
+        ],
+        "note": "How far does this sample stand from the middle of its window, in a spread that a wild value cannot move?"
+      },
+      {
+        "id": "robust",
+        "label": "A spread that cannot be bent",
+        "focus": [
+          "spread"
+        ],
+        "note": "The spread is the median of the distances, not their mean. The measure of normal is not bent by the fault it looks for."
+      },
+      {
+        "id": "untouched",
+        "label": "Only the guilty are replaced",
+        "focus": [
+          "keep",
+          "out"
+        ],
+        "note": "A sample that passes the test is given back exactly as it arrived."
+      }
+    ]
+  },
+  "layout": {
+    "mode": "grid",
+    "origin": [
+      40,
+      120
+    ],
+    "cols": 6,
+    "gapX": 28,
+    "gapY": 56,
+    "cellW": 124,
+    "cellH": 62
+  },
+  "components": [
+    {
+      "id": "sample",
+      "type": "external",
+      "label": "Your Samples",
+      "sublabel": "one may be wrong",
+      "row": 1,
+      "col": 0
+    },
+    {
+      "id": "medroad",
+      "type": "security",
+      "label": "A Median Filter",
+      "sublabel": "replaces them all",
+      "row": 0,
+      "col": 1,
+      "tag": "too heavy a price"
+    },
+    {
+      "id": "centre",
+      "type": "backend",
+      "label": "The Middle",
+      "sublabel": "median of window",
+      "row": 1,
+      "col": 1
+    },
+    {
+      "id": "spread",
+      "type": "backend",
+      "label": "1.4826 * MAD",
+      "sublabel": "median of distances",
+      "row": 2,
+      "col": 1
+    },
+    {
+      "id": "test",
+      "type": "backend",
+      "label": "Is It Too Far",
+      "sublabel": "more than 3 spreads",
+      "row": 1,
+      "col": 2
+    },
+    {
+      "id": "keep",
+      "type": "cloud",
+      "label": "Given Back",
+      "sublabel": "exactly as it came",
+      "row": 0,
+      "col": 3
+    },
+    {
+      "id": "out",
+      "type": "cloud",
+      "label": "Replaced",
+      "sublabel": "by the middle",
+      "row": 2,
+      "col": 3
+    }
+  ],
+  "boundaries": [
+    {
+      "kind": "region",
+      "label": "one question, asked of each sample",
+      "wraps": [
+        "centre",
+        "test"
+      ]
+    }
+  ],
+  "connections": [
+    {
+      "id": "in",
+      "from": "sample",
+      "to": "centre",
+      "label": "x[n]",
+      "variant": "emphasis",
+      "labelAt": [
+        176,
+        312
+      ]
+    },
+    {
+      "id": "heavy",
+      "from": "sample",
+      "to": "medroad",
+      "label": "what it would cost"
+    },
+    {
+      "id": "scaled",
+      "from": "spread",
+      "to": "test",
+      "label": "the spread"
+    },
+    {
+      "id": "asked",
+      "from": "centre",
+      "to": "test",
+      "variant": "emphasis"
+    },
+    {
+      "id": "passed",
+      "from": "test",
+      "to": "keep",
+      "label": "within three",
+      "variant": "emphasis"
+    },
+    {
+      "id": "failed",
+      "from": "test",
+      "to": "out",
+      "label": "beyond three",
+      "variant": "emphasis"
+    }
+  ],
+  "cards": [
+    {
+      "dot": "cyan",
+      "title": "What it works out",
+      "items": [
+        "centre = the median of the window",
+        "spread = 1.4826 * the median of |x[k] - centre|",
+        "x[n] is replaced by centre only when |x[n] - centre| > 3 * spread"
+      ]
+    },
+    {
+      "dot": "emerald",
+      "title": "Why the median of distances",
+      "items": [
+        "One wild value moves a mean and cannot move a median",
+        "Thus the measure of what is normal is not bent by the fault it looks for",
+        "The 1.4826 makes it equal the standard deviation for noise of the usual shape"
+      ]
+    },
+    {
+      "dot": "amber",
+      "title": "What it does not do",
+      "items": [
+        "It does not touch a sample that passes the test",
+        "A median filter would flatten the signal and lose every narrow peak",
+        "This is a heavy price for a fault that happens once a second"
+      ]
+    }
+  ]
+}
