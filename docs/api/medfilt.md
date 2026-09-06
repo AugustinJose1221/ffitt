@@ -9,7 +9,7 @@ python3 scripts/api_doc.py
 
 The median of the last samples. Declared in `ffitt/filter/medfilt.h`.
 
-[Back to the index](../API.md) | [How the filter modules work](../../ffitt/filter/README.md) | [How it works](../diagrams/filter/medfilt.html) ([preview](https://htmlpreview.github.io/?https://github.com/AugustinJose1221/ffitt/blob/main/docs/diagrams/filter/medfilt.html))
+[Back to the index](../API.md) | [How the filter modules work](../../ffitt/filter/README.md) | [How it works](../diagrams/filter/medfilt.html) ([preview](https://htmlpreview.github.io/?https://github.com/AugustinJose1221/ffitt/blob/development/docs/diagrams/filter/medfilt.html))
 
 ## Overview
 

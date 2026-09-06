@@ -290,13 +290,20 @@ DIAGRAM_DIRECTORY = os.path.join("docs", "diagrams")
 # A page of HTML in a repository is given to a reader as source, not as a page.
 # This service fetches such a page and shows it.
 #
-# The link names a branch, and it names main. A reader opens the documentation
-# of the released library, thus the diagram beside it must be the released one.
-# The cost is that a diagram made on a branch cannot be previewed by this link
-# until it reaches main; until then, open the file from a clone.
+# The link names a branch, and it names development.
+#
+# main was tried first, on the thought that a reader opens the documentation of
+# the released library. That link is broken for as long as the diagrams are
+# being made, because they reach development first and main only at a release.
+# Every link written that way gave nothing at all.
+#
+# development always holds what main holds and usually more, thus a link that
+# names it resolves at every moment. The cost is that a reader on main may be
+# shown a diagram newer than the release beside it. A diagram that explains a
+# method changes rarely, thus that is the cheaper of the two faults.
 PREVIEW_SERVICE = "https://htmlpreview.github.io/?"
 PREVIEW_REPOSITORY = "https://github.com/AugustinJose1221/ffitt"
-PREVIEW_BRANCH = "main"
+PREVIEW_BRANCH = "development"
 
 
 def diagram_of(module):

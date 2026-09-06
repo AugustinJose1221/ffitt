@@ -384,3 +384,26 @@ def test_a_method_written_in_a_header_reaches_its_document():
         assert "## Method" in document, (
             "%s writes a method block that never reaches its document; "
             "an empty line above it is what that needs" % name)
+
+
+def test_the_preview_branch_holds_the_diagrams():
+    """The branch the link names must be one that actually holds the files.
+
+    main was named first and holds no diagram at all until a release, thus
+    every link written that way gave nothing. This holds the branch to one
+    that has them.
+    """
+    import subprocess
+
+    links = api_doc.diagram_links("fft")
+    assert "/blob/%s/" % api_doc.PREVIEW_BRANCH in links
+
+    listing = subprocess.run(
+        ["git", "ls-tree", "-r", "--name-only", api_doc.PREVIEW_BRANCH],
+        cwd=api_doc.REPOSITORY, capture_output=True, text=True)
+    if listing.returncode != 0:
+        return  # no such branch here, which a shallow clone can give
+
+    assert "docs/diagrams/" in listing.stdout, (
+        "the branch %s holds no diagram, thus every preview link is dead"
+        % api_doc.PREVIEW_BRANCH)
