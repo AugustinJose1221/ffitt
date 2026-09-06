@@ -9,7 +9,7 @@ python3 scripts/api_doc.py
 
 Taking the level and the drift out of a block. Declared in `ffitt/filter/detrend.h`.
 
-[Back to the index](../API.md) | [How the filter modules work](../../ffitt/filter/README.md)
+[Back to the index](../API.md) | [How the filter modules work](../../ffitt/filter/README.md) | [How it works](../diagrams/filter/detrend.html) ([preview](https://htmlpreview.github.io/?https://github.com/AugustinJose1221/ffitt/blob/development/docs/diagrams/filter/detrend.html))
 
 ## Overview
 
@@ -112,6 +112,28 @@ the block. The offset is the value of the trend at the middle, which is the
 mean of the block, and NOT the value at the first sample. Use
 detrend_trend_at to get the trend at a sample rather than working it out by
 hand.
+
+## Method
+
+For the level alone, the mean of the block is taken off:
+
+    y[n] = x[n] - mean(x)
+
+For the drift as well, a straight line is laid through the block by least
+squares and that line is taken off:
+
+    y[n] = x[n] - (a + b*n)
+
+where b is the slope the readings suggest and a is where that line starts.
+
+This works on a whole block, not on a stream, and that is the difference
+from dcblock. A block can be measured from both ends, thus the line is the
+best one for the block and not a guess that follows behind.
+
+The reason it matters is the transform. A block that ends higher than it
+began is read as one period of something that repeats, and the join between
+the end and the next copy is a step. That step is not in the signal, and its
+energy spreads across EVERY frequency.
 
 ## Functions
 

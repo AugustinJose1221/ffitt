@@ -9,7 +9,7 @@ python3 scripts/api_doc.py
 
 A filter built as a ladder of stages. Declared in `ffitt/filter/lattice.h`.
 
-[Back to the index](../API.md) | [How the filter modules work](../../ffitt/filter/README.md)
+[Back to the index](../API.md) | [How the filter modules work](../../ffitt/filter/README.md) | [How it works](../diagrams/filter/lattice.html) ([preview](https://htmlpreview.github.io/?https://github.com/AugustinJose1221/ffitt/blob/development/docs/diagrams/filter/lattice.html))
 
 ## Overview
 
@@ -101,6 +101,28 @@ and the difference is not a nicety:
 USING THE SECOND WHERE THE FIRST BELONGS IS HOW AN ADAPTIVE FILTER COMES TO
 LOOK BETTER THAN IT IS. A filter measured on its error a posteriori always
 reports a smaller error, because it has been told the answer first.
+
+## Method
+
+The ladder carries two signals through the stages: what is still unexplained
+looking forward, and the same looking back one step further.
+
+    forward[m+1]  = forward[m]  - k[m] * held[m]
+    backward[m+1] = held[m]     - k[m] * forward[m]
+
+k[m] is the one number a stage holds. It is moved towards whatever the two
+still have in common, divided by how loud that stage has been:
+
+    k[m] = k[m] + rate * (what the two share) / (energy of the stage)
+
+DIVIDING BY THE LOUDNESS IS WHY A LADDER LEARNS QUICKLY. Each stage judges
+its own step against its own signal, thus a quiet stage is not held back by
+a loud one, and every stage learns at its own pace. A straight list of
+coefficients moves all of them against one rate and cannot do that.
+
+The energy is a running sum over a fading past, and not a running mean. Such
+a sum is about 1/(1-factor) times the mean, thus at a factor of 0.99 it is a
+hundred times larger, and the rate must be read with that in mind.
 
 ## Macros
 

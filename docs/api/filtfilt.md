@@ -9,7 +9,7 @@ python3 scripts/api_doc.py
 
 Filtering with no delay. Declared in `ffitt/filter/filtfilt.h`.
 
-[Back to the index](../API.md) | [How the filter modules work](../../ffitt/filter/README.md)
+[Back to the index](../API.md) | [How the filter modules work](../../ffitt/filter/README.md) | [How it works](../diagrams/filter/filtfilt.html) ([preview](https://htmlpreview.github.io/?https://github.com/AugustinJose1221/ffitt/blob/development/docs/diagrams/filter/filtfilt.html))
 
 ## Overview
 
@@ -71,6 +71,28 @@ second stands below it. The signal then begins with no step and no corner.
 
 Nothing is stored for either, because the carried samples are worked out
 from the ones already in hand.
+
+## Method
+
+The block is filtered forwards, turned round, filtered again, and turned
+back:
+
+    y = reverse(filter(reverse(filter(x))))
+
+Running the same filter both ways cancels the delay exactly. Whatever the
+filter held back on the way forward it holds back again on the way back, and
+the two shifts are equal and opposite. Thus every frequency comes out where
+it went in, and the shape of the signal survives.
+
+Two things follow from it, and both must be known:
+
+The filter is applied TWICE, thus the band it takes out is taken out twice.
+The edge is sharper than the design asks for and the stop band is deeper by
+the same measure again.
+
+It cannot be done as the samples arrive. The whole block must be in hand
+before the backward pass can start, thus this is for a recording and never
+for a live signal.
 
 ## Functions
 

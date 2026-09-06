@@ -9,7 +9,7 @@ python3 scripts/api_doc.py
 
 Taking the level of a signal away. Declared in `ffitt/filter/dcblock.h`.
 
-[Back to the index](../API.md) | [How the filter modules work](../../ffitt/filter/README.md)
+[Back to the index](../API.md) | [How the filter modules work](../../ffitt/filter/README.md) | [How it works](../diagrams/filter/dcblock.html) ([preview](https://htmlpreview.github.io/?https://github.com/AugustinJose1221/ffitt/blob/development/docs/diagrams/filter/dcblock.html))
 
 ## Overview
 
@@ -80,6 +80,26 @@ the answer to that step is larger than the signal for tens of seconds.
 This module sets its level to the first sample it is given. That says:
 assume the signal stood here for ever before now. There is then no step, and
 the tracker is settled from the first sample onwards.
+
+## Method
+
+The tracker follows the level with one pole, and takes it off:
+
+    level = level + pole * (x[n] - level)
+    y[n]  = x[n] - level
+
+The level is primed with the first sample rather than with zero. Without
+that the first answer would be a step of the whole level, larger than the
+signal, and it would take a long time to die away.
+
+A high pass from the iir module would do the same work, and for most signals
+it should. The reason for this module is arithmetic. At the default width a
+number holds about seven digits. A converter of 24 bits sitting near the
+middle of its range gives about eight million counts, thus six of those
+seven digits are spent on a level that carries nothing.
+
+Here the subtraction happens FIRST and in one line, thus what goes into the
+rest of the chain is the small signal alone and the digits are spent on it.
 
 ## Macros
 

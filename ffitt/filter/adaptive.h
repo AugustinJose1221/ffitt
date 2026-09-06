@@ -64,6 +64,33 @@
 // step then does not follow how loud the reference is, and a rate between 0
 // and 2 is stable FOR ANY SIGNAL. Take 0.1 to 0.5 and it will work.
 
+// Method:
+// The filter gives its answer as any finite filter does, and then moves every
+// coefficient a little towards whatever would have been right:
+//
+//     y[n]    = sum over k of x[n-k] * h[k]
+//     error   = wanted[n] - y[n]
+//     h[k]    = (1 - leak) * h[k] + step * x[n-k]
+//
+// The step is what parts the three rules. Plain least mean squares uses
+// step = rate * error, thus a loud signal moves the coefficients further than
+// a quiet one and the same rate is too fast for one and too slow for the
+// other.
+//
+// The normalised rule divides that step by the loudness of the window, thus
+// the same rate behaves the same way whatever the signal is doing. It is
+// stable for any signal while the rate lies between 0 and 2, and outside that
+// it runs away whatever the signal is. That is arithmetic, not judgement, thus
+// the module refuses it.
+//
+// The sign rule takes a step of a fixed size in the direction of the error
+// only. It needs no multiplication at all, and it settles more slowly and
+// never quite as close.
+//
+// The leak pulls every coefficient gently towards nothing, so that a
+// coefficient which nothing is driving cannot wander away over hours.
+
+
 typedef enum{
     ADAPTIVE_PLAIN = 0,         // The rule of least mean squares
     ADAPTIVE_NORMALISED,        // The same, divided by the energy in the filter

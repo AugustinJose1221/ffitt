@@ -73,6 +73,29 @@
 // step needs a filter of about 2000 coefficients. Doing it as 8 then 8 needs
 // two filters of about 40, and the two together cost far less than the one.
 
+// Method:
+// Changing the rate by P/Q is three steps, and only the middle one is obvious:
+//
+//     1. put Q-1 zeros between the samples, which raises the rate by Q
+//     2. filter, at the higher rate
+//     3. keep every Pth sample, which lowers the rate by P
+//
+// The filter in the middle does two jobs at once, and both are necessary. On
+// the way up it fills in the zeros, which are not samples of anything. On the
+// way down it removes everything above half the NEW rate, before that content
+// can fold back.
+//
+// That folding is the whole reason this is a module and not a line of code. A
+// signal at 32 kHz may hold up to 16 kHz. Keep every 64th sample and the new
+// rate holds nothing above 250 Hz. What was above 250 does not disappear: it
+// comes back at a frequency it never had, sitting on top of the signal and
+// looking exactly like part of it, and NOTHING can take it out afterwards.
+//
+// The zeros are never really inserted and the thrown samples are never really
+// worked out. The library computes only the outputs it keeps, thus the cost is
+// the cost of the answers and not of the intermediate rate.
+
+
 // How many coefficients a filter needs for a given factor, as a rule of thumb.
 //
 // This gives a turn of about a fifth of the new rate, and a stop band about

@@ -1,0 +1,222 @@
+{
+  "schema_version": 1,
+  "diagram_type": "architecture",
+  "meta": {
+    "title": "Inside lattice",
+    "animation": "trace",
+    "quality_profile": "showcase",
+    "views": [
+      {
+        "id": "the-shape",
+        "label": "A ladder, not a list",
+        "focus": [
+          "stage1",
+          "stage2"
+        ],
+        "note": "Each stage holds one number and takes away whatever the stage before it could already account for."
+      },
+      {
+        "id": "two-signals",
+        "label": "Two signals travel",
+        "focus": [
+          "stage1",
+          "held",
+          "stage2"
+        ],
+        "note": "What is still unexplained looking forward, and the same looking back one step further, travel through the stages together."
+      },
+      {
+        "id": "own-pace",
+        "label": "Each stage learns at its own pace",
+        "focus": [
+          "energy",
+          "move"
+        ],
+        "note": "The step is divided by how loud that stage has been, thus a quiet stage is not held back by a loud one."
+      },
+      {
+        "id": "the-sum",
+        "label": "A sum, not a mean",
+        "focus": [
+          "energy"
+        ],
+        "note": "The energy is a running sum over a fading past. At a factor of 0.99 it is about a hundred times the mean."
+      }
+    ]
+  },
+  "layout": {
+    "mode": "grid",
+    "origin": [
+      40,
+      120
+    ],
+    "cols": 6,
+    "gapX": 28,
+    "gapY": 56,
+    "cellW": 124,
+    "cellH": 62
+  },
+  "components": [
+    {
+      "id": "signal",
+      "type": "external",
+      "label": "Your Signal",
+      "sublabel": "x[n]",
+      "row": 1,
+      "col": 0
+    },
+    {
+      "id": "stage1",
+      "type": "backend",
+      "label": "Stage m",
+      "sublabel": "holds one number",
+      "row": 1,
+      "col": 1
+    },
+    {
+      "id": "held",
+      "type": "database",
+      "label": "Looking Back",
+      "sublabel": "one step further",
+      "row": 0,
+      "col": 2
+    },
+    {
+      "id": "stage2",
+      "type": "backend",
+      "label": "Stage m+1",
+      "sublabel": "and the next",
+      "row": 1,
+      "col": 2
+    },
+    {
+      "id": "energy",
+      "type": "database",
+      "label": "How Loud",
+      "sublabel": "a fading sum",
+      "row": 2,
+      "col": 2
+    },
+    {
+      "id": "move",
+      "type": "backend",
+      "label": "Move k[m]",
+      "sublabel": "by what they share",
+      "row": 2,
+      "col": 1
+    },
+    {
+      "id": "left",
+      "type": "cloud",
+      "label": "What Is Left",
+      "sublabel": "none could explain",
+      "row": 1,
+      "col": 3
+    }
+  ],
+  "boundaries": [
+    {
+      "kind": "region",
+      "label": "one number for each stage of the ladder",
+      "wraps": [
+        "stage1",
+        "stage2"
+      ]
+    }
+  ],
+  "connections": [
+    {
+      "id": "in",
+      "from": "signal",
+      "to": "stage1",
+      "label": "x[n]",
+      "variant": "emphasis",
+      "labelAt": [
+        176,
+        312
+      ]
+    },
+    {
+      "id": "fwd",
+      "from": "stage1",
+      "to": "stage2",
+      "label": "forward, less k*held",
+      "variant": "emphasis",
+      "labelAt": [
+        328,
+        312
+      ]
+    },
+    {
+      "id": "back",
+      "from": "held",
+      "to": "stage2",
+      "label": "backward",
+      "labelAt": [
+        404.0,
+        194.0
+      ]
+    },
+    {
+      "id": "share",
+      "from": "stage2",
+      "to": "move",
+      "variant": "emphasis",
+      "fromSide": "bottom",
+      "toSide": "right"
+    },
+    {
+      "id": "loud",
+      "from": "energy",
+      "to": "move",
+      "label": "divides the step",
+      "labelAt": [
+        328.0,
+        430.0
+      ]
+    },
+    {
+      "id": "adjust",
+      "from": "move",
+      "to": "stage1",
+      "label": "k[m] moves"
+    },
+    {
+      "id": "rest",
+      "from": "stage2",
+      "to": "left",
+      "label": "the residue",
+      "variant": "emphasis",
+      "labelDy": -24
+    }
+  ],
+  "cards": [
+    {
+      "dot": "cyan",
+      "title": "What it works out",
+      "items": [
+        "forward[m+1] = forward[m] - k[m] * held[m]",
+        "backward[m+1] = held[m] - k[m] * forward[m]",
+        "k[m] moves towards whatever the two still have in common"
+      ]
+    },
+    {
+      "dot": "emerald",
+      "title": "Why a ladder learns quickly",
+      "items": [
+        "The step of a stage is divided by how loud that stage has been",
+        "Thus each stage judges its own step against its own signal",
+        "A straight list moves every coefficient against one rate and cannot do that"
+      ]
+    },
+    {
+      "dot": "amber",
+      "title": "What will catch you",
+      "items": [
+        "The energy is a running SUM over a fading past, not a running mean",
+        "Such a sum is about 1/(1-factor) times the mean",
+        "At a factor of 0.99 it is a hundred times larger, and the rate must be read so"
+      ]
+    }
+  ]
+}

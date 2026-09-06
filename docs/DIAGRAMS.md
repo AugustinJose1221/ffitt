@@ -13,7 +13,7 @@ a few chapters that walk through it a step at a time.
 **Preview** opens the page in a browser. **File** is the page itself, which a
 reader with a clone can open with no service at all.
 
-20 of the 64 modules have a diagram.
+30 of the 64 modules have a diagram.
 
 ## Transforms
 
@@ -42,18 +42,18 @@ reader with a clone can open with no service at all.
 |---|---|---|
 | [`fir`](api/fir.md) | [preview](https://htmlpreview.github.io/?https://github.com/AugustinJose1221/ffitt/blob/development/docs/diagrams/filter/fir.html) | [fir.html](diagrams/filter/fir.html) |
 | [`iir`](api/iir.md) | [preview](https://htmlpreview.github.io/?https://github.com/AugustinJose1221/ffitt/blob/development/docs/diagrams/filter/iir.html) | [iir.html](diagrams/filter/iir.html) |
-| [`savgol`](api/savgol.md) | not yet drawn | |
+| [`savgol`](api/savgol.md) | [preview](https://htmlpreview.github.io/?https://github.com/AugustinJose1221/ffitt/blob/development/docs/diagrams/filter/savgol.html) | [savgol.html](diagrams/filter/savgol.html) |
 | [`movavg`](api/movavg.md) | [preview](https://htmlpreview.github.io/?https://github.com/AugustinJose1221/ffitt/blob/development/docs/diagrams/filter/movavg.html) | [movavg.html](diagrams/filter/movavg.html) |
 | [`medfilt`](api/medfilt.md) | [preview](https://htmlpreview.github.io/?https://github.com/AugustinJose1221/ffitt/blob/development/docs/diagrams/filter/medfilt.html) | [medfilt.html](diagrams/filter/medfilt.html) |
-| [`dcblock`](api/dcblock.md) | not yet drawn | |
-| [`detrend`](api/detrend.md) | not yet drawn | |
-| [`hampel`](api/hampel.md) | not yet drawn | |
-| [`adaptive`](api/adaptive.md) | not yet drawn | |
-| [`rls`](api/rls.md) | not yet drawn | |
-| [`lattice`](api/lattice.md) | not yet drawn | |
-| [`resample`](api/resample.md) | not yet drawn | |
-| [`filtfilt`](api/filtfilt.md) | not yet drawn | |
-| [`farrow`](api/farrow.md) | not yet drawn | |
+| [`dcblock`](api/dcblock.md) | [preview](https://htmlpreview.github.io/?https://github.com/AugustinJose1221/ffitt/blob/development/docs/diagrams/filter/dcblock.html) | [dcblock.html](diagrams/filter/dcblock.html) |
+| [`detrend`](api/detrend.md) | [preview](https://htmlpreview.github.io/?https://github.com/AugustinJose1221/ffitt/blob/development/docs/diagrams/filter/detrend.html) | [detrend.html](diagrams/filter/detrend.html) |
+| [`hampel`](api/hampel.md) | [preview](https://htmlpreview.github.io/?https://github.com/AugustinJose1221/ffitt/blob/development/docs/diagrams/filter/hampel.html) | [hampel.html](diagrams/filter/hampel.html) |
+| [`adaptive`](api/adaptive.md) | [preview](https://htmlpreview.github.io/?https://github.com/AugustinJose1221/ffitt/blob/development/docs/diagrams/filter/adaptive.html) | [adaptive.html](diagrams/filter/adaptive.html) |
+| [`rls`](api/rls.md) | [preview](https://htmlpreview.github.io/?https://github.com/AugustinJose1221/ffitt/blob/development/docs/diagrams/filter/rls.html) | [rls.html](diagrams/filter/rls.html) |
+| [`lattice`](api/lattice.md) | [preview](https://htmlpreview.github.io/?https://github.com/AugustinJose1221/ffitt/blob/development/docs/diagrams/filter/lattice.html) | [lattice.html](diagrams/filter/lattice.html) |
+| [`resample`](api/resample.md) | [preview](https://htmlpreview.github.io/?https://github.com/AugustinJose1221/ffitt/blob/development/docs/diagrams/filter/resample.html) | [resample.html](diagrams/filter/resample.html) |
+| [`filtfilt`](api/filtfilt.md) | [preview](https://htmlpreview.github.io/?https://github.com/AugustinJose1221/ffitt/blob/development/docs/diagrams/filter/filtfilt.html) | [filtfilt.html](diagrams/filter/filtfilt.html) |
+| [`farrow`](api/farrow.md) | [preview](https://htmlpreview.github.io/?https://github.com/AugustinJose1221/ffitt/blob/development/docs/diagrams/filter/farrow.html) | [farrow.html](diagrams/filter/farrow.html) |
 
 ## Estimation
 

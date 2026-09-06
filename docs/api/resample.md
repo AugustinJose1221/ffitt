@@ -9,7 +9,7 @@ python3 scripts/api_doc.py
 
 Changing the rate of a signal. Declared in `ffitt/filter/resample.h`.
 
-[Back to the index](../API.md) | [How the filter modules work](../../ffitt/filter/README.md)
+[Back to the index](../API.md) | [How the filter modules work](../../ffitt/filter/README.md) | [How it works](../diagrams/filter/resample.html) ([preview](https://htmlpreview.github.io/?https://github.com/AugustinJose1221/ffitt/blob/development/docs/diagrams/filter/resample.html))
 
 ## Overview
 
@@ -71,6 +71,29 @@ works, and a caller who wants a sharper edge gives a longer one.
 A LARGE FACTOR IS BETTER DONE IN STAGES. Going from 32 kHz to 500 Hz in one
 step needs a filter of about 2000 coefficients. Doing it as 8 then 8 needs
 two filters of about 40, and the two together cost far less than the one.
+
+## Method
+
+Changing the rate by P/Q is three steps, and only the middle one is obvious:
+
+    1. put Q-1 zeros between the samples, which raises the rate by Q
+    2. filter, at the higher rate
+    3. keep every Pth sample, which lowers the rate by P
+
+The filter in the middle does two jobs at once, and both are necessary. On
+the way up it fills in the zeros, which are not samples of anything. On the
+way down it removes everything above half the NEW rate, before that content
+can fold back.
+
+That folding is the whole reason this is a module and not a line of code. A
+signal at 32 kHz may hold up to 16 kHz. Keep every 64th sample and the new
+rate holds nothing above 250 Hz. What was above 250 does not disappear: it
+comes back at a frequency it never had, sitting on top of the signal and
+looking exactly like part of it, and NOTHING can take it out afterwards.
+
+The zeros are never really inserted and the thrown samples are never really
+worked out. The library computes only the outputs it keeps, thus the cost is
+the cost of the answers and not of the intermediate rate.
 
 ## Macros
 

@@ -73,6 +73,28 @@
 // Nothing is stored for either, because the carried samples are worked out
 // from the ones already in hand.
 
+// Method:
+// The block is filtered forwards, turned round, filtered again, and turned
+// back:
+//
+//     y = reverse(filter(reverse(filter(x))))
+//
+// Running the same filter both ways cancels the delay exactly. Whatever the
+// filter held back on the way forward it holds back again on the way back, and
+// the two shifts are equal and opposite. Thus every frequency comes out where
+// it went in, and the shape of the signal survives.
+//
+// Two things follow from it, and both must be known:
+//
+// The filter is applied TWICE, thus the band it takes out is taken out twice.
+// The edge is sharper than the design asks for and the stop band is deeper by
+// the same measure again.
+//
+// It cannot be done as the samples arrive. The whole block must be in hand
+// before the backward pass can start, thus this is for a recording and never
+// for a live signal.
+
+
 // How many samples are carried past each end, for a filter of the given size.
 //
 // Three times the length of the filter is enough for the answer to have

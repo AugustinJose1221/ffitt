@@ -9,7 +9,7 @@ python3 scripts/api_doc.py
 
 The filter of Savitzky and Golay. Declared in `ffitt/filter/savgol.h`.
 
-[Back to the index](../API.md) | [How the filter modules work](../../ffitt/filter/README.md)
+[Back to the index](../API.md) | [How the filter modules work](../../ffitt/filter/README.md) | [How it works](../diagrams/filter/savgol.html) ([preview](https://htmlpreview.github.io/?https://github.com/AugustinJose1221/ffitt/blob/development/docs/diagrams/filter/savgol.html))
 
 ## Overview
 
@@ -36,6 +36,30 @@ The design uses the matrix module: it builds the matrix of the powers of the
 positions in the window, and it solves the normal equations of the least
 squares. That work happens one time, at savgol_design. The filter itself
 then multiplies and adds only.
+
+## Method
+
+For each window the filter lays a polynomial through the samples by least
+squares, and gives the value of that polynomial at the middle:
+
+    y[n] = sum over k of x[n+k] * h[k]
+
+That is one weighed sum, exactly the shape of a finite filter. The fitting is
+not done again for every sample. A window of a given size and a polynomial of
+a given order always give the SAME weights, thus they are worked out once at
+the design and used for ever after.
+
+The weights come from the least squares fit itself:
+
+    h = row of the middle of (A' * A)^-1 * A'
+
+where A holds a power of the offset in each column. A derivative is the same
+fit read differently: the weights for the first derivative come from the
+second row rather than the middle one, and no new fitting is needed.
+
+That is why a peak survives. A mean can only give a flat answer over the
+window, thus a peak is made lower and wider. A polynomial can follow the
+curve of the peak, thus the height and the width come through.
 
 ## Types
 
