@@ -98,8 +98,6 @@ like roots.
 How many numbers a polynomial of the given order holds, which is one more
 than the order.
 
-True if the order is one whose roots this module will find.
-
 ## Macros
 
 ### `POLY_LARGEST_ROOT_ORDER`

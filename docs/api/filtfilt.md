@@ -72,11 +72,6 @@ second stands below it. The signal then begins with no step and no corner.
 Nothing is stored for either, because the carried samples are worked out
 from the ones already in hand.
 
-How many samples are carried past each end, for a filter of the given size.
-
-Three times the length of the filter is enough for the answer to have
-settled. Where the signal is shorter than that, as much as there is is used.
-
 ## Functions
 
 ### `filtfilt_padding`

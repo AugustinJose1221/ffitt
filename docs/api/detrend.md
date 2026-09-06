@@ -113,8 +113,6 @@ mean of the block, and NOT the value at the first sample. Use
 detrend_trend_at to get the trend at a sample rather than working it out by
 hand.
 
-Which trend to take away.
-
 ## Functions
 
 ### `detrend_is_valid_kind`

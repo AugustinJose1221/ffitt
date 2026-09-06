@@ -71,8 +71,6 @@ standard deviation of samples that follow a normal spread.
 The number is 1/0.6745, because for a normal spread the median absolute
 deviation is 0.6745 of the deviation.
 
-Give the sum of the samples.
-
 ## Macros
 
 ### `STATS_MAD_TO_DEVIATION`

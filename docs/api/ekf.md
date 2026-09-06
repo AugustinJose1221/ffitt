@@ -48,10 +48,6 @@ ekf_set_derivative_step changes it.
 The filter takes no memory while it runs. Thus a target with no heap can use
 it, as with the module kalman.
 
-The state function. It reads the state and the input, and it writes the next
-state into the result. The three matrices have the orders nx x 1, ni x 1 and
-nx x 1.
-
 ## Macros
 
 ### `EKF_MEMPOOL_SIZE`

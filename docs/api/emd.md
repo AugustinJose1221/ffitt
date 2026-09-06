@@ -16,18 +16,6 @@ Empirical mode decomposition. Declared in `ffitt/decompose/emd.h`.
 A signal with fewer than three samples holds no peak and no valley, thus
 the decomposition cannot take anything out of it.
 
-The empirical mode decomposition.
-
-The decomposition takes a signal apart into intrinsic mode functions and a
-residue. Each function holds one range of frequency of the signal. The sum
-of all the functions and the residue gives the signal again.
-
-The method works in steps. It finds the peaks and the valleys of the signal,
-draws a spline through the peaks and a spline through the valleys, and takes
-the mean of the two curves away from the signal. It repeats this until the
-result is an intrinsic mode function. The rest is the residue, and the
-method starts again with it.
-
 ## Macros
 
 ### `EMD_MINIMUM_SIZE`

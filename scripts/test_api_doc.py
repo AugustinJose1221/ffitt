@@ -268,47 +268,96 @@ def test_a_module_with_no_method_gives_none(tmp_path):
     assert method == []
 
 
-def test_every_module_of_the_repository_carries_its_overview():
-    """The prose at the top of a header must reach the documentation.
+def test_the_comment_of_a_declaration_is_not_read_twice():
+    """A comment directly above a declaration belongs to that declaration.
 
-    It did not, for every module, until the generator learned to carry it.
+    Reading it into the overview as well printed the same words twice in one
+    document, once at the top and once beside the function.
     """
+    text = "\n".join([
+        "#ifndef EXAMPLE_H",
+        "#define EXAMPLE_H",
+        "",
+        "// The example module.",
+        "",
+        "// True if the size can be used.",
+        "bool example_is_valid_size(uint32_t size);",
+        "",
+    ])
+    overview, method = api_doc.read_module_comment(text.splitlines())
+    assert overview == ["The example module."]
+    assert method == []
+    assert not any("size can be used" in line for line in overview)
+
+
+def test_no_module_says_the_same_thing_twice():
+    """No line of an overview may also stand as the comment of a function."""
     for name, path, _ in api_doc.MODULES:
+        full = os.path.join(api_doc.REPOSITORY, path)
+        with open(full, encoding="utf-8") as handle:
+            overview, _ = api_doc.read_module_comment(handle.read().splitlines())
+
+        _, _, functions = api_doc.read_header(full)
+        for function_name, _, comment in functions:
+            if not comment:
+                continue
+            assert comment[0] not in overview, (
+                "%s says the comment of %s in its overview as well"
+                % (name, function_name))
+
+
+def test_no_text_above_the_first_declaration_is_lost():
+    """Every comment block at the top of a header must reach the document.
+
+    It may arrive as the Overview or as the Method. The block that sits
+    directly on the first declaration is left out here, because it belongs to
+    that declaration: for a struct it is printed beside the type, and for an
+    enum it is lost, which is the fault that issue #92 holds.
+    """
+    for name, path, title in api_doc.MODULES:
         if name in api_doc.HEADERS_WITHOUT_A_MODULE:
             continue
-        with open(os.path.join(api_doc.REPOSITORY, path), encoding="utf-8") as handle:
-            overview, _ = api_doc.read_module_comment(handle.read().splitlines())
-        assert overview != [], "%s has no overview at the top of its header" % name
 
-
-def test_nothing_above_the_first_declaration_is_dropped():
-    """Every comment line at the top of a header must reach the document.
-
-    The reader took the first block only. A header that said more after its
-    method block lost that text without a sound. This holds the whole set.
-    """
-    for name, path, _ in api_doc.MODULES:
         with open(os.path.join(api_doc.REPOSITORY, path), encoding="utf-8") as handle:
             lines = handle.read().splitlines()
 
-        overview, method = api_doc.read_module_comment(lines)
-        carried = set(line for line in overview + method if line.strip())
+        document = api_doc.build_module_document(name, path, title)
 
-        # The same walk as the reader, gathering every comment line it passed.
-        seen = []
+        standalone = []
+        pending = []
         for line in lines:
             stripped = line.strip()
             if stripped.startswith("//"):
                 body = stripped[2:]
                 if body.startswith(" "):
                     body = body[1:]
-                seen.append(body)
+                pending.append(body)
                 continue
             if stripped == "" or stripped.startswith("#"):
+                standalone.extend(pending)
+                pending = []
                 continue
+            # The declaration ends the search, and takes its own comment away.
             break
 
-        for line in seen:
-            if not line.strip() or line.lower().startswith("method:"):
+        for body in standalone:
+            if not body.strip() or body.lower().startswith("method:"):
                 continue
-            assert line in carried, "%s drops the line %r" % (name, line)
+            assert body in document, "%s loses the line %r" % (name, body)
+
+
+def test_a_module_whose_comment_sits_on_its_declaration_keeps_it():
+    """Some headers put their whole description on the first declaration.
+
+    Those modules get no Overview, because the words already stand beside the
+    declaration. They must not be printed twice, and must not be lost.
+    """
+    name, path, title = "point2d", "ffitt/core/point2d.h", "A point on a plane"
+    with open(os.path.join(api_doc.REPOSITORY, path), encoding="utf-8") as handle:
+        overview, _ = api_doc.read_module_comment(handle.read().splitlines())
+
+    assert overview == []
+    document = api_doc.build_module_document(name, path, title)
+    # No Overview section, because the words stand beside the type instead.
+    assert "## Overview" not in document
+    assert "A point on a plane." in document

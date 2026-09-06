@@ -162,17 +162,24 @@ def read_module_comment(lines):
             current.append(body)
             continue
 
-        if current:
-            blocks.append(current)
-            current = []
-
         # An empty line and a line of the preprocessor stand between the guard,
         # the includes and the comment of the module. A declaration does not,
         # thus the first of those ends the search.
         if stripped == "" or stripped.startswith("#"):
+            if current:
+                blocks.append(current)
+                current = []
             continue
+
+        # A comment that stands directly above a declaration, with no empty
+        # line between, belongs to that declaration and not to the module.
+        # comment_above reads it there, and reading it here as well would say
+        # the same thing twice. Thus it is thrown away rather than kept.
+        current = []
         break
 
+    # Anything still gathered ran to the end of the file with no declaration
+    # after it, thus it belongs to the module.
     if current:
         blocks.append(current)
 

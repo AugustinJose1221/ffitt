@@ -53,8 +53,6 @@ stretch of recording, or a bin above the cutoff of a filter. Without a floor
 the answer holds values that no arithmetic and no picture can use.
 SPECTROGRAM_FLOOR_DECIBEL is where this module stops.
 
-Which unit the answer is in.
-
 ## Macros
 
 ### `SPECTROGRAM_FLOOR_DECIBEL`

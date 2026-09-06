@@ -158,14 +158,6 @@ by the guard on the diagonal, and rightly.
 How many numbers a polynomial of the given order holds, which is one more
 than the order: a line is of the first order and holds two.
 
-True if a polynomial of this order can be fitted through this many points at
-the width of this build.
-
-There must be at least as many points as numbers to find, and the order must
-not be above LSTSQ_HIGHEST_ORDER. This says nothing about whether the
-readings can fix a polynomial of that order; only the fit itself can say
-that, and it does.
-
 ## Macros
 
 ### `LSTSQ_SMALLEST_PIVOT_PART`

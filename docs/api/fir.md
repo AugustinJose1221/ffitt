@@ -88,22 +88,6 @@ change the window; to turn faster, lengthen the filter.
 How far either side of a frequency the group delay is measured, for a filter
 that is not symmetric.
 
-True if a filter of the given length can hold the given cutoff.
-
-The turn from passing to stopping is FIR_TRANSITION/length wide. A cutoff
-nearer to 0 than that, or nearer to 0.5 than that, has no room for the turn.
-The design then gives back a filter whose pass band never reaches 1, and it
-does so quietly.
-
-Measured, for a low pass of 101 coefficients, where the turn is 0.0198 wide,
-at the gain that should be 1.0 in the pass band:
-
-    cutoff    0.0500   0.0200   0.0100   0.0050   0.0020
-    gain      1.0024   1.0039   0.8443   0.5065   0.2140
-
-The gain holds while the cutoff is above the width of the turn, and falls
-away under it. Thus: make the filter longer, or bring the sample rate down.
-
 ## Macros
 
 ### `FIR_TRANSITION`

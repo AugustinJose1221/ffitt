@@ -104,9 +104,6 @@ not settle cannot spin for ever.
 How small the off-diagonal part must be, against the diagonal, before the
 work is done.
 
-True if this matrix can be given to eigen_solve: square, at least one by
-one, and symmetric within the tolerance that eigen_solve uses.
-
 ## Macros
 
 ### `EIGEN_LARGEST_SWEEPS`

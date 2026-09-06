@@ -35,12 +35,6 @@ which describes nothing. For that reason the Hilbert transform goes together
 with the empirical mode decomposition, which takes a signal apart into such
 single frequency parts. The hht module joins the two.
 
-Give the analytic signal of a real signal.
-
-The signal and the work buffer must hold as many values as the size of the
-transform. The function writes the result into the work buffer, thus it gets
-no memory.
-
 ## Functions
 
 ### `hilbert_analytic_signal`

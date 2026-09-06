@@ -52,10 +52,6 @@ that way the widths of two different shapes may be set beside each other and
 mean the same thing, which they do not if one is given as a standard
 deviation and another as a half width at half the top.
 
-True if this is a width a curve can be read at, which means above nothing.
-A width of nothing is a peak of no width at all, and every shape here
-divides by it.
-
 ## Functions
 
 ### `curve_is_valid_width`

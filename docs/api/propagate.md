@@ -91,8 +91,6 @@ The most states a model may hold.
 The methods keep a few copies of the state on the stack, so that no memory
 is taken and none is asked of the caller. This is what bounds those copies.
 
-Which method carries the state forward.
-
 ## Macros
 
 ### `PROPAGATE_LARGEST_STATE`
