@@ -1,0 +1,183 @@
+{
+  "schema_version": 1,
+  "diagram_type": "architecture",
+  "meta": {
+    "title": "Inside fft",
+    "quality_profile": "showcase"
+  },
+  "layout": {
+    "mode": "grid",
+    "origin": [
+      40,
+      120
+    ],
+    "cols": 6,
+    "gapX": 28,
+    "gapY": 56,
+    "cellW": 124,
+    "cellH": 62
+  },
+  "components": [
+    {
+      "id": "size",
+      "type": "external",
+      "label": "Your Size",
+      "sublabel": "a power of two",
+      "tag": "64, 256, 1024",
+      "row": 1,
+      "col": 0
+    },
+    {
+      "id": "alloc",
+      "type": "backend",
+      "label": "fft_alloc",
+      "sublabel": "called one time",
+      "row": 1,
+      "col": 1
+    },
+    {
+      "id": "twiddle",
+      "type": "database",
+      "label": "Turning Factors",
+      "sublabel": "size/2 values",
+      "row": 0,
+      "col": 2
+    },
+    {
+      "id": "reverse",
+      "type": "database",
+      "label": "Reversal Order",
+      "sublabel": "size values",
+      "row": 2,
+      "col": 2
+    },
+    {
+      "id": "reorder",
+      "type": "backend",
+      "label": "Reorder",
+      "sublabel": "pairs exchanged",
+      "row": 1,
+      "col": 3
+    },
+    {
+      "id": "butterfly",
+      "type": "backend",
+      "label": "Butterfly Passes",
+      "sublabel": "log2(size) of them",
+      "row": 1,
+      "col": 4
+    },
+    {
+      "id": "bins",
+      "type": "cloud",
+      "label": "Frequency Bins",
+      "sublabel": "the same array",
+      "row": 1,
+      "col": 5
+    },
+    {
+      "id": "binfreq",
+      "type": "backend",
+      "label": "fft_bin_frequency",
+      "sublabel": "a bin to hertz",
+      "row": 2,
+      "col": 5
+    }
+  ],
+  "boundaries": [
+    {
+      "kind": "region",
+      "label": "fft_transform, in the array you gave",
+      "wraps": [
+        "reorder",
+        "butterfly"
+      ]
+    }
+  ],
+  "connections": [
+    {
+      "id": "ask",
+      "from": "size",
+      "to": "alloc",
+      "label": "a power of two",
+      "variant": "emphasis",
+      "labelDy": -24
+    },
+    {
+      "id": "build-twiddle",
+      "from": "alloc",
+      "to": "twiddle",
+      "label": "built one time"
+    },
+    {
+      "id": "build-reverse",
+      "from": "alloc",
+      "to": "reverse",
+      "label": "built one time"
+    },
+    {
+      "id": "read-order",
+      "from": "reverse",
+      "to": "reorder",
+      "label": "the order"
+    },
+    {
+      "id": "read-factors",
+      "from": "twiddle",
+      "to": "butterfly",
+      "label": "the factors"
+    },
+    {
+      "id": "first",
+      "from": "reorder",
+      "to": "butterfly",
+      "label": "then the passes",
+      "variant": "emphasis",
+      "labelDy": 47
+    },
+    {
+      "id": "result",
+      "from": "butterfly",
+      "to": "bins",
+      "label": "the result",
+      "variant": "emphasis",
+      "labelDy": -24
+    },
+    {
+      "id": "which-hertz",
+      "from": "bins",
+      "to": "binfreq",
+      "label": "which bin",
+      "labelDy": 24
+    }
+  ],
+  "cards": [
+    {
+      "dot": "cyan",
+      "title": "What it works out",
+      "items": [
+        "X[k] = sum over n of x[n] * exp(-2*pi*i*k*n/size)",
+        "Bin k says how much of the signal turns at the frequency of that bin",
+        "Worked out directly, that sum costs size*size steps"
+      ]
+    },
+    {
+      "dot": "emerald",
+      "title": "How the library gets there",
+      "items": [
+        "The radix-2 method of Cooley and Tukey splits the sum in half again and again",
+        "That leaves log2(size) passes over the array, not size passes",
+        "The two tables depend on the size alone, thus they are built at the allocation"
+      ]
+    },
+    {
+      "dot": "amber",
+      "title": "What it costs you",
+      "items": [
+        "The transform itself asks for no memory and works in the array you gave",
+        "The tables hold size/2 turning factors and size indices",
+        "A float holds about 7 digits; up to about 4096 points at least 4 survive"
+      ]
+    }
+  ]
+}
