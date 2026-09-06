@@ -9,7 +9,7 @@ python3 scripts/api_doc.py
 
 Detection of one frequency. Declared in `ffitt/transform/goertzel.h`.
 
-[Back to the index](../API.md) | [How the transform modules work](../../ffitt/transform/README.md)
+[Back to the index](../API.md) | [How the transform modules work](../../ffitt/transform/README.md) | [How it works](../diagrams/transform/goertzel.html) ([preview](https://htmlpreview.github.io/?https://github.com/AugustinJose1221/ffitt/blob/main/docs/diagrams/transform/goertzel.html))
 
 ## Overview
 
@@ -32,6 +32,32 @@ frequency that holds a whole number of turns inside the block gives the
 clearest answer.
 
 Call goertzel_reset before each new block.
+
+## Method
+
+One bin of a Fourier transform is the whole block weighed against one
+turning rate:
+
+    X[k] = sum over n of x[n] * exp(-2*pi*i*k*n/size)
+
+The library does not work that sum out. The same answer comes from a filter
+with two poles that is fed one sample at a time. With the angle of the bin
+written w, and coefficient = 2*cos(w), each sample carries two values
+forward:
+
+    s[n] = x[n] + coefficient*s[n-1] - s[n-2]
+
+After the whole block those two values hold the answer:
+
+    real      = s[n] - s[n-1]*cos(w)
+    imaginary = s[n-1]*sin(w)
+
+Thus the cost is one multiplication and two additions for each sample, and
+the state is two values and the two constants. Nothing holds the block.
+
+The angle is taken from the bin that lies nearest the frequency you ask
+for, because the answer is clearest when a whole number of turns fits
+inside the block.
 
 ## Types
 

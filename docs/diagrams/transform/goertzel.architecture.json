@@ -1,0 +1,206 @@
+{
+  "schema_version": 1,
+  "diagram_type": "architecture",
+  "meta": {
+    "title": "Inside goertzel",
+    "animation": "trace",
+    "quality_profile": "showcase",
+    "views": [
+      {
+        "id": "what-you-ask",
+        "label": "What you ask",
+        "focus": [
+          "ask",
+          "init"
+        ],
+        "note": "One frequency, a sample rate and a block size, given once. The detector takes no memory."
+      },
+      {
+        "id": "set-one-time",
+        "label": "Set one time",
+        "focus": [
+          "init",
+          "consts"
+        ],
+        "note": "The angle of the nearest bin gives two constants, and they never change again."
+      },
+      {
+        "id": "one-sample",
+        "label": "One sample at a time",
+        "focus": [
+          "samples",
+          "step",
+          "state"
+        ],
+        "note": "Each sample costs one multiplication and two additions, and only two values are carried forward."
+      },
+      {
+        "id": "the-answer",
+        "label": "The answer",
+        "focus": [
+          "state",
+          "answer"
+        ],
+        "note": "After a whole block those two values give the size and the angle at the frequency you asked for."
+      }
+    ]
+  },
+  "layout": {
+    "mode": "grid",
+    "origin": [
+      40,
+      120
+    ],
+    "cols": 6,
+    "gapX": 28,
+    "gapY": 56,
+    "cellW": 124,
+    "cellH": 62
+  },
+  "components": [
+    {
+      "id": "ask",
+      "type": "external",
+      "label": "Your Tone",
+      "sublabel": "hertz and rate",
+      "tag": "one frequency",
+      "row": 1,
+      "col": 0
+    },
+    {
+      "id": "init",
+      "type": "backend",
+      "label": "goertzel_init",
+      "sublabel": "takes no memory",
+      "row": 1,
+      "col": 1
+    },
+    {
+      "id": "consts",
+      "type": "database",
+      "label": "Two Constants",
+      "sublabel": "cos w and 2cos w",
+      "row": 0,
+      "col": 2
+    },
+    {
+      "id": "samples",
+      "type": "external",
+      "label": "Your Samples",
+      "sublabel": "one at a time",
+      "row": 2,
+      "col": 2
+    },
+    {
+      "id": "step",
+      "type": "backend",
+      "label": "Two-pole Step",
+      "sublabel": "1 multiply, 2 adds",
+      "row": 1,
+      "col": 3
+    },
+    {
+      "id": "state",
+      "type": "database",
+      "label": "Two Values",
+      "sublabel": "the whole state",
+      "row": 1,
+      "col": 4
+    },
+    {
+      "id": "answer",
+      "type": "cloud",
+      "label": "Magnitude",
+      "sublabel": "and the angle",
+      "row": 1,
+      "col": 5
+    }
+  ],
+  "boundaries": [
+    {
+      "kind": "region",
+      "label": "held for the whole block",
+      "wraps": [
+        "step",
+        "state"
+      ]
+    }
+  ],
+  "connections": [
+    {
+      "id": "asked",
+      "from": "ask",
+      "to": "init",
+      "label": "rate and size",
+      "variant": "emphasis",
+      "labelDy": -24
+    },
+    {
+      "id": "set",
+      "from": "init",
+      "to": "consts",
+      "label": "worked out one time"
+    },
+    {
+      "id": "coefficient",
+      "from": "consts",
+      "to": "step",
+      "label": "the coefficient"
+    },
+    {
+      "id": "fed",
+      "from": "samples",
+      "to": "step",
+      "label": "each sample",
+      "variant": "emphasis"
+    },
+    {
+      "id": "carried",
+      "from": "step",
+      "to": "state",
+      "label": "carried forward",
+      "variant": "emphasis",
+      "labelAt": [
+        632,
+        312
+      ]
+    },
+    {
+      "id": "read",
+      "from": "state",
+      "to": "answer",
+      "label": "after the block",
+      "variant": "emphasis",
+      "labelDy": -24
+    }
+  ],
+  "cards": [
+    {
+      "dot": "cyan",
+      "title": "What it works out",
+      "items": [
+        "X[k] = sum over n of x[n] * exp(-2*pi*i*k*n/size), for one k only",
+        "A transform gives every frequency; here only one is wanted",
+        "The angle comes from the bin nearest the frequency you asked for"
+      ]
+    },
+    {
+      "dot": "emerald",
+      "title": "How the library gets there",
+      "items": [
+        "s[n] = x[n] + coefficient*s[n-1] - s[n-2], with coefficient = 2*cos(w)",
+        "real = s[n] - s[n-1]*cos(w) and imaginary = s[n-1]*sin(w)",
+        "The sum is never worked out; a filter with two poles gives the same answer"
+      ]
+    },
+    {
+      "dot": "amber",
+      "title": "What it costs you",
+      "items": [
+        "One multiplication and two additions for each sample",
+        "The whole state is two values and two constants, and no block is held",
+        "Above about log2(size) frequencies, a transform costs less than this"
+      ]
+    }
+  ]
+}

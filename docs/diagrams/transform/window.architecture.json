@@ -1,0 +1,210 @@
+{
+  "schema_version": 1,
+  "diagram_type": "architecture",
+  "meta": {
+    "title": "Inside window",
+    "animation": "trace",
+    "quality_profile": "showcase",
+    "views": [
+      {
+        "id": "the-fault",
+        "label": "The fault it mends",
+        "focus": [
+          "block",
+          "step"
+        ],
+        "note": "A transform takes the block to repeat for ever. The end does not meet the start, and that step holds every frequency."
+      },
+      {
+        "id": "the-shape",
+        "label": "The shape",
+        "focus": [
+          "coeffs",
+          "shape"
+        ],
+        "note": "Four numbers and a sum of cosines give the whole shape. Only those four separate one window from another."
+      },
+      {
+        "id": "the-product",
+        "label": "One multiplication",
+        "focus": [
+          "shape",
+          "apply",
+          "ready"
+        ],
+        "note": "Each sample of the block is multiplied by the value of the window at that place. Nothing else happens."
+      },
+      {
+        "id": "the-trade",
+        "label": "What you trade",
+        "focus": [
+          "ready",
+          "trade"
+        ],
+        "note": "A window that hides a far tone better spreads a near one wider. The table in the header names the trade of each."
+      }
+    ]
+  },
+  "layout": {
+    "mode": "grid",
+    "origin": [
+      40,
+      120
+    ],
+    "cols": 6,
+    "gapX": 28,
+    "gapY": 56,
+    "cellW": 124,
+    "cellH": 62
+  },
+  "components": [
+    {
+      "id": "block",
+      "type": "external",
+      "label": "Your Block",
+      "sublabel": "size samples",
+      "tag": "rarely a whole period",
+      "row": 1,
+      "col": 0
+    },
+    {
+      "id": "step",
+      "type": "security",
+      "label": "The Step",
+      "sublabel": "end meets start",
+      "tag": "smears every bin",
+      "row": 0,
+      "col": 1
+    },
+    {
+      "id": "coeffs",
+      "type": "database",
+      "label": "Four Numbers",
+      "sublabel": "a0 a1 a2 a3",
+      "row": 2,
+      "col": 1
+    },
+    {
+      "id": "shape",
+      "type": "backend",
+      "label": "Sum of Cosines",
+      "sublabel": "one value per place",
+      "row": 1,
+      "col": 2
+    },
+    {
+      "id": "apply",
+      "type": "backend",
+      "label": "Multiply",
+      "sublabel": "y[n] = x[n]*w[n]",
+      "row": 1,
+      "col": 3
+    },
+    {
+      "id": "ready",
+      "type": "cloud",
+      "label": "Block Ready",
+      "sublabel": "no step at the ends",
+      "row": 1,
+      "col": 4
+    },
+    {
+      "id": "trade",
+      "type": "external",
+      "label": "The Trade",
+      "sublabel": "lobe against lobe",
+      "row": 1,
+      "col": 5
+    }
+  ],
+  "boundaries": [
+    {
+      "kind": "region",
+      "label": "worked out for each place",
+      "wraps": [
+        "shape",
+        "apply"
+      ]
+    }
+  ],
+  "connections": [
+    {
+      "id": "seen",
+      "from": "block",
+      "to": "step",
+      "label": "what a transform sees"
+    },
+    {
+      "id": "mend",
+      "from": "block",
+      "to": "shape",
+      "label": "the samples",
+      "variant": "emphasis",
+      "labelAt": [
+        184,
+        312
+      ]
+    },
+    {
+      "id": "chosen",
+      "from": "coeffs",
+      "to": "shape",
+      "label": "which window"
+    },
+    {
+      "id": "valued",
+      "from": "shape",
+      "to": "apply",
+      "label": "w[n]",
+      "variant": "emphasis",
+      "labelAt": [
+        632,
+        312
+      ]
+    },
+    {
+      "id": "made",
+      "from": "apply",
+      "to": "ready",
+      "label": "the product",
+      "variant": "emphasis",
+      "labelDy": -24
+    },
+    {
+      "id": "costs",
+      "from": "ready",
+      "to": "trade",
+      "label": "what it costs",
+      "labelDy": -24
+    }
+  ],
+  "cards": [
+    {
+      "dot": "cyan",
+      "title": "What it works out",
+      "items": [
+        "y[n] = x[n] * w[n], one multiplication for each sample",
+        "The window falls to nothing at both ends, thus the block meets itself",
+        "Without it, one tone smears across the whole result"
+      ]
+    },
+    {
+      "dot": "emerald",
+      "title": "How the library gets there",
+      "items": [
+        "w[n] = a0 - a1*cos(t) + a2*cos(2*t) - a3*cos(3*t), with t = 2*pi*n/(size-1)",
+        "Hann, Hamming, Blackman and Blackman-Harris differ in those four numbers alone",
+        "The divisor is size-1, thus the last value equals the first and the shape is symmetric"
+      ]
+    },
+    {
+      "dot": "amber",
+      "title": "What you trade",
+      "items": [
+        "A wider main lobe hides a tone that stands close by",
+        "Higher side lobes hide a weak tone that stands far away",
+        "Tukey and Kaiser do not fit the sum and are worked out on their own"
+      ]
+    }
+  ]
+}

@@ -49,6 +49,28 @@
 //
 // The main lobe is in bins, against the rectangular window.
 //
+// Method:
+//
+// The block is multiplied by the window before the transform reads it:
+//
+//     y[n] = x[n] * w[n]
+//
+// Most of these windows are one sum of cosines. With the turn of sample n
+// written t = 2*pi*n/(size-1), the value is:
+//
+//     w[n] = a0 - a1*cos(t) + a2*cos(2*t) - a3*cos(3*t)
+//
+// The four numbers are all that separates one window from another:
+//
+//     Hann              0.5      0.5      0        0
+//     Hamming           0.54     0.46     0        0
+//     Blackman          0.42     0.5      0.08     0
+//     Blackman-Harris   0.35875  0.48829  0.14128  0.01168
+//
+// The divisor is size-1 and not size, thus the window is symmetric and its
+// last value equals its first. Tukey and Kaiser do not fit this sum and are
+// worked out on their own.
+//
 // WHAT A WINDOW DOES TO THE ANSWER
 //
 // A window makes the signal smaller, thus every height in the result is too
