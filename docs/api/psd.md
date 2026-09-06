@@ -11,6 +11,59 @@ Power at each frequency. Declared in `ffitt/transform/psd.h`.
 
 [Back to the index](../API.md) | [How the transform modules work](../../ffitt/transform/README.md)
 
+## Overview
+
+How much power a signal holds at each frequency, by the method of Welch.
+
+WHY NOT SIMPLY TRANSFORM THE WHOLE SIGNAL
+
+One transform of a long signal gives a great many bins, and every one of
+them is as noisy as the last. Making the signal twice as long gives twice as
+many bins, each still as noisy: the answer becomes finer and no more
+certain. For a signal that holds noise, one transform of it is a poor
+measurement however long the signal is.
+
+Welch cuts the signal into blocks that overlap, transforms each one, and
+takes the mean of the results. The bins are coarser, because a block is
+shorter than the signal. But the noise in each bin falls as the number of
+blocks grows, and THAT is the trade this module offers:
+
+  fewer, longer blocks    fine in frequency, noisy in size
+  more, shorter blocks    coarse in frequency, steady in size
+
+A signal of 4096 samples cut into 8 overlapping blocks of 1024 gives bins 8
+times as wide and an answer about 3 times as steady.
+
+THE SCALING, WHICH IS THE PART THAT IS USUALLY WRONG
+
+A power spectral density is power for each hertz, thus its numbers do not
+change when the block gets longer or the window changes. Getting there needs
+three corrections, and leaving any of them out gives an answer that looks
+reasonable and is wrong by a factor that nobody notices:
+
+  THE WINDOW makes the signal smaller. The correction is the sum of the
+  squares of the window, not the sum of the window, because power follows
+  the square.
+
+  THE SAMPLE RATE turns power for each bin into power for each hertz.
+
+  THE OTHER HALF OF THE SPECTRUM holds the same power again, at the negative
+  frequencies. This module gives the one-sided answer, thus every bin except
+  the first and the last is doubled.
+
+With all three, a wave of amplitude A at one frequency has an area under the
+curve of A*A/2, whatever the block, the window or the overlap. The tests
+hold that.
+
+HOW MUCH TO OVERLAP
+
+A window throws away the samples at the two ends of every block. Overlapping
+the blocks uses those samples again in the next block, thus none of the
+signal is wasted. Half the block is the usual choice and suits every window
+here. More than that costs work and gains little, because blocks that
+overlap heavily hold much the same samples and their noise no longer
+averages away.
+
 ## Types
 
 ### `psd_t`

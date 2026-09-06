@@ -11,6 +11,37 @@ The discrete wavelet transform. Declared in `ffitt/transform/dwt.h`.
 
 [Back to the index](../API.md) | [How the transform modules work](../../ffitt/transform/README.md)
 
+## Overview
+
+The discrete wavelet transform.
+
+The transform takes a signal apart into an approximation and a detail. The
+approximation holds the slow part of the signal at half the number of
+samples, and the detail holds the fast part, also at half the number of
+samples. Together they hold as many values as the signal, thus the transform
+loses nothing and dwt_inverse gives the signal again.
+
+A Fourier transform says which frequencies the signal holds but not where
+they are. A wavelet transform says both, because each value of the detail
+belongs to one place of the signal. Thus the transform suits a signal that
+holds a short event, such as a step or a spike.
+
+The main use is to take noise out of a signal. Take the transform, set every
+small value of the detail to zero, and take the inverse transform. The noise
+spreads over every value of the detail, while the signal itself holds few
+large values. Thus this step takes away much of the noise and keeps the
+edges of the signal, which a low pass filter would make round.
+
+The size of the signal must be even for one level. For several levels the
+size must divide by two as many times as there are levels.
+
+The module holds two wavelets:
+
+- Haar, which is the simplest one. It looks at two samples at a time, thus
+  it finds a step very well and a smooth curve badly.
+- Daubechies with four coefficients, which looks at four samples at a time.
+  It follows a curve better, and it gives a smoother result.
+
 ## Macros
 
 ### `DWT_MAX_COEFFICIENT_COUNT`

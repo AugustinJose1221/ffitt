@@ -11,6 +11,60 @@ A filter that finds its own coefficients. Declared in `ffitt/filter/adaptive.h`.
 
 [Back to the index](../API.md) | [How the filter modules work](../../ffitt/filter/README.md)
 
+## Overview
+
+A filter that finds its own coefficients while it runs.
+
+Every other filter in this library is designed once and then applied. This
+one is given no design at all. It is given an answer to aim at, and it
+changes its own coefficients a little with every sample until it hits it.
+
+WHAT IT IS FOR
+
+TAKING AWAY NOISE THAT IS MEASURED SOMEWHERE ELSE. This is the use that
+matters most and the one a fixed filter cannot serve. A microphone near an
+engine, a coil near a transformer, a lead near a motor: in each case a
+second sensor sees the noise ALONE, without the signal. The noise reaches
+the first sensor changed in size and delayed, and by an amount nobody knows
+and which does not stay still.
+
+Give the noisy signal as what to aim at and the second sensor as the
+reference. The filter learns whatever turns one into the other and takes it
+away. WHAT IS LEFT OVER IS THE ANSWER, not what the filter gives out: the
+output is the noise it has learned, and the error is the signal with that
+noise gone.
+
+This works when no filter of frequency can, because the noise and the signal
+may hold exactly the same frequencies. What parts them is that the reference
+holds one and not the other.
+
+FOLLOWING SOMETHING THAT CHANGES. A fixed filter is right for the conditions
+it was designed for. This one follows.
+
+WHAT IT NEEDS, AND WHAT GOES WRONG WITHOUT IT
+
+THE REFERENCE MUST NOT HOLD THE SIGNAL. If it does, the filter learns to
+take the signal away as well, because that also makes the error smaller.
+This is the one way to use it that fails quietly: the error falls, everything
+looks well, and the answer has had the signal removed from it.
+
+THE RATE DECIDES EVERYTHING. Too high and the filter never settles but
+rattles around the answer, or runs away to nothing at all. Too low and it
+takes for ever to learn and cannot follow a change. adaptive_normalised is
+the answer to that, and the reason it usually wins.
+
+WHY adaptive_normalised IS THE ONE TO REACH FOR
+
+The plain rule moves each coefficient by the rate times the error times the
+reference. Thus how far it moves follows how LARGE the reference is, and a
+rate that settles for a quiet reference makes the filter run away for a loud
+one. The safe rate therefore depends on a signal that the designer has not
+heard yet.
+
+The normalised rule divides by the energy of what is in the filter now. The
+step then does not follow how loud the reference is, and a rate between 0
+and 2 is stable FOR ANY SIGNAL. Take 0.1 to 0.5 and it will work.
+
 ## Macros
 
 ### `ADAPTIVE_FLOOR`

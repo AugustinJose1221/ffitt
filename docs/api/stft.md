@@ -11,6 +11,82 @@ The transform in short pieces. Declared in `ffitt/transform/stft.h`.
 
 [Back to the index](../API.md) | [How the transform modules work](../../ffitt/transform/README.md)
 
+## Overview
+
+The transform of a signal in short pieces, so that WHEN a frequency was
+there can be seen and not only THAT it was.
+
+One transform of a whole recording says which frequencies it holds and says
+nothing at all about when. A recording of a bird and then a car gives the
+same answer as a recording of a car and then a bird. Cutting the recording
+into short pieces and transforming each one gives a frequency answer for
+each moment, which is what almost every real question wants.
+
+THE TRADE THAT CANNOT BE ESCAPED
+
+A short block sees when a thing happened but cannot say what frequency it
+was; a long block says the frequency finely but cannot say when. This is not
+a fault of the method and no method escapes it. A block of n samples at a
+sample rate of r covers n/r seconds and its bins stand r/n hertz apart, and
+the product of those two is 1 whatever is chosen.
+
+    block at 8000 samples in a second     covers      bins stand apart
+    128                                   16 ms       62.5 Hz
+    1024                                  128 ms       7.8 Hz
+    8192                                   1.02 s      0.98 Hz
+
+CHOOSE THE BLOCK FROM THE QUESTION. Speech asks what is being said, which
+changes every 20 ms, thus a block near that. A shaft turning at 50 hertz
+asks which of two nearby orders is growing, thus a block of a second or
+more. There is no default that suits both.
+
+GOING BACK IS NOT FREE, AND THE MODULE SAYS WHERE IT WORKED
+
+stft_inverse puts the pieces back together, and it can only do so where the
+windows covered the sample. Two different things can stop that.
+
+THE FIRST IS THE WINDOW AND THE HOP TOGETHER. A hop as long as the block
+leaves the samples at the ends of each block multiplied by nearly nothing,
+and nothing divided back out can recover them. stft_can_rebuild examines the
+window and the hop and says whether every sample inside the signal carries
+enough weight. Call it once after stft_design rather than finding out from a
+rebuilt signal that is quietly wrong.
+
+THE SECOND IS THE TWO ENDS OF THE SIGNAL ITSELF, and it catches everyone.
+The sample at the very start is covered by the FIRST BLOCK ONLY, where a
+sample in the middle is covered by as many blocks as fit across it. A hann
+window is zero at its first sample, thus the first sample of the whole
+signal is multiplied by zero and no arithmetic brings it back.
+
+stft_solid_range gives the stretch of samples where the cover is full and
+the answer is exact. OUTSIDE THAT STRETCH THE OUTPUT IS SET TO ZERO rather
+than left as a number that looks like an answer. Where the ends matter, put
+a block of zeros before the signal and another after it, and the stretch
+then covers everything that was really there.
+
+Measured on a block of 256, the worst error inside the solid stretch, at 32
+bits:
+
+    window       hop of block/4  hop of block/2  hop of the whole block
+    rectangular       0.0000005       0.0000005       0.0000007
+    hann              0.0000005       0.0000005   REFUSED
+    hamming           0.0000005       0.0000005       0.0000035
+    blackman          0.0000005       0.0000005   REFUSED
+
+That is the rounding of the transform itself and nothing more. At 64 bits
+every figure is below what these can show.
+
+A hop of half the block is the usual choice and rebuilds exactly with every
+window here. The refusals are real: a hann window at a hop of the whole block
+leaves the first sample of every block multiplied by zero.
+
+WHAT IS GIVEN BACK, AND HOW IT IS LAID OUT
+
+One frame for each block, and stft_bin_count bins for each frame. The frames
+lie one after another, thus the bin b of the frame f sits at
+(f * stft_bin_count(block)) + b. Only the bins up to half the block and one
+more are kept, because the signal is real and the rest is their mirror.
+
 ## Macros
 
 ### `STFT_SMALLEST_WEIGHT_PART`

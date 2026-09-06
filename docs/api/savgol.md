@@ -11,6 +11,32 @@ The filter of Savitzky and Golay. Declared in `ffitt/filter/savgol.h`.
 
 [Back to the index](../API.md) | [How the filter modules work](../../ffitt/filter/README.md)
 
+## Overview
+
+The filter of Savitzky and Golay.
+
+The filter smooths a signal and keeps its shape. It takes a window of
+samples, lays a polynomial through them by the method of the least squares,
+and gives the value of that polynomial at the middle of the window.
+
+A plain mean of a window makes a peak lower and wider. This filter does not,
+because a polynomial can follow a peak. Thus the filter suits a signal where
+the height and the width of a peak carry the information, such as the result
+of a spectrometer or a chromatograph.
+
+The filter can also give a derivative of the signal. The derivative of the
+polynomial at the middle of the window is a much better answer than the
+plain difference of two samples, which noise disturbs strongly.
+
+The window must hold an odd number of samples, so that it has a middle. The
+order of the polynomial must be below the size of the window. A higher order
+follows the signal more closely and takes away less noise.
+
+The design uses the matrix module: it builds the matrix of the powers of the
+positions in the window, and it solves the normal equations of the least
+squares. That work happens one time, at savgol_design. The filter itself
+then multiplies and adds only.
+
 ## Types
 
 ### `savgol_t`

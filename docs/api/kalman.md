@@ -11,6 +11,11 @@ The Kalman filter. Declared in `ffitt/estimate/kalman.h`.
 
 [Back to the index](../API.md) | [How the estimate modules work](../../ffitt/estimate/README.md)
 
+## Overview
+
+The number of float elements that kalman_static_alloc needs in the memory
+pool. Give the same three sizes that you give to kalman_static_alloc.
+
 ## Macros
 
 ### `KALMAN_MEMPOOL_SIZE`

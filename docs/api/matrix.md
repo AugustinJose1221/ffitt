@@ -11,6 +11,22 @@ Matrices of float values. Declared in `ffitt/linalg/matrix.h`.
 
 [Back to the index](../API.md) | [How the linalg modules work](../../ffitt/linalg/README.md)
 
+## Overview
+
+A matrix of float values.
+
+The elements lie in one block, one row after the other. Thus the element at
+the row i and the column j lies at the position (i*n)+j.
+
+Two functions give a matrix. matrix_alloc takes the memory from the heap,
+and the caller must give the matrix to matrix_free. matrix_static_alloc
+takes memory that the caller holds, and matrix_free then does nothing. The
+member dynamic_alloc says which of the two made the matrix.
+
+Every operation that gives a new matrix takes memory from the heap. On a
+target with no heap, use the operations at the end of this file, which write
+into a matrix that the caller holds.
+
 ## Types
 
 ### `matrix_t`

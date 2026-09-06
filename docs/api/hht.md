@@ -11,6 +11,26 @@ The Hilbert-Huang transform. Declared in `ffitt/transform/hht.h`.
 
 [Back to the index](../API.md) | [How the transform modules work](../../ffitt/transform/README.md)
 
+## Overview
+
+The Hilbert-Huang transform.
+
+The transform joins the two parts that this library already holds:
+
+1. The empirical mode decomposition takes a signal apart into intrinsic mode
+   functions. Each function holds one frequency at a time.
+2. The Hilbert transform gives the amplitude and the frequency at each point
+   of time of such a function.
+
+The result says which frequency the signal holds at which time, and how
+strong it is. A Fourier transform gives the frequencies of the whole signal
+and says nothing about the time. Thus the Hilbert-Huang transform suits a
+signal whose frequency changes, where a Fourier transform gives a wide band
+and no clear answer.
+
+The Hilbert transform needs the size to be a power of two, because it uses
+the fast Fourier transform. Give the decomposition a signal of such a size.
+
 ## Functions
 
 ### `hht_transform_imf`

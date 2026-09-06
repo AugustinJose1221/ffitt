@@ -11,6 +11,106 @@ A filter that solves least squares at every sample. Declared in `ffitt/filter/rl
 
 [Back to the index](../API.md) | [How the filter modules work](../../ffitt/filter/README.md)
 
+## Overview
+
+A filter that finds its own coefficients, by least squares, at every sample.
+
+The adaptive module takes one small step downhill with each sample and
+arrives after thousands of them. THIS ONE SOLVES THE WHOLE LEAST SQUARES
+PROBLEM AT EVERY SAMPLE, over everything it has heard so far, and arrives in
+about twice as many samples as it has coefficients.
+
+Measured, on a filter of 16 coefficients learning an unknown response, the
+samples taken to bring the coefficients 40 dB towards the truth:
+
+    normalised least mean squares (adaptive)     163
+    this module                                   24
+
+Twenty-four samples for a filter of sixteen. That is what it is for.
+
+BUT READ THE OTHER HALF OF THAT MEASUREMENT. Left to run, the two settle at
+different places:
+
+                                  32 bits    64 bits
+    normalised least mean squares  -149 dB    -317 dB
+    this module                     -97 dB    -137 dB
+
+The adaptive module goes on improving long after this one has stopped,
+because this one is limited by the precision of the matrix it carries and
+that one is limited by nothing.
+
+SO THE CHOICE IS NOT WHICH IS BETTER. It is whether the answer is wanted
+quickly or wanted exactly. Where the thing being learned changes often, only
+the first matters. Where it stands still and there is time, the adaptive
+module ends up ahead and costs a hundredth of the memory.
+
+WHAT IT COSTS IN MEMORY, WHICH IS WHY THIS IS NOT A RULE OF THE ADAPTIVE
+MODULE
+
+The adaptive module holds a few numbers for each coefficient. This one holds
+a whole square matrix beside them, because solving a least squares problem
+needs the inverse of a correlation matrix and that is what it carries
+forward. At 32 bits:
+
+    length     adaptive     this module
+    16          0.1 kB        1.3 kB
+    64          0.5 kB       17 kB
+    256         2 kB        266 kB
+
+A length of 256 is ordinary for an echo canceller and 266 kB is not ordinary
+for a device. The cost had to be visible in the type rather than hidden
+behind an enumeration, and that is why this is a module of its own.
+
+The work for each sample grows the same way: with the square of the length
+where the adaptive module grows with the length itself.
+
+WHAT IT COSTS IN PRECISION, WHICH IS THE PART THAT SURPRISES PEOPLE
+
+THE FILTER CAN RUN CORRECTLY FOR THOUSANDS OF SAMPLES AND THEN FALL APART.
+The matrix it carries forward should stay symmetric and should describe a
+spread that is real in every direction. Nothing in the arithmetic holds it
+to that.
+
+This module writes the two halves of that matrix TOGETHER: one half is
+worked out and the same value is put in both places. Written the usual way,
+each half is worked out on its own and their roundings differ.
+
+Measured, on a filter of 16 over a million samples at 32 bits:
+
+    forgetting      halves drift apart by     what happens
+    worked out apart
+      1.000              1.03                 held
+      0.999              1.82                 FELL OVER at sample 7230
+      0.990              1.84                 FELL OVER at sample 987
+      0.950              1.31                 FELL OVER at sample 216
+    written together
+      every one          0.00                 held, all four
+
+READ THE FIRST COLUMN. The two halves come to differ by MORE THAN THE
+LARGEST ELEMENT of the matrix, and then one direction of the spread goes
+below nothing and the coefficients run away. Writing them together holds
+them exactly equal, for nothing, for ever. The ukf module holds its
+covariance together the same way, for the same reason.
+
+The module also WATCHES THE DIAGONAL. Where an element of it falls to
+nothing or below, the spread has stopped being real and rls_is_healthy gives
+false.
+
+ASK rls_is_healthy. A filter that has fallen apart still answers, and its
+answers are nonsense.
+
+AND THE FORGETTING FACTOR IS NOT A TUNING KNOB
+
+It says how much of the past to keep. At 1 the filter remembers everything
+and settles on the best answer for all of it, which is right where the thing
+being learned does not change. Below 1 the past fades, and the filter can
+follow something that moves.
+
+The fading is what makes the matrix lose its footing faster, and the table
+above is that in numbers: the same filter written the careless way lasts
+7230 samples at 0.999 and 216 at 0.95. Roughly, the filter holds about
+1/(1-factor) samples: 0.99 holds a hundred, 0.999 holds a thousand.
+
 ## Macros
 
 ### `RLS_MATRIX_SIZE`

@@ -11,6 +11,43 @@ The extended Kalman filter. Declared in `ffitt/estimate/ekf.h`.
 
 [Back to the index](../API.md) | [How the estimate modules work](../../ffitt/estimate/README.md)
 
+## Overview
+
+The extended Kalman filter.
+
+The Kalman filter in the module kalman works with a model where a matrix
+moves the state forward and another matrix reads the measurement from the
+state. Many real models do not have that shape. A radar gives a distance,
+which is the square root of a sum of squares of the state. A pendulum turns
+with the sine of its angle. Such a model needs a function and not a matrix.
+
+This filter takes two functions:
+
+- the state function f, which gives the next state from the present state
+  and the input;
+- the measurement function h, which gives the measurement that the present
+  state would produce.
+
+The filter still needs a matrix at each step, because the covariance moves
+through a matrix. It gets that matrix from the slope of the function at the
+present state, which is the Jacobian matrix. The filter calculates the
+Jacobian with the central difference: it moves one element of the state a
+little to each side, calls the function two times, and takes the difference.
+Thus the caller writes the two functions only, and writes no derivative.
+
+A note on the module pmatrix: an element of a pmatrix is a function of one
+float. A Jacobian needs a function of the whole state, which holds nx
+values. For that reason this module holds its own type of function and does
+not use pmatrix.
+
+The step of the difference must suit the size of the values of the state. A
+step that is too small loses every digit in a float, and a step that is too
+large gives the slope of the wrong place. The default is 0.001, and
+ekf_set_derivative_step changes it.
+
+The filter takes no memory while it runs. Thus a target with no heap can use
+it, as with the module kalman.
+
 ## Macros
 
 ### `EKF_MEMPOOL_SIZE`

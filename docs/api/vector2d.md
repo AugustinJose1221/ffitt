@@ -11,6 +11,14 @@ Vectors with two values. Declared in `ffitt/linalg/vector2d.h`.
 
 [Back to the index](../API.md) | [How the linalg modules work](../../ffitt/linalg/README.md)
 
+## Overview
+
+A vector with two values.
+
+This module gives the operations of the vector module for a vector of the
+size 2, thus the caller does not give the size at each call. The result is a
+vector_t, and every function of the vector module takes it.
+
 ## Functions
 
 ### `vector2d_alloc`

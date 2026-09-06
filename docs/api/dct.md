@@ -11,6 +11,56 @@ Turning a signal into cosines. Declared in `ffitt/transform/dct.h`.
 
 [Back to the index](../API.md) | [How the transform modules work](../../ffitt/transform/README.md)
 
+## Overview
+
+Turn a signal into cosines, and back.
+
+The transform in fft turns a signal into sines AND cosines, which is what is
+needed to say where in its turn each frequency stands. WHERE THE PHASE IS NOT
+WANTED, half of that is wasted: a real signal of n samples becomes n complex
+numbers holding 2n numbers, of which n are the mirror of the others.
+
+This turns a signal of n samples into n cosines and nothing else. It is the
+transform behind every compression of a picture or a sound that anybody uses,
+and the reason is one property:
+
+IT GATHERS A SMOOTH SIGNAL INTO ITS FIRST FEW NUMBERS. A signal that changes
+slowly comes out as a handful of large numbers followed by a long tail of
+nearly nothing, thus the tail can be thrown away and the signal rebuilt from
+what is left. Measured on a slow curve of 64 samples that does not come back
+to where it started, how many numbers are needed to hold each share of it:
+
+  share kept       this      the transform
+  ----------      -----      -------------
+  0.99                4                 20
+  0.999               8                  -
+  0.99999            30                  -
+
+THE TRANSFORM COLUMN COUNTS NUMBERS AND NOT BINS. Ten of its bins carry 0.99
+of that curve and each bin is a complex number, thus twenty numbers against
+four. The same curve, five times the room.
+
+And a signal of noise needs all 64 either way, which is the point: there is
+nothing to gather.
+
+WHY IT BEATS THE TRANSFORM AT THIS, and it is not the arithmetic. A transform
+treats the block as one turn of something that repeats, thus a signal that
+starts low and ends high has a STEP in it where the end meets the beginning
+again, and a step needs every frequency there is. This treats the block as
+half of a turn of something mirrored, thus the end meets its own mirror and
+there is no step. That is the whole of the difference.
+
+WHAT IT CANNOT DO. It says nothing about phase, thus it cannot be used to
+filter by multiplying and transforming back, and it cannot say where in its
+turn a tone stands. Reach for fft for those.
+
+WHAT IT COSTS. This works in time proportional to the SQUARE of the size,
+where fft works in time proportional to the size multiplied by its logarithm.
+At a size of 64 that is about four times as much work; at 1024 it is about a
+hundred times. The size is capped below for that reason. Against it, this
+takes any size at all rather than a power of two, and it needs no memory
+beyond what the caller gives.
+
 ## Macros
 
 ### `DCT_LARGEST_SIZE`

@@ -11,6 +11,70 @@ Following a tone that will not stay still. Declared in `ffitt/estimate/pll.h`.
 
 [Back to the index](../API.md) | [How the estimate modules work](../../ffitt/estimate/README.md)
 
+## Overview
+
+Follow a tone whose frequency will not stay still.
+
+A tachometer gives a tone whose frequency IS the speed. A mains supply sits
+near 50 Hz and wanders. A tag returns a carrier that the motion between the
+two ends has shifted. In each of them the frequency is the measurement, and it
+changes while it is being measured.
+
+A TRANSFORM CANNOT DO THIS, and the reason is not that it is slow. A transform
+reads a block and gives the frequencies in that block. Make the block long
+enough to tell 50.0 Hz from 50.1 and the frequency has moved before the block
+is over; make it short enough to follow the movement and it can no longer tell
+the two apart. That trade is not an implementation and it does not go away.
+
+A loop does not have it. It holds a guess of the frequency and a guess of the
+phase, compares its guess against what arrives, and moves. It gives a NEW
+ANSWER AT EVERY SAMPLE, and how quickly it follows a change is a number the
+caller sets rather than a length it has to choose.
+
+WHAT IS PAID FOR THAT. A loop can be wrong in ways a transform cannot:
+
+  IT MUST BE STARTED NEAR THE ANSWER. Told to look near 50 Hz it will find a
+  tone at 50.4; told to look near 50 Hz it will not find one at 200. How far
+  it will reach is about its bandwidth, and pll_pull_range gives it.
+
+  IT CAN LOCK ONTO SOMETHING ELSE. Given noise and no tone it will settle
+  somewhere and report a frequency with the same confidence as a real one.
+  pll_lock_quality is the only thing that says which happened, and it must be
+  read.
+
+  IT TAKES TIME TO ARRIVE. Of the order of a few divided by the bandwidth in
+  samples, and pll_settle_samples gives a rough figure. The table below gives
+  what was measured, which runs from about two divided by the bandwidth for a
+  narrow loop to about half of that for a wide one.
+
+THE BANDWIDTH IS THE WHOLE OF THE TRADE. Wide follows a change quickly and
+lets noise into the answer; narrow is steady and slow. Measured on a tone at a
+tenth of the sample rate, with noise as loud as the tone for the wander and
+none for the lock:
+
+  bandwidth     wander of the answer     samples to find the tone
+  ---------     --------------------     ------------------------
+  0.0005                    0.001107                         4603
+  0.0010                    0.001540                         1154
+  0.0020                    0.002542                          258
+  0.0050                    0.006196                           57
+  0.0100                    0.012724                           42
+
+READ IT ACROSS. Twenty times the bandwidth finds the tone a hundred times as
+fast and wanders eleven times as far. Neither end is right; which one is
+depends on how fast the thing being watched really moves and how much noise
+is on it.
+
+AND THE BANDWIDTH MUST STAY WELL BELOW THE FREQUENCY BEING FOLLOWED. The
+detector gives the error it wants and a ripple at twice the tone on top of it,
+and the loop leans on being too slow to follow that ripple. At a bandwidth
+near the tone it follows the ripple instead and the answer shakes.
+
+THE LOOP MEASURES HOW LOUD THE SIGNAL IS AND DIVIDES BY IT. Without that the
+gain of the loop would be the gain the caller set MULTIPLIED BY the loudness
+of whatever arrived, thus a quiet tone would never lock and a loud one would
+be unstable, and the bandwidth would mean nothing.
+
 ## Macros
 
 ### `PLL_KEEP`

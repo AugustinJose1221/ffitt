@@ -11,6 +11,80 @@ One frequency, answered at every sample. Declared in `ffitt/transform/slide.h`.
 
 [Back to the index](../API.md) | [How the transform modules work](../../ffitt/transform/README.md)
 
+## Overview
+
+A transform that answers at EVERY sample, for a few frequencies only.
+
+The transform beside this one needs the whole block in memory and answers
+once the block is full. goertzel needs no block but answers once per block
+as well, and it must be reset between them. Between the two sits the case
+that neither serves: a program that must know, AT EVERY SAMPLE, how much of
+two or three known frequencies the last N samples held.
+
+That is what this does. It holds one running total for each frequency
+watched, and each new sample costs one complex multiplication and two
+additions per frequency, whatever N is. A watcher on a 1024 sample window
+holds a few dozen bytes for each frequency, and not the 1024 samples' worth
+that a block transform must keep to answer at all.
+
+HOW IT WORKS. The total for one bin, when the window slides one sample on,
+differs from the total before it by the sample that arrived and the sample
+that fell off the end, the whole then turned by one bin's worth of angle:
+
+    X[n] = (X[n-1] + arrived - left) * turn
+
+Nothing about that grows with N. The window itself must still be kept, so
+that the sample which left can be subtracted, and that is what the ringbuf
+inside holds.
+
+THE RECURRENCE IS ONLY JUST STABLE, AND THIS IS THE THING TO KNOW ABOUT IT.
+
+The turning factor has a magnitude of exactly one, thus nothing in the
+arithmetic ever shrinks: every rounding error that goes in stays in and goes
+round for ever. The mending is to make the factor a shade smaller than one,
+which is what the damping is. An error then fades instead of circling.
+
+WHAT THE DAMPING COSTS. It is not free: a total that is always shrinking a
+little reads low, by a fixed amount that does not go away. MEASURED against
+the transform of the same window, for a steady tone sitting on the bin, and
+the same at both widths:
+
+  damping     the answer reads low by     an error fades to a tenth in
+  1.0                            0 %      never
+  0.9999                      1.27 %      about 23000 samples
+  0.999                      11.78 %      about 2300 samples
+  0.99                       64.10 %      about 230 samples
+
+WHAT SWITCHING IT OFF COSTS, which is the other half and the surprising
+half. MEASURED on a steady tone, against the transform of the same window,
+with the damping at exactly one:
+
+  width      worst drift over 20 million samples   past 1 part in 1000 at
+  32 bit                              1.0e-03            54000 samples
+  64 bit                              4.0e-10            never reached
+
+READ THOSE TWO TABLES TOGETHER BEFORE CHOOSING.
+
+  AT 32 BITS the damping earns its keep. Without it a watcher must be reset
+  every few tens of thousands of samples, which at 8 kHz is every few
+  seconds, and a reset costs a whole window of filling before the answer
+  means anything again.
+
+  AT 64 BITS IT LARGELY DOES NOT. The plain recurrence drifted by four parts
+  in ten thousand million over twenty million samples, which is below
+  anything a watcher would act on. A caller at that width who wants the
+  answer to READ TRUE - one comparing against a threshold in the unit of the
+  signal, rather than watching for a change - should give a damping of 1.0
+  and take the exactness.
+
+The default is 0.9999, because the library is built for a float unless told
+otherwise, and at that width the drift is real.
+
+WHAT THIS IS NOT. It gives the bins it was told to watch and no others. A
+caller who wants the whole spectrum wants fft, which does all N bins for
+less than N of these. The crossover is the same one goertzel names: past
+about log2(N) frequencies the whole transform is cheaper.
+
 ## Macros
 
 ### `SLIDE_DAMPING`
