@@ -9,7 +9,7 @@ python3 scripts/api_doc.py
 
 Matrices with a parameter. Declared in `ffitt/linalg/pmatrix.h`.
 
-[Back to the index](../API.md) | [How the linalg modules work](../../ffitt/linalg/README.md)
+[Back to the index](../API.md) | [How the linalg modules work](../../ffitt/linalg/README.md) | [How it works](../diagrams/linalg/pmatrix.html) ([preview](https://htmlpreview.github.io/?https://github.com/AugustinJose1221/ffitt/blob/development/docs/diagrams/linalg/pmatrix.html))
 
 ## Overview
 
@@ -41,6 +41,28 @@ calculation.
 
 A function of the standard library that takes a float and gives a float,
 such as real_sin or real_cos, fits the type of an element directly.
+
+## Method
+
+Each element is not a number but a function of one parameter:
+
+    M(x)(i,j) = f_ij(x)
+
+Giving a value for x calls every one of those functions once and writes the
+answers into a plain matrix:
+
+    matrix(i,j) = f_ij(x)
+
+which every other module of the library can then take.
+
+That is the whole of it. The module holds pointers to functions rather than
+values, and the evaluation is one pass over the elements. Nothing is
+differentiated, nothing is solved, and no arithmetic is done on the functions
+themselves.
+
+It exists because a state that moves with time or with an angle is written
+once as a shape, and then evaluated at each step, rather than rebuilt by hand
+at every step by the caller.
 
 ## Types
 

@@ -9,7 +9,7 @@ python3 scripts/api_doc.py
 
 Polynomials, and where they cross nothing. Declared in `ffitt/linalg/poly.h`.
 
-[Back to the index](../API.md) | [How the linalg modules work](../../ffitt/linalg/README.md)
+[Back to the index](../API.md) | [How the linalg modules work](../../ffitt/linalg/README.md) | [How it works](../diagrams/linalg/poly.html) ([preview](https://htmlpreview.github.io/?https://github.com/AugustinJose1221/ffitt/blob/development/docs/diagrams/linalg/poly.html))
 
 ## Overview
 
@@ -97,6 +97,31 @@ like roots.
 
 How many numbers a polynomial of the given order holds, which is one more
 than the order.
+
+## Method
+
+A polynomial is a list of numbers, lowest power first:
+
+    p(x) = c[0] + c[1]*x + c[2]*x^2 + ...
+
+A root is found by walking downhill from a starting place, by the step of
+Newton:
+
+    x = x - p(x) / p'(x)
+
+The step is taken in complex numbers, so that a root off the real line can be
+reached at all. Once a root is found it is divided out, and the walk starts
+again on what is left.
+
+WHAT "NEARLY NOTHING" MEANS IS NOT A FIXED NUMBER. Adding up the terms loses
+digits to the largest of them, thus the value of a polynomial can be trusted
+only down to about the size of its largest term times the smallest step the
+width can tell. The module therefore measures the size of the polynomial at
+the place it is standing, and judges against that.
+
+A fixed threshold would ask the same of a polynomial whose terms are millions
+and of one whose terms are millionths, and it would be wrong for one of them
+whichever number was chosen.
 
 ## Macros
 

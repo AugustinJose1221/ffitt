@@ -1,0 +1,229 @@
+{
+  "schema_version": 1,
+  "diagram_type": "architecture",
+  "meta": {
+    "title": "Inside lstsq",
+    "animation": "trace",
+    "quality_profile": "showcase",
+    "views": [
+      {
+        "id": "the-aim",
+        "label": "The least total square error",
+        "focus": [
+          "points",
+          "aim"
+        ],
+        "note": "The curve that leaves the smallest total of squared errors between it and the readings."
+      },
+      {
+        "id": "normal",
+        "label": "Setting the derivative to nothing",
+        "focus": [
+          "normal"
+        ],
+        "note": "That gives one square system: (A' * A) * c = A' * y, with a power of x in each column of A."
+      },
+      {
+        "id": "cholesky",
+        "label": "Two triangles, not one square",
+        "focus": [
+          "chol",
+          "tri"
+        ],
+        "note": "The factor of Cholesky turns the square problem into two triangular ones, and a triangle is solved by substitution alone."
+      },
+      {
+        "id": "centred",
+        "label": "Why the places move",
+        "focus": [
+          "centre",
+          "digits"
+        ],
+        "note": "A power of a large x runs out of digits quickly. Moving the places to sit about zero is what keeps the fit from failing."
+      }
+    ]
+  },
+  "layout": {
+    "mode": "grid",
+    "origin": [
+      40,
+      120
+    ],
+    "cols": 6,
+    "gapX": 28,
+    "gapY": 56,
+    "cellW": 124,
+    "cellH": 62
+  },
+  "components": [
+    {
+      "id": "points",
+      "type": "external",
+      "label": "Your Readings",
+      "sublabel": "x and y",
+      "row": 1,
+      "col": 0
+    },
+    {
+      "id": "centre",
+      "type": "backend",
+      "label": "About a Centre",
+      "sublabel": "and a width",
+      "row": 1,
+      "col": 1
+    },
+    {
+      "id": "digits",
+      "type": "security",
+      "label": "Powers of Large x",
+      "sublabel": "digits run out",
+      "row": 0,
+      "col": 1
+    },
+    {
+      "id": "aim",
+      "type": "backend",
+      "label": "Least Square Error",
+      "sublabel": "the smallest total",
+      "row": 2,
+      "col": 2
+    },
+    {
+      "id": "normal",
+      "type": "backend",
+      "label": "Normal Equations",
+      "sublabel": "(A'A)c = A'y",
+      "row": 1,
+      "col": 2
+    },
+    {
+      "id": "chol",
+      "type": "backend",
+      "label": "Cholesky",
+      "sublabel": "A'A = L L'",
+      "row": 1,
+      "col": 3
+    },
+    {
+      "id": "tri",
+      "type": "backend",
+      "label": "Down, Then Up",
+      "sublabel": "substitution only",
+      "row": 1,
+      "col": 4
+    },
+    {
+      "id": "out",
+      "type": "cloud",
+      "label": "The Coefficients",
+      "sublabel": "lowest power first",
+      "row": 1,
+      "col": 5
+    }
+  ],
+  "boundaries": [
+    {
+      "kind": "region",
+      "label": "no transpose is ever formed",
+      "wraps": [
+        "chol",
+        "tri"
+      ]
+    }
+  ],
+  "connections": [
+    {
+      "id": "moved",
+      "from": "points",
+      "to": "centre",
+      "label": "the places",
+      "variant": "emphasis",
+      "labelAt": [
+        176,
+        312
+      ]
+    },
+    {
+      "id": "without",
+      "from": "points",
+      "to": "digits",
+      "label": "if left as they came"
+    },
+    {
+      "id": "derived",
+      "from": "aim",
+      "to": "normal",
+      "label": "set to nothing"
+    },
+    {
+      "id": "built",
+      "from": "centre",
+      "to": "normal",
+      "label": "A and y",
+      "variant": "emphasis",
+      "labelAt": [
+        328.0,
+        312.0
+      ]
+    },
+    {
+      "id": "split",
+      "from": "normal",
+      "to": "chol",
+      "label": "one square",
+      "variant": "emphasis",
+      "labelAt": [
+        480.0,
+        312.0
+      ]
+    },
+    {
+      "id": "solved",
+      "from": "chol",
+      "to": "tri",
+      "label": "two triangles",
+      "variant": "emphasis",
+      "labelAt": [
+        632.0,
+        312.0
+      ]
+    },
+    {
+      "id": "read",
+      "from": "tri",
+      "to": "out",
+      "label": "c",
+      "variant": "emphasis",
+      "labelDy": -24
+    }
+  ],
+  "cards": [
+    {
+      "dot": "cyan",
+      "title": "What it works out",
+      "items": [
+        "minimise sum over i of (y[i] - p(x[i]))^2",
+        "Setting the derivative to nothing gives (A' * A) * c = A' * y",
+        "A holds a power of x in each column"
+      ]
+    },
+    {
+      "dot": "emerald",
+      "title": "How the library gets there",
+      "items": [
+        "A' * A = L * L', the factor of Cholesky",
+        "That turns one square problem into two triangular ones",
+        "Walk down the triangle, then back up through the transpose, which is never formed"
+      ]
+    },
+    {
+      "dot": "amber",
+      "title": "Why the places are moved",
+      "items": [
+        "A power of a large x runs out of digits quickly",
+        "The places are held about a centre and a width rather than as they came",
+        "That is what keeps the fit from failing on readings far from the origin"
+      ]
+    }
+  ]
+}

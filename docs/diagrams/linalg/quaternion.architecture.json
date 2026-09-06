@@ -1,0 +1,228 @@
+{
+  "schema_version": 1,
+  "diagram_type": "architecture",
+  "meta": {
+    "title": "Inside quaternion",
+    "animation": "trace",
+    "quality_profile": "showcase",
+    "views": [
+      {
+        "id": "the-fault",
+        "label": "Where three angles fail",
+        "focus": [
+          "euler",
+          "lock"
+        ],
+        "note": "At one attitude two of the three axes line up, and from that moment the third number is lost."
+      },
+      {
+        "id": "four-numbers",
+        "label": "Four, held at unit length",
+        "focus": [
+          "quat"
+        ],
+        "note": "Four numbers whose squares add to one. There is no attitude at which they fail."
+      },
+      {
+        "id": "turning",
+        "label": "Turning by one, then another",
+        "focus": [
+          "mul",
+          "rotate"
+        ],
+        "note": "Composing two attitudes is a multiplication, and turning a vector is a multiplication on both sides."
+      },
+      {
+        "id": "the-price",
+        "label": "What the constraint costs",
+        "focus": [
+          "drift"
+        ],
+        "note": "Rounding slowly breaks the unit length, thus it must be brought back to one from time to time."
+      }
+    ]
+  },
+  "layout": {
+    "mode": "grid",
+    "origin": [
+      40,
+      120
+    ],
+    "cols": 6,
+    "gapX": 28,
+    "gapY": 56,
+    "cellW": 124,
+    "cellH": 62
+  },
+  "components": [
+    {
+      "id": "attitude",
+      "type": "external",
+      "label": "Which Way",
+      "sublabel": "something points",
+      "row": 1,
+      "col": 0
+    },
+    {
+      "id": "euler",
+      "type": "security",
+      "label": "Three Angles",
+      "sublabel": "the obvious way",
+      "row": 0,
+      "col": 1
+    },
+    {
+      "id": "lock",
+      "type": "security",
+      "label": "Gimbal Lock",
+      "sublabel": "the third is lost",
+      "row": 0,
+      "col": 2,
+      "tag": "cannot be designed around"
+    },
+    {
+      "id": "quat",
+      "type": "database",
+      "label": "Four Numbers",
+      "sublabel": "squares add to one",
+      "row": 1,
+      "col": 1
+    },
+    {
+      "id": "mul",
+      "type": "backend",
+      "label": "Multiply Them",
+      "sublabel": "one turn then another",
+      "row": 1,
+      "col": 2
+    },
+    {
+      "id": "rotate",
+      "type": "backend",
+      "label": "q * v * conj(q)",
+      "sublabel": "turns a vector",
+      "row": 1,
+      "col": 3
+    },
+    {
+      "id": "drift",
+      "type": "security",
+      "label": "Length Drifts",
+      "sublabel": "rounding breaks it",
+      "row": 2,
+      "col": 3
+    },
+    {
+      "id": "out",
+      "type": "cloud",
+      "label": "No Bad Attitude",
+      "sublabel": "anywhere at all",
+      "row": 1,
+      "col": 4
+    }
+  ],
+  "boundaries": [
+    {
+      "kind": "region",
+      "label": "the four must keep a length of one",
+      "wraps": [
+        "quat",
+        "mul"
+      ]
+    }
+  ],
+  "connections": [
+    {
+      "id": "held",
+      "from": "attitude",
+      "to": "quat",
+      "label": "four numbers",
+      "variant": "emphasis",
+      "labelAt": [
+        176,
+        312
+      ]
+    },
+    {
+      "id": "other",
+      "from": "attitude",
+      "to": "euler",
+      "label": "the obvious way"
+    },
+    {
+      "id": "fails",
+      "from": "euler",
+      "to": "lock",
+      "label": "two axes line up",
+      "labelAt": [
+        328.0,
+        194.0
+      ]
+    },
+    {
+      "id": "compose",
+      "from": "quat",
+      "to": "mul",
+      "label": "q1 * q2",
+      "variant": "emphasis",
+      "labelAt": [
+        328.0,
+        312.0
+      ]
+    },
+    {
+      "id": "applied",
+      "from": "mul",
+      "to": "rotate",
+      "label": "on both sides",
+      "variant": "emphasis",
+      "labelAt": [
+        480.0,
+        312.0
+      ]
+    },
+    {
+      "id": "safe",
+      "from": "rotate",
+      "to": "out",
+      "label": "every attitude",
+      "variant": "emphasis",
+      "labelDy": -24
+    },
+    {
+      "id": "cost",
+      "from": "drift",
+      "to": "out",
+      "label": "bring it back"
+    }
+  ],
+  "cards": [
+    {
+      "dot": "cyan",
+      "title": "What it works out",
+      "items": [
+        "q = w + x*i + y*j + z*k, with w^2 + x^2 + y^2 + z^2 = 1",
+        "Turning by one attitude then another is q3 = q1 * q2",
+        "Turning a vector is v' = q * v * conjugate(q)"
+      ]
+    },
+    {
+      "dot": "rose",
+      "title": "Why not three angles",
+      "items": [
+        "At one attitude two of the three axes line up",
+        "A turn about one and a turn about another then do the same thing",
+        "No arrangement of the axes removes the fault; it only moves it elsewhere"
+      ]
+    },
+    {
+      "dot": "amber",
+      "title": "What it costs you",
+      "items": [
+        "The four numbers must keep a length of one",
+        "Rounding slowly breaks that constraint",
+        "Thus the length must be brought back to one from time to time"
+      ]
+    }
+  ]
+}

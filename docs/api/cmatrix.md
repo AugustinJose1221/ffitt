@@ -9,7 +9,7 @@ python3 scripts/api_doc.py
 
 Matrices of complex numbers. Declared in `ffitt/linalg/cmatrix.h`.
 
-[Back to the index](../API.md) | [How the linalg modules work](../../ffitt/linalg/README.md)
+[Back to the index](../API.md) | [How the linalg modules work](../../ffitt/linalg/README.md) | [How it works](../diagrams/linalg/cmatrix.html) ([preview](https://htmlpreview.github.io/?https://github.com/AugustinJose1221/ffitt/blob/development/docs/diagrams/linalg/cmatrix.html))
 
 ## Overview
 
@@ -25,6 +25,26 @@ target.
 
 The two modules give the same names for the same operations, thus a user who
 knows the matrix module knows this module as well.
+
+## Method
+
+The arithmetic is the same shape as the real matrix, with each element a
+complex number:
+
+    (A * B)(i,j) = sum over k of A(i,k) * B(k,j)
+
+but every one of those products is a complex multiplication, which is four
+real multiplications and two additions:
+
+    (a + i*b) * (c + i*d) = (a*c - b*d) + i*(a*d + b*c)
+
+Thus a complex matrix multiply costs about four times a real one of the same
+shape, and that cost is the reason this is a module of its own.
+
+One module for both types would need a second copy of each function, or a
+union in the structure and a check of the type inside every loop. Both make
+the real matrix larger and slower for the caller who never uses a complex
+one, and on a small target that caller is the common one.
 
 ## Types
 
