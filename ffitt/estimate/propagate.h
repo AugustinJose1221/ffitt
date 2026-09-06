@@ -91,6 +91,30 @@
 #define PROPAGATE_LARGEST_STATE     16u
 #endif
 
+// Method:
+// Nobody writes a model as a step. A model of anything physical is written as a
+// rate of change:
+//
+//     dx/dt = f(x, u, t)
+//
+// and the filters all want the other thing: the state at the next sample.
+//
+// This module is the bridge. It takes a step of the given size through that
+// rate:
+//
+//     Euler        x = x + h*f(x)
+//     Midpoint     one probe at the half step, then use its rate
+//     Runge-Kutta  four probes, weighed 1, 2, 2, 1
+//
+// The error left after one step falls with the order: Euler is wrong in
+// proportion to the square of the step, midpoint to its cube, Runge-Kutta to
+// its fifth power. Thus halving the step buys a factor of 4, of 8 and of 32.
+//
+// The cost is the probes: one call of f, two, or four. A model that is cheap to
+// evaluate should take the fourth-order step and a longer step with it, and a
+// model that is dear should take a shorter step and a cheaper rule.
+
+
 // Which method carries the state forward.
 typedef enum{
     // One ask for the rate. The error halves when the step halves.

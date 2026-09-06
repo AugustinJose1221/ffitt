@@ -9,7 +9,7 @@ python3 scripts/api_doc.py
 
 Following a tone that will not stay still. Declared in `ffitt/estimate/pll.h`.
 
-[Back to the index](../API.md) | [How the estimate modules work](../../ffitt/estimate/README.md)
+[Back to the index](../API.md) | [How the estimate modules work](../../ffitt/estimate/README.md) | [How it works](../diagrams/estimate/pll.html) ([preview](https://htmlpreview.github.io/?https://github.com/AugustinJose1221/ffitt/blob/development/docs/diagrams/estimate/pll.html))
 
 ## Overview
 
@@ -74,6 +74,30 @@ THE LOOP MEASURES HOW LOUD THE SIGNAL IS AND DIVIDES BY IT. Without that the
 gain of the loop would be the gain the caller set MULTIPLIED BY the loudness
 of whatever arrived, thus a quiet tone would never lock and a loud one would
 be unstable, and the bandwidth would mean nothing.
+
+## Method
+
+The loop holds its own idea of the tone and keeps correcting it:
+
+    error     = how far the input leads or lags the loop's own oscillator
+    frequency = frequency + integral_gain * error
+    phase     = phase + frequency + proportional_gain * error
+
+The error is what a multiplication of the two gives once the sum frequency is
+filtered away: it is nothing when the two line up and grows as they part.
+
+TWO GAINS, AND EACH DOES A DIFFERENT JOB. The proportional one moves the
+phase at once, thus it follows a step. The integral one moves the frequency,
+thus it follows a drift and holds it with no error left over. A loop with the
+proportional term alone always lags a tone whose frequency has moved.
+
+A TRANSFORM CANNOT DO THIS, and not for want of speed. A transform reads a
+block and gives one answer for it, thus a frequency that changes inside the
+block is smeared across the bins. Here the answer is carried forward and
+corrected at every sample, thus a frequency that moves is followed rather
+than averaged.
+
+The bandwidth is a fraction of the sample rate and not a number of hertz.
 
 ## Macros
 

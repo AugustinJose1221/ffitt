@@ -12,6 +12,25 @@
 #include "callback.h"
 #endif
 
+// Method:
+// There is no arithmetic here. The module holds one mode that emd has already
+// made, as the places and the values:
+//
+//     imf = { x[i], y[i] }
+//
+// What makes it a mode rather than any curve is a property that emd's sifting
+// worked to reach: it has as many crossings of zero as it has peaks and
+// valleys, and its envelopes sit about zero.
+//
+// That property is what lets hilbert read a meaning from it. An amplitude and a
+// frequency at every sample mean something only where the signal holds ONE
+// frequency at a time, and a mode is exactly such a signal. Hand hilbert a
+// signal that is not one, and it gives a mean of several frequencies which
+// describes nothing.
+//
+// Thus this module is the shape that carries that promise from emd to hht.
+
+
 // An intrinsic mode function.
 //
 // The empirical mode decomposition takes a signal apart into such functions.

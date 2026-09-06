@@ -1,0 +1,220 @@
+{
+  "schema_version": 1,
+  "diagram_type": "architecture",
+  "meta": {
+    "title": "Inside matched",
+    "animation": "trace",
+    "quality_profile": "showcase",
+    "views": [
+      {
+        "id": "no-band",
+        "label": "No band can be kept",
+        "focus": [
+          "band"
+        ],
+        "note": "The shape covers the same band as the noise, thus no filter of frequency can separate them."
+      },
+      {
+        "id": "the-best",
+        "label": "The shape looks for itself",
+        "focus": [
+          "slide",
+          "best"
+        ],
+        "note": "The best thing to look for a known shape with is that shape, turned round and slid along."
+      },
+      {
+        "id": "sharpness",
+        "label": "Why the peak is sharp",
+        "focus": [
+          "sharp"
+        ],
+        "note": "The peak is sharper the less the shape resembles itself shifted, which is why a chirp is used."
+      },
+      {
+        "id": "the-threshold",
+        "label": "The hard part is the threshold",
+        "focus": [
+          "floor"
+        ],
+        "note": "A fixed number is wrong as soon as the noise floor moves, thus it is set from the score stream itself."
+      }
+    ]
+  },
+  "layout": {
+    "mode": "grid",
+    "origin": [
+      40,
+      120
+    ],
+    "cols": 6,
+    "gapX": 28,
+    "gapY": 56,
+    "cellW": 124,
+    "cellH": 62
+  },
+  "components": [
+    {
+      "id": "noisy",
+      "type": "external",
+      "label": "A Noisy Reading",
+      "sublabel": "the shape is in there",
+      "row": 1,
+      "col": 0
+    },
+    {
+      "id": "band",
+      "type": "security",
+      "label": "A Band Filter",
+      "sublabel": "cannot help here",
+      "row": 0,
+      "col": 1
+    },
+    {
+      "id": "shape",
+      "type": "database",
+      "label": "The Known Shape",
+      "sublabel": "turned round",
+      "row": 2,
+      "col": 1
+    },
+    {
+      "id": "slide",
+      "type": "backend",
+      "label": "Slide and Sum",
+      "sublabel": "a correlation",
+      "row": 1,
+      "col": 1
+    },
+    {
+      "id": "best",
+      "type": "cloud",
+      "label": "The Largest Score",
+      "sublabel": "where it sits",
+      "row": 1,
+      "col": 2
+    },
+    {
+      "id": "sharp",
+      "type": "cloud",
+      "label": "A Sharp Peak",
+      "sublabel": "if unlike itself shifted",
+      "row": 0,
+      "col": 3
+    },
+    {
+      "id": "floor",
+      "type": "backend",
+      "label": "From the Stream",
+      "sublabel": "in deviations",
+      "row": 2,
+      "col": 3
+    },
+    {
+      "id": "out",
+      "type": "cloud",
+      "label": "Whether, and When",
+      "sublabel": "the two questions",
+      "row": 1,
+      "col": 3
+    }
+  ],
+  "boundaries": [
+    {
+      "kind": "region",
+      "label": "nothing else gives a larger score against the noise",
+      "wraps": [
+        "slide",
+        "best"
+      ]
+    }
+  ],
+  "connections": [
+    {
+      "id": "into",
+      "from": "noisy",
+      "to": "slide",
+      "label": "x[n]",
+      "variant": "emphasis",
+      "labelAt": [
+        176,
+        312
+      ]
+    },
+    {
+      "id": "useless",
+      "from": "noisy",
+      "to": "band",
+      "label": "same band as noise"
+    },
+    {
+      "id": "with",
+      "from": "shape",
+      "to": "slide",
+      "label": "the weights"
+    },
+    {
+      "id": "peaks",
+      "from": "slide",
+      "to": "best",
+      "label": "score[n]",
+      "variant": "emphasis",
+      "labelAt": [
+        328.0,
+        312.0
+      ]
+    },
+    {
+      "id": "shapesharp",
+      "from": "best",
+      "to": "sharp",
+      "label": "how sharp"
+    },
+    {
+      "id": "judged",
+      "from": "floor",
+      "to": "out",
+      "label": "the threshold"
+    },
+    {
+      "id": "answer",
+      "from": "best",
+      "to": "out",
+      "label": "above it or not",
+      "variant": "emphasis",
+      "labelAt": [
+        480.0,
+        312.0
+      ]
+    }
+  ],
+  "cards": [
+    {
+      "dot": "cyan",
+      "title": "What it works out",
+      "items": [
+        "score[n] = sum over k of x[n+k] * shape[k]",
+        "That is a correlation with the shape that is being looked for",
+        "The score peaks where the shape sits"
+      ]
+    },
+    {
+      "dot": "emerald",
+      "title": "Why nothing does better",
+      "items": [
+        "Against noise spread evenly, no other weights give a larger score at the right place",
+        "No filter of frequency can help: the shape covers the same band as the noise",
+        "The peak is sharper the less the shape looks like itself shifted"
+      ]
+    },
+    {
+      "dot": "rose",
+      "title": "Where the difficulty really is",
+      "items": [
+        "The sum is the easy part",
+        "A fixed threshold is wrong as soon as the noise floor moves",
+        "Thus it is set from the score stream itself, in deviations above what it has been"
+      ]
+    }
+  ]
+}

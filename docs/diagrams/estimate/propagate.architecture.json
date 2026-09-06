@@ -1,0 +1,224 @@
+{
+  "schema_version": 1,
+  "diagram_type": "architecture",
+  "meta": {
+    "title": "Inside propagate",
+    "animation": "trace",
+    "quality_profile": "showcase",
+    "views": [
+      {
+        "id": "the-gap",
+        "label": "Nobody writes a step",
+        "focus": [
+          "written",
+          "wanted"
+        ],
+        "note": "A model of anything physical is written as a rate of change. The filters all want the state at the next sample."
+      },
+      {
+        "id": "three-rules",
+        "label": "Three rules, three costs",
+        "focus": [
+          "euler",
+          "mid",
+          "rk"
+        ],
+        "note": "One probe of the rate, two, or four. Each buys a different order of accuracy."
+      },
+      {
+        "id": "the-order",
+        "label": "What halving the step buys",
+        "focus": [
+          "order"
+        ],
+        "note": "Euler improves by 4, midpoint by 8, Runge-Kutta by 32, for the same halving."
+      },
+      {
+        "id": "the-trade",
+        "label": "Which to take",
+        "focus": [
+          "choose"
+        ],
+        "note": "A model cheap to evaluate should take the fourth-order rule and a longer step. A dear one should take a cheaper rule."
+      }
+    ]
+  },
+  "layout": {
+    "mode": "grid",
+    "origin": [
+      40,
+      120
+    ],
+    "cols": 6,
+    "gapX": 28,
+    "gapY": 56,
+    "cellW": 124,
+    "cellH": 62
+  },
+  "components": [
+    {
+      "id": "written",
+      "type": "external",
+      "label": "dx/dt = f(x,u,t)",
+      "sublabel": "how models are written",
+      "row": 1,
+      "col": 0
+    },
+    {
+      "id": "wanted",
+      "type": "external",
+      "label": "x at Next Sample",
+      "sublabel": "what filters want",
+      "row": 0,
+      "col": 1
+    },
+    {
+      "id": "euler",
+      "type": "backend",
+      "label": "Euler",
+      "sublabel": "one probe",
+      "row": 0,
+      "col": 2
+    },
+    {
+      "id": "mid",
+      "type": "backend",
+      "label": "Midpoint",
+      "sublabel": "two probes",
+      "row": 1,
+      "col": 2
+    },
+    {
+      "id": "rk",
+      "type": "backend",
+      "label": "Runge-Kutta",
+      "sublabel": "four probes",
+      "row": 2,
+      "col": 2
+    },
+    {
+      "id": "order",
+      "type": "database",
+      "label": "Error Falls",
+      "sublabel": "h^2, h^3, h^5",
+      "row": 1,
+      "col": 3
+    },
+    {
+      "id": "choose",
+      "type": "backend",
+      "label": "Pick the Step",
+      "sublabel": "cost against error",
+      "row": 1,
+      "col": 4
+    },
+    {
+      "id": "out",
+      "type": "cloud",
+      "label": "A Step Forward",
+      "sublabel": "the filters can take",
+      "row": 1,
+      "col": 5
+    }
+  ],
+  "boundaries": [
+    {
+      "kind": "region",
+      "label": "one call of f, or two, or four",
+      "wraps": [
+        "mid",
+        "order"
+      ]
+    }
+  ],
+  "connections": [
+    {
+      "id": "bridge",
+      "from": "written",
+      "to": "mid",
+      "label": "the rate",
+      "variant": "emphasis",
+      "labelAt": [
+        176,
+        312
+      ]
+    },
+    {
+      "id": "needs",
+      "from": "wanted",
+      "to": "euler"
+    },
+    {
+      "id": "one",
+      "from": "written",
+      "to": "euler",
+      "label": "cheapest"
+    },
+    {
+      "id": "four",
+      "from": "written",
+      "to": "rk",
+      "label": "dearest"
+    },
+    {
+      "id": "cost1",
+      "from": "euler",
+      "to": "order",
+      "label": "h squared"
+    },
+    {
+      "id": "cost3",
+      "from": "rk",
+      "to": "order",
+      "label": "h to the fifth"
+    },
+    {
+      "id": "weigh",
+      "from": "order",
+      "to": "choose",
+      "label": "against the probes",
+      "variant": "emphasis",
+      "labelAt": [
+        632.0,
+        312.0
+      ]
+    },
+    {
+      "id": "taken",
+      "from": "choose",
+      "to": "out",
+      "label": "x at n+1",
+      "variant": "emphasis",
+      "labelDy": -24
+    }
+  ],
+  "cards": [
+    {
+      "dot": "cyan",
+      "title": "What it works out",
+      "items": [
+        "Euler: x = x + h*f(x)",
+        "Midpoint: one probe at the half step, then use its rate",
+        "Runge-Kutta: four probes, weighed 1, 2, 2, 1"
+      ]
+    },
+    {
+      "dot": "emerald",
+      "title": "What each buys",
+      "items": [
+        "The error after one step falls as h^2, h^3 and h^5 in that order",
+        "Thus halving the step buys a factor of 4, of 8, and of 32",
+        "The cost is the probes: one call of f, two, or four"
+      ]
+    },
+    {
+      "dot": "amber",
+      "title": "Which to take",
+      "items": [
+        "A model that is cheap to evaluate should take the fourth-order rule and a longer step",
+        "A model that is dear should take a shorter step and a cheaper rule",
+        "kalman, ekf and ukf all want a step, and nobody writes a model as one"
+      ]
+    }
+  ]
+}

@@ -1,0 +1,228 @@
+{
+  "schema_version": 1,
+  "diagram_type": "architecture",
+  "meta": {
+    "title": "Inside ekf",
+    "animation": "trace",
+    "quality_profile": "showcase",
+    "views": [
+      {
+        "id": "the-gap",
+        "label": "A matrix will not do",
+        "focus": [
+          "radar"
+        ],
+        "note": "A radar gives a square root of a sum of squares. A pendulum turns with a sine. Neither is a matrix."
+      },
+      {
+        "id": "the-line",
+        "label": "A straight line at one place",
+        "focus": [
+          "jacob"
+        ],
+        "note": "The derivative of the model at the place the state stands now takes the place of the matrix."
+      },
+      {
+        "id": "which-is-which",
+        "label": "The state goes through the truth",
+        "focus": [
+          "truef",
+          "cov"
+        ],
+        "note": "The true function moves the state. Only the uncertainty goes through the straight line."
+      },
+      {
+        "id": "the-weakness",
+        "label": "Where the line is wrong",
+        "focus": [
+          "bend"
+        ],
+        "note": "A line laid against a model that bends sharply is wrong a little way off, and the filter cannot know it."
+      }
+    ]
+  },
+  "layout": {
+    "mode": "grid",
+    "origin": [
+      40,
+      120
+    ],
+    "cols": 6,
+    "gapX": 28,
+    "gapY": 56,
+    "cellW": 124,
+    "cellH": 62
+  },
+  "components": [
+    {
+      "id": "model",
+      "type": "external",
+      "label": "A Bending Model",
+      "sublabel": "f and h",
+      "row": 1,
+      "col": 0
+    },
+    {
+      "id": "radar",
+      "type": "external",
+      "label": "A Square Root",
+      "sublabel": "or a sine",
+      "row": 0,
+      "col": 0
+    },
+    {
+      "id": "jacob",
+      "type": "backend",
+      "label": "Take the Derivative",
+      "sublabel": "F and H, here",
+      "row": 1,
+      "col": 1
+    },
+    {
+      "id": "truef",
+      "type": "backend",
+      "label": "Move by f",
+      "sublabel": "the true function",
+      "row": 0,
+      "col": 2
+    },
+    {
+      "id": "cov",
+      "type": "backend",
+      "label": "Move P by F",
+      "sublabel": "the straight line",
+      "row": 2,
+      "col": 2
+    },
+    {
+      "id": "gain",
+      "type": "backend",
+      "label": "The Gain",
+      "sublabel": "as the plain filter",
+      "row": 1,
+      "col": 3
+    },
+    {
+      "id": "bend",
+      "type": "security",
+      "label": "A Sharp Bend",
+      "sublabel": "the line is wrong",
+      "row": 0,
+      "col": 4
+    },
+    {
+      "id": "out",
+      "type": "cloud",
+      "label": "It Follows",
+      "sublabel": "a curved model",
+      "row": 1,
+      "col": 4
+    }
+  ],
+  "boundaries": [
+    {
+      "kind": "region",
+      "label": "the state through the truth, the uncertainty through the line",
+      "wraps": [
+        "truef",
+        "cov"
+      ]
+    }
+  ],
+  "connections": [
+    {
+      "id": "cannot",
+      "from": "radar",
+      "to": "model",
+      "label": "no matrix fits",
+      "labelAt": [
+        100.0,
+        194.0
+      ]
+    },
+    {
+      "id": "lay",
+      "from": "model",
+      "to": "jacob",
+      "label": "at x now",
+      "variant": "emphasis",
+      "labelAt": [
+        176,
+        312
+      ]
+    },
+    {
+      "id": "state",
+      "from": "jacob",
+      "to": "truef",
+      "label": "x = f(x, u)",
+      "variant": "emphasis"
+    },
+    {
+      "id": "uncert",
+      "from": "jacob",
+      "to": "cov",
+      "label": "P = F*P*F' + Q",
+      "variant": "emphasis"
+    },
+    {
+      "id": "both",
+      "from": "truef",
+      "to": "gain",
+      "label": "the state"
+    },
+    {
+      "id": "also",
+      "from": "cov",
+      "to": "gain",
+      "label": "and the spread",
+      "variant": "emphasis"
+    },
+    {
+      "id": "fails",
+      "from": "bend",
+      "to": "gain",
+      "label": "a little way off"
+    },
+    {
+      "id": "gives",
+      "from": "gain",
+      "to": "out",
+      "label": "corrected",
+      "variant": "emphasis",
+      "labelAt": [
+        632.0,
+        312.0
+      ]
+    }
+  ],
+  "cards": [
+    {
+      "dot": "cyan",
+      "title": "What it works out",
+      "items": [
+        "F is the derivative of f at x, and H the derivative of h at x",
+        "x = f(x, u), and P = F*P*F' + Q",
+        "x = x + K*(y - h(x)), with K from H as the plain filter uses C"
+      ]
+    },
+    {
+      "dot": "emerald",
+      "title": "Which goes through what",
+      "items": [
+        "The state goes through the TRUE function, bending as the model bends",
+        "Only the uncertainty goes through the straight line",
+        "Getting that the wrong way round is the usual fault"
+      ]
+    },
+    {
+      "dot": "rose",
+      "title": "Where it fails",
+      "items": [
+        "A straight line laid against a model that bends sharply is wrong a little way off",
+        "The filter has no way to know that it is wrong",
+        "Where the bend is severe, ukf answers without any derivative at all"
+      ]
+    }
+  ]
+}

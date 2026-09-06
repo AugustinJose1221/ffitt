@@ -17,6 +17,37 @@
 #define KALMAN_MEMPOOL_SIZE(ni, nx, ny)     ((6*(nx)*(nx)) + (5*(nx)*(ny)) + (6*(ny)*(ny)) \
                                             + ((nx)*(ni)) + (4*(nx)) + (3*(ny)) + (ni))
 
+// Method:
+// The filter carries a state and how uncertain that state is, and does two
+// things with each measurement.
+//
+// PREDICT, which moves both forward and lets the uncertainty grow:
+//
+//     x = A*x + B*u
+//     P = A*P*A' + Q
+//
+// UPDATE, which pulls the state towards the measurement by an amount that
+// depends on which of the two is trusted more:
+//
+//     S = C*P*C' + R
+//     K = P*C' * inverse(S)
+//     x = x + K*(y - C*x)
+//     P = (I - K*C)*P
+//
+// K is the whole idea. Where the measurement is noisy against the model, R is
+// large, S is large, K is small, and the measurement barely moves the state.
+// Where the model is the doubtful one, P grows, K grows, and the measurement is
+// followed closely.
+//
+// The filter takes no memory while it runs. Every intermediate result goes in
+// scratch matrices laid out at the allocation, thus a static filter needs no
+// heap at all.
+//
+// Where S cannot be inverted the update is refused and the state is left as it
+// was, because a state moved by an inverse that does not exist is worse than a
+// state not moved.
+
+
 // Scratch matrices. The filter uses these matrices to hold the intermediate
 // results of the predict step and of the update step. The filter does not get
 // memory while it runs. Thus a static filter needs no heap.

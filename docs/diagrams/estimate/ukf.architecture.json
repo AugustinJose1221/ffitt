@@ -1,0 +1,216 @@
+{
+  "schema_version": 1,
+  "diagram_type": "architecture",
+  "meta": {
+    "title": "Inside ukf",
+    "animation": "trace",
+    "quality_profile": "showcase",
+    "views": [
+      {
+        "id": "no-derivative",
+        "label": "No derivative anywhere",
+        "focus": [
+          "spread",
+          "noline"
+        ],
+        "note": "Where the extended filter lays a straight line, this one lays no line at all."
+      },
+      {
+        "id": "the-points",
+        "label": "A handful of real points",
+        "focus": [
+          "spread",
+          "through"
+        ],
+        "note": "Points spread about the state by the square root of P, each put through the true function."
+      },
+      {
+        "id": "read-back",
+        "label": "Read back where they landed",
+        "focus": [
+          "read"
+        ],
+        "note": "The mean and the spread of what comes out are read from where the points landed."
+      },
+      {
+        "id": "the-risk",
+        "label": "What can break it",
+        "focus": [
+          "root"
+        ],
+        "note": "The square root of P must exist, thus P must stay positive definite, and rounding can break that."
+      }
+    ]
+  },
+  "layout": {
+    "mode": "grid",
+    "origin": [
+      40,
+      120
+    ],
+    "cols": 6,
+    "gapX": 28,
+    "gapY": 56,
+    "cellW": 124,
+    "cellH": 62
+  },
+  "components": [
+    {
+      "id": "state",
+      "type": "external",
+      "label": "State and Spread",
+      "sublabel": "x and P",
+      "row": 1,
+      "col": 0
+    },
+    {
+      "id": "spread",
+      "type": "backend",
+      "label": "Sigma Points",
+      "sublabel": "2*nx + 1 of them",
+      "row": 1,
+      "col": 1
+    },
+    {
+      "id": "root",
+      "type": "security",
+      "label": "Square Root of P",
+      "sublabel": "must exist",
+      "row": 0,
+      "col": 1
+    },
+    {
+      "id": "through",
+      "type": "backend",
+      "label": "Through the True f",
+      "sublabel": "bending as it will",
+      "row": 1,
+      "col": 2
+    },
+    {
+      "id": "read",
+      "type": "backend",
+      "label": "Read Them Back",
+      "sublabel": "mean and spread",
+      "row": 1,
+      "col": 3
+    },
+    {
+      "id": "noline",
+      "type": "cloud",
+      "label": "No Line Laid",
+      "sublabel": "and no derivative",
+      "row": 0,
+      "col": 3
+    },
+    {
+      "id": "out",
+      "type": "cloud",
+      "label": "A New x and P",
+      "sublabel": "from where they went",
+      "row": 1,
+      "col": 4
+    }
+  ],
+  "boundaries": [
+    {
+      "kind": "region",
+      "label": "the model is asked about real points, not about a line",
+      "wraps": [
+        "through",
+        "read"
+      ]
+    }
+  ],
+  "connections": [
+    {
+      "id": "laid",
+      "from": "state",
+      "to": "spread",
+      "label": "spread by root P",
+      "variant": "emphasis",
+      "labelAt": [
+        176,
+        312
+      ]
+    },
+    {
+      "id": "needs",
+      "from": "root",
+      "to": "spread",
+      "label": "or nothing works",
+      "labelAt": [
+        252.0,
+        194.0
+      ]
+    },
+    {
+      "id": "each",
+      "from": "spread",
+      "to": "through",
+      "label": "every point",
+      "variant": "emphasis",
+      "labelAt": [
+        328.0,
+        312.0
+      ]
+    },
+    {
+      "id": "landed",
+      "from": "through",
+      "to": "read",
+      "label": "Y[i]",
+      "variant": "emphasis"
+    },
+    {
+      "id": "never",
+      "from": "noline",
+      "to": "read",
+      "label": "none was needed",
+      "labelAt": [
+        556.0,
+        194.0
+      ]
+    },
+    {
+      "id": "gives",
+      "from": "read",
+      "to": "out",
+      "label": "weighed sums",
+      "variant": "emphasis",
+      "labelAt": [
+        632,
+        312
+      ]
+    }
+  ],
+  "cards": [
+    {
+      "dot": "cyan",
+      "title": "What it works out",
+      "items": [
+        "2*nx + 1 sigma points, spread about x by the square root of P",
+        "Y[i] = f(X[i], u), each point through the TRUE function",
+        "x = sum of w[i]*Y[i], and P from how far the Y[i] landed apart"
+      ]
+    },
+    {
+      "dot": "emerald",
+      "title": "How it differs from ekf",
+      "items": [
+        "The extended filter asks what the model does to a straight line",
+        "This asks what the model does to a handful of real points",
+        "No derivative is taken anywhere at all"
+      ]
+    },
+    {
+      "dot": "rose",
+      "title": "What can break it",
+      "items": [
+        "The square root of P is what spreads the points, thus it must exist",
+        "P must stay positive definite, and rounding can break that",
+        "It is the one thing that fails here where the extended filter would not"
+      ]
+    }
+  ]
+}

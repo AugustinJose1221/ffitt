@@ -1,0 +1,248 @@
+{
+  "schema_version": 1,
+  "diagram_type": "architecture",
+  "meta": {
+    "title": "Inside pll",
+    "animation": "trace",
+    "quality_profile": "showcase",
+    "views": [
+      {
+        "id": "why-not-fft",
+        "label": "Why a transform cannot",
+        "focus": [
+          "block"
+        ],
+        "note": "A transform reads a block and gives one answer. A frequency that changes inside the block is smeared across the bins."
+      },
+      {
+        "id": "the-error",
+        "label": "How far apart they are",
+        "focus": [
+          "mix",
+          "err"
+        ],
+        "note": "Multiplying the input by the loop's own oscillator gives a value that is nothing when the two line up."
+      },
+      {
+        "id": "two-gains",
+        "label": "Two gains, two jobs",
+        "focus": [
+          "prop",
+          "integ"
+        ],
+        "note": "The proportional gain moves the phase at once. The integral gain moves the frequency and holds a drift with no error left."
+      },
+      {
+        "id": "the-answer",
+        "label": "The frequency is the answer",
+        "focus": [
+          "freq"
+        ],
+        "note": "The loop's own frequency, carried forward and corrected at every sample, is the measurement."
+      }
+    ]
+  },
+  "layout": {
+    "mode": "grid",
+    "origin": [
+      40,
+      120
+    ],
+    "cols": 6,
+    "gapX": 28,
+    "gapY": 56,
+    "cellW": 124,
+    "cellH": 62
+  },
+  "components": [
+    {
+      "id": "tone",
+      "type": "external",
+      "label": "A Moving Tone",
+      "sublabel": "the frequency IS it",
+      "row": 1,
+      "col": 0
+    },
+    {
+      "id": "block",
+      "type": "security",
+      "label": "A Transform",
+      "sublabel": "smears a moving tone",
+      "row": 0,
+      "col": 1
+    },
+    {
+      "id": "mix",
+      "type": "backend",
+      "label": "Compare",
+      "sublabel": "input against its own",
+      "row": 1,
+      "col": 1
+    },
+    {
+      "id": "err",
+      "type": "database",
+      "label": "The Error",
+      "sublabel": "nothing when lined up",
+      "row": 1,
+      "col": 2
+    },
+    {
+      "id": "prop",
+      "type": "backend",
+      "label": "Proportional",
+      "sublabel": "moves the phase",
+      "row": 0,
+      "col": 3
+    },
+    {
+      "id": "integ",
+      "type": "backend",
+      "label": "Integral",
+      "sublabel": "moves the frequency",
+      "row": 2,
+      "col": 3
+    },
+    {
+      "id": "osc",
+      "type": "backend",
+      "label": "Its Own Oscillator",
+      "sublabel": "phase and frequency",
+      "row": 1,
+      "col": 4
+    },
+    {
+      "id": "freq",
+      "type": "cloud",
+      "label": "The Frequency",
+      "sublabel": "at every sample",
+      "row": 1,
+      "col": 5
+    }
+  ],
+  "boundaries": [
+    {
+      "kind": "region",
+      "label": "carried forward and corrected at every sample",
+      "wraps": [
+        "osc",
+        "freq"
+      ]
+    }
+  ],
+  "connections": [
+    {
+      "id": "into",
+      "from": "tone",
+      "to": "mix",
+      "label": "the input",
+      "variant": "emphasis",
+      "labelAt": [
+        176,
+        312
+      ]
+    },
+    {
+      "id": "cannot",
+      "from": "tone",
+      "to": "block",
+      "label": "if a block were read"
+    },
+    {
+      "id": "apart",
+      "from": "mix",
+      "to": "err",
+      "label": "how far",
+      "variant": "emphasis",
+      "labelAt": [
+        328.0,
+        312.0
+      ]
+    },
+    {
+      "id": "fast",
+      "from": "err",
+      "to": "prop",
+      "label": "at once"
+    },
+    {
+      "id": "slow",
+      "from": "err",
+      "to": "integ",
+      "label": "and lasting"
+    },
+    {
+      "id": "moves1",
+      "from": "prop",
+      "to": "osc",
+      "label": "the phase"
+    },
+    {
+      "id": "moves2",
+      "from": "integ",
+      "to": "osc",
+      "label": "the frequency"
+    },
+    {
+      "id": "back",
+      "from": "osc",
+      "to": "mix",
+      "labelAt": [
+        480.0,
+        312.0
+      ],
+      "fromSide": "bottom",
+      "toSide": "bottom",
+      "via": [
+        [
+          708,
+          470
+        ],
+        [
+          252,
+          470
+        ]
+      ]
+    },
+    {
+      "id": "read",
+      "from": "osc",
+      "to": "freq",
+      "label": "the answer",
+      "variant": "emphasis",
+      "labelAt": [
+        784,
+        312
+      ]
+    }
+  ],
+  "cards": [
+    {
+      "dot": "cyan",
+      "title": "What it works out",
+      "items": [
+        "error = how far the input leads or lags the loop's own oscillator",
+        "frequency = frequency + integral_gain * error",
+        "phase = phase + frequency + proportional_gain * error"
+      ]
+    },
+    {
+      "dot": "emerald",
+      "title": "What each gain does",
+      "items": [
+        "The proportional gain moves the phase at once, thus it follows a step",
+        "The integral gain moves the frequency, thus it follows a drift and leaves no error",
+        "With the proportional term alone, a tone whose frequency has moved is always lagged"
+      ]
+    },
+    {
+      "dot": "amber",
+      "title": "Why not a transform",
+      "items": [
+        "A transform reads a block and gives one answer for the whole of it",
+        "A frequency that changes inside the block is smeared across the bins",
+        "The bandwidth here is a fraction of the sample rate, and not a number of hertz"
+      ]
+    }
+  ]
+}

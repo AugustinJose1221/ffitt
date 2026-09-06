@@ -1,0 +1,238 @@
+{
+  "schema_version": 1,
+  "diagram_type": "architecture",
+  "meta": {
+    "title": "Inside kalman",
+    "animation": "trace",
+    "quality_profile": "showcase",
+    "views": [
+      {
+        "id": "two-steps",
+        "label": "Predict, then update",
+        "focus": [
+          "predict",
+          "update"
+        ],
+        "note": "One step moves the state forward and lets the uncertainty grow. The other pulls it back towards the measurement."
+      },
+      {
+        "id": "the-gain",
+        "label": "What the gain decides",
+        "focus": [
+          "gain"
+        ],
+        "note": "Where the measurement is noisy the gain is small and it barely moves the state. Where the model is doubtful the gain grows."
+      },
+      {
+        "id": "no-memory",
+        "label": "No memory while it runs",
+        "focus": [
+          "scratch"
+        ],
+        "note": "Every intermediate result goes in scratch matrices laid out at the allocation, thus a static filter needs no heap."
+      },
+      {
+        "id": "refusal",
+        "label": "When it refuses",
+        "focus": [
+          "singular"
+        ],
+        "note": "Where the innovation covariance cannot be inverted, the update is refused and the state is left as it was."
+      }
+    ]
+  },
+  "layout": {
+    "mode": "grid",
+    "origin": [
+      40,
+      120
+    ],
+    "cols": 6,
+    "gapX": 28,
+    "gapY": 56,
+    "cellW": 124,
+    "cellH": 62
+  },
+  "components": [
+    {
+      "id": "model",
+      "type": "external",
+      "label": "Your Model",
+      "sublabel": "A, B, C",
+      "row": 0,
+      "col": 0
+    },
+    {
+      "id": "meas",
+      "type": "external",
+      "label": "A Measurement",
+      "sublabel": "y, and noisy",
+      "row": 2,
+      "col": 0
+    },
+    {
+      "id": "predict",
+      "type": "backend",
+      "label": "Predict",
+      "sublabel": "x = A*x + B*u",
+      "row": 1,
+      "col": 1
+    },
+    {
+      "id": "cov",
+      "type": "database",
+      "label": "Uncertainty P",
+      "sublabel": "grows on predict",
+      "row": 0,
+      "col": 2
+    },
+    {
+      "id": "gain",
+      "type": "backend",
+      "label": "The Gain K",
+      "sublabel": "which to trust",
+      "row": 1,
+      "col": 2
+    },
+    {
+      "id": "update",
+      "type": "backend",
+      "label": "Update",
+      "sublabel": "x + K*(y - C*x)",
+      "row": 1,
+      "col": 3
+    },
+    {
+      "id": "scratch",
+      "type": "database",
+      "label": "Scratch Matrices",
+      "sublabel": "laid out once",
+      "row": 2,
+      "col": 3
+    },
+    {
+      "id": "singular",
+      "type": "security",
+      "label": "S Not Invertible",
+      "sublabel": "the update refused",
+      "row": 0,
+      "col": 4
+    },
+    {
+      "id": "out",
+      "type": "cloud",
+      "label": "A Better State",
+      "sublabel": "and a smaller P",
+      "row": 1,
+      "col": 4
+    }
+  ],
+  "boundaries": [
+    {
+      "kind": "region",
+      "label": "no memory is taken while the filter runs",
+      "wraps": [
+        "gain",
+        "update"
+      ]
+    }
+  ],
+  "connections": [
+    {
+      "id": "moves",
+      "from": "model",
+      "to": "predict",
+      "label": "A and B",
+      "variant": "emphasis",
+      "labelAt": [
+        176,
+        224
+      ]
+    },
+    {
+      "id": "grows",
+      "from": "predict",
+      "to": "cov",
+      "label": "P = A*P*A' + Q",
+      "variant": "emphasis"
+    },
+    {
+      "id": "weighs",
+      "from": "cov",
+      "to": "gain",
+      "label": "against R",
+      "labelAt": [
+        404.0,
+        194.0
+      ]
+    },
+    {
+      "id": "arrives",
+      "from": "meas",
+      "to": "gain",
+      "label": "y",
+      "variant": "emphasis",
+      "fromSide": "right",
+      "toSide": "bottom"
+    },
+    {
+      "id": "pulls",
+      "from": "gain",
+      "to": "update",
+      "label": "K",
+      "variant": "emphasis"
+    },
+    {
+      "id": "holds",
+      "from": "scratch",
+      "to": "update",
+      "label": "every step"
+    },
+    {
+      "id": "refused",
+      "from": "singular",
+      "to": "update",
+      "label": "left as it was"
+    },
+    {
+      "id": "better",
+      "from": "update",
+      "to": "out",
+      "label": "x and P",
+      "variant": "emphasis",
+      "labelAt": [
+        632.0,
+        312.0
+      ]
+    }
+  ],
+  "cards": [
+    {
+      "dot": "cyan",
+      "title": "What it works out",
+      "items": [
+        "Predict: x = A*x + B*u, and P = A*P*A' + Q",
+        "Update: K = P*C' * inverse(C*P*C' + R)",
+        "x = x + K*(y - C*x), and P = (I - K*C)*P"
+      ]
+    },
+    {
+      "dot": "emerald",
+      "title": "What the gain means",
+      "items": [
+        "Where the measurement is noisy, R is large, K is small, and it barely moves the state",
+        "Where the model is doubtful, P grows, K grows, and the measurement is followed",
+        "That one matrix is the whole idea of the filter"
+      ]
+    },
+    {
+      "dot": "amber",
+      "title": "What it asks of you",
+      "items": [
+        "The filter takes no memory while it runs",
+        "Every intermediate result sits in scratch laid out at the allocation",
+        "Where S cannot be inverted the update is refused, and the state is left alone"
+      ]
+    }
+  ]
+}

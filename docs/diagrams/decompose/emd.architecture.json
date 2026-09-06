@@ -1,0 +1,233 @@
+{
+  "schema_version": 1,
+  "diagram_type": "architecture",
+  "meta": {
+    "title": "Inside emd",
+    "animation": "trace",
+    "quality_profile": "showcase",
+    "views": [
+      {
+        "id": "the-sift",
+        "label": "One sift",
+        "focus": [
+          "peaks",
+          "envel",
+          "take"
+        ],
+        "note": "Lay a spline through the peaks and another through the valleys, and take the mean of the two away from the signal."
+      },
+      {
+        "id": "when-done",
+        "label": "When it is a mode",
+        "focus": [
+          "mode"
+        ],
+        "note": "As many crossings of zero as it has peaks and valleys, and envelopes that sit about zero."
+      },
+      {
+        "id": "again",
+        "label": "Then again on the rest",
+        "focus": [
+          "residue"
+        ],
+        "note": "The whole loop runs again on what is left, thus each mode is slower than the one before it."
+      },
+      {
+        "id": "no-model",
+        "label": "Nothing is chosen in advance",
+        "focus": [
+          "mixing"
+        ],
+        "note": "The signal decides the modes. That is the strength, and mode mixing where two frequencies sit close is the weakness."
+      }
+    ]
+  },
+  "layout": {
+    "mode": "grid",
+    "origin": [
+      40,
+      120
+    ],
+    "cols": 6,
+    "gapX": 28,
+    "gapY": 56,
+    "cellW": 124,
+    "cellH": 62
+  },
+  "components": [
+    {
+      "id": "signal",
+      "type": "external",
+      "label": "Your Signal",
+      "sublabel": "several frequencies",
+      "row": 1,
+      "col": 0
+    },
+    {
+      "id": "peaks",
+      "type": "backend",
+      "label": "Peaks and Valleys",
+      "sublabel": "found first",
+      "row": 1,
+      "col": 1
+    },
+    {
+      "id": "envel",
+      "type": "backend",
+      "label": "Two Splines",
+      "sublabel": "upper and lower",
+      "row": 1,
+      "col": 2
+    },
+    {
+      "id": "take",
+      "type": "backend",
+      "label": "Take the Mean Off",
+      "sublabel": "x less the middle",
+      "row": 1,
+      "col": 3
+    },
+    {
+      "id": "mode",
+      "type": "cloud",
+      "label": "An IMF",
+      "sublabel": "one frequency at a time",
+      "row": 0,
+      "col": 4
+    },
+    {
+      "id": "mixing",
+      "type": "security",
+      "label": "Mode Mixing",
+      "sublabel": "if two sit close",
+      "row": 0,
+      "col": 2,
+      "tag": "not answered here"
+    },
+    {
+      "id": "residue",
+      "type": "backend",
+      "label": "The Residue",
+      "sublabel": "sift it again",
+      "row": 2,
+      "col": 4
+    },
+    {
+      "id": "trend",
+      "type": "cloud",
+      "label": "The Last Residue",
+      "sublabel": "what is left over",
+      "row": 1,
+      "col": 5
+    }
+  ],
+  "boundaries": [
+    {
+      "kind": "region",
+      "label": "repeated until what is left is a mode",
+      "wraps": [
+        "envel",
+        "take"
+      ]
+    }
+  ],
+  "connections": [
+    {
+      "id": "into",
+      "from": "signal",
+      "to": "peaks",
+      "label": "x[n]",
+      "variant": "emphasis",
+      "labelAt": [
+        176,
+        312
+      ]
+    },
+    {
+      "id": "through",
+      "from": "peaks",
+      "to": "envel",
+      "label": "a spline each",
+      "variant": "emphasis",
+      "labelAt": [
+        328.0,
+        312.0
+      ]
+    },
+    {
+      "id": "risk",
+      "from": "envel",
+      "to": "mixing",
+      "label": "two close together",
+      "labelAt": [
+        480,
+        194
+      ]
+    },
+    {
+      "id": "middle",
+      "from": "envel",
+      "to": "take",
+      "label": "their mean",
+      "variant": "emphasis",
+      "labelAt": [
+        480.0,
+        312.0
+      ]
+    },
+    {
+      "id": "done",
+      "from": "take",
+      "to": "mode",
+      "label": "when it is one",
+      "variant": "emphasis"
+    },
+    {
+      "id": "rest",
+      "from": "take",
+      "to": "residue",
+      "label": "what is left",
+      "variant": "emphasis"
+    },
+    {
+      "id": "loop",
+      "from": "residue",
+      "to": "trend",
+      "label": "slower each time",
+      "variant": "emphasis",
+      "labelAt": [
+        784.0,
+        312.0
+      ]
+    }
+  ],
+  "cards": [
+    {
+      "dot": "cyan",
+      "title": "What one sift does",
+      "items": [
+        "Find every peak and every valley of the signal",
+        "Lay a spline through the peaks, and another through the valleys",
+        "Take the mean of those two envelopes away, and repeat"
+      ]
+    },
+    {
+      "dot": "emerald",
+      "title": "What stops it",
+      "items": [
+        "A mode has as many crossings of zero as it has peaks and valleys",
+        "Its envelopes sit about zero",
+        "Then the whole loop runs again on the residue, and each mode is slower than the last"
+      ]
+    },
+    {
+      "dot": "rose",
+      "title": "Strength and weakness together",
+      "items": [
+        "Nothing here is derived from a model; the signal decides the modes",
+        "Thus it follows a signal that no fixed basis fits",
+        "Where two frequencies sit close, one sift takes pieces of both, and that is not answered here"
+      ]
+    }
+  ]
+}

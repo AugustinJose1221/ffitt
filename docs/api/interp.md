@@ -9,7 +9,7 @@ python3 scripts/api_doc.py
 
 Reading between the points of a table. Declared in `ffitt/interpolate/interp.h`.
 
-[Back to the index](../API.md) | [How the interpolate modules work](../../ffitt/interpolate/README.md)
+[Back to the index](../API.md) | [How the interpolate modules work](../../ffitt/interpolate/README.md) | [How it works](../diagrams/interpolate/interp.html) ([preview](https://htmlpreview.github.io/?https://github.com/AugustinJose1221/ffitt/blob/development/docs/diagrams/interpolate/interp.html))
 
 ## Overview
 
@@ -72,6 +72,30 @@ WHICH TO TAKE
 THE INPUTS MUST RISE THROUGH THE TABLE. That is what lets a search find the
 place in a few steps rather than by walking it. A table written the other
 way round must be turned round first.
+
+## Method
+
+Every real reading falls between two entries of the table, and what to do
+there is a choice of three:
+
+    LINEAR   y = y[i] + (y[i+1] - y[i]) * t,  with t the fraction between
+    PCHIP    a curve of the third power, with slopes chosen so that the curve
+             never leaves the range of the two points it lies between
+    SPLINE   a curve of the third power, with slopes chosen so that the
+             curvature matches at every point
+
+The difference between the last two is the one that matters. A spline is
+smoother, and to be that smooth it MAY OVERSHOOT: given points that rise and
+then flatten, the curve can rise above the highest of them.
+
+PCHIP will not. It gives up some smoothness in exchange for never leaving the
+range of the data, thus a table of a physical limit, a calibration or a duty
+cycle should be read with it. A curve that must look right to the eye should
+be read with a spline.
+
+Linear costs almost nothing and has a corner at every point. Where the table
+is dense, that corner is smaller than the noise and linear is the right
+answer.
 
 ## Macros
 

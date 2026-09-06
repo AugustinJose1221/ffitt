@@ -441,3 +441,42 @@ def test_a_module_with_no_diagram_says_so_rather_than_linking_nowhere():
         if "not yet drawn" in line:
             assert "htmlpreview" not in line
             assert line.count("|") == 4, "the row must keep its three columns"
+
+
+def test_a_macro_that_runs_over_lines_does_not_end_the_search():
+    """A #define may continue on the next line, which begins with no mark.
+
+    Read as it stands that line looks like a declaration and ends the search,
+    thus everything the header says after such a macro is lost. kalman has
+    one, and its whole method block went missing that way.
+    """
+    text = "\n".join([
+        "#ifndef EXAMPLE_H",
+        "#define EXAMPLE_H",
+        "",
+        "// How much memory the thing needs.",
+        "#define EXAMPLE_SIZE(a, b)   ((6*(a)*(a)) + (5*(a)*(b)) \\",
+        "                             + (4*(a)) + (b))",
+        "",
+        "// Method:",
+        "// The value is the mean of the samples.",
+        "",
+        "// The thing itself.",
+        "typedef struct{",
+        "    int a;",
+        "}example_t;",
+        "",
+    ])
+    overview, method = api_doc.read_module_comment(text.splitlines())
+    assert method == ["The value is the mean of the samples."]
+    assert "How much memory the thing needs." in overview
+
+
+def test_kalman_carries_its_method():
+    """kalman has a macro that runs over two lines, and lost everything after."""
+    with open(os.path.join(api_doc.REPOSITORY, "ffitt/estimate/kalman.h"),
+              encoding="utf-8") as handle:
+        _, method = api_doc.read_module_comment(handle.read().splitlines())
+
+    assert method != [], "kalman writes a method block that never arrives"
+    assert any("K is the whole idea" in line for line in method)

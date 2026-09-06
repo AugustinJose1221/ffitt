@@ -53,6 +53,30 @@
 // USE BOTH WHERE IT MATTERS. They agree when the reading suits them and part
 // company when it does not, and that parting is the only warning either gives.
 
+// Method:
+// A whole number of samples is easy, and correlate_best_lag already gives it.
+// This is the part below one sample.
+//
+// The phase of the cross spectrum carries it:
+//
+//     S_xy[k] = X[k] * conj(Y[k])
+//     angle of S_xy[k] = 2*pi*k*delay/size
+//
+// A delay in time is a phase that rises steadily with frequency, and the RATE
+// it rises at is the delay. Thus the answer comes from the slope of a line laid
+// through those angles, and not from any one bin.
+//
+//     delay = slope * size / (2*pi)
+//
+// Two things follow. The angles must be unwrapped before the line is laid, or
+// each turn past pi throws the slope out. And bins where the two signals share
+// nothing carry an angle that is noise, thus they are weighed by how much the
+// two actually share there.
+//
+// The answer is in samples and can be a fraction of one. farrow is the other
+// half of this: having measured 2.35 samples, that module applies it.
+
+
 typedef enum{
     DELAY_CORRELATE = 0,        // From the peak of the cross correlation
     DELAY_PHASE                 // From the slope of the phase

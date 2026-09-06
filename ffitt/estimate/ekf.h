@@ -47,6 +47,33 @@
 // The filter takes no memory while it runs. Thus a target with no heap can use
 // it, as with the module kalman.
 
+// Method:
+// The plain filter needs a matrix to move the state and a matrix to read the
+// measurement. A radar gives a distance, which is a square root of a sum of
+// squares. A pendulum turns with the sine of its angle. Neither is a matrix.
+//
+// The extended filter lays a straight line against the model at the place the
+// state stands now:
+//
+//     F = the derivative of f at x, the Jacobian
+//     H = the derivative of h at x
+//
+// and then runs the plain filter with F and H in place of A and C:
+//
+//     x = f(x, u)                 the real function moves the state
+//     P = F*P*F' + Q              the straight line moves the uncertainty
+//     K = P*H' * inverse(H*P*H' + R)
+//     x = x + K*(y - h(x))        the real function reads the measurement
+//
+// Note which is which. The state goes through the true function; only the
+// uncertainty goes through the straight line.
+//
+// That is also the weakness. A straight line laid against a model that bends
+// sharply is wrong a little way from the point it was laid at, and the filter
+// has no way to know it. Where the bend is severe, ukf answers the same
+// question without any derivative at all.
+
+
 // The state function. It reads the state and the input, and it writes the next
 // state into the result. The three matrices have the orders nx x 1, ni x 1 and
 // nx x 1.
