@@ -68,6 +68,24 @@ falls away as one over a square, thus it still has something left far from
 its centre. Fitting a gaussian to a peak that really has long tails
 underestimates its area, and that is the usual fault.
 
+## Types
+
+### `curve_shape_t`
+
+Write a curve of the chosen shape across a list of places.
+
+The places run from `from` to `to` across the count, which is what a
+measurement swept across a range looks like. Give false if the count is
+nothing or the width is not one curve_is_valid_width accepts.
+
+```c
+typedef enum{
+    CURVE_GAUSSIAN = 0,
+    CURVE_LORENTZIAN,
+    CURVE_SKEWED_GAUSSIAN
+}curve_shape_t;
+```
+
 ## Functions
 
 ### `curve_is_valid_width`

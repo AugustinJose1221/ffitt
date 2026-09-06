@@ -126,6 +126,82 @@ is used at.
 
 ## Types
 
+### `generate_kind_t`
+
+Which shape to make.
+
+```c
+typedef enum{
+    // A sine. It holds one frequency and nothing else, thus it needs no
+    // band-limiting and gets none.
+    GENERATE_SINE = 0,
+
+    // A square wave, band-limited at its corners.
+    GENERATE_SQUARE,
+
+    // A sawtooth, band-limited at its one corner in each turn.
+    GENERATE_SAWTOOTH,
+
+    // A triangle. It has no step, only a change of slope, thus it folds far
+    // less than the other two even when written naively.
+    GENERATE_TRIANGLE,
+
+    // Random values spread evenly, holding every frequency alike.
+    GENERATE_WHITE_NOISE,
+
+    // Random values holding twice the power in each halving of frequency,
+    // which is what most natural noise does.
+    GENERATE_PINK_NOISE,
+
+    // A random walk: four times the power in each halving of frequency. This
+    // is what DRIFT looks like -- a reading that wanders away and does not
+    // come back on its own. Reach for it to test dcblock, detrend, and the one
+    // way changepoint is documented to fail.
+    GENERATE_BROWN_NOISE,
+
+    // The mirror of pink: twice the power in each DOUBLING of frequency.
+    GENERATE_BLUE_NOISE,
+
+    // Random values drawn from a normal spread rather than an even one.
+    //
+    // THIS IS THE ONE THE REST OF THE LIBRARY ASSUMES. matched_threshold_for
+    // turns a rate of false alarms into a threshold by inverting the tail of a
+    // normal spread; the table of thresholds in changepoint.h was measured on
+    // normal noise; kalman, ekf and ukf all take the noise of the process and
+    // of the measurement to be normal. GENERATE_WHITE_NOISE is drawn EVENLY,
+    // thus none of those claims can be examined with it: measured, the same
+    // changepoint threshold gave one wrong alarm in every 372 samples on an
+    // even spread and one in every 465 on a normal one.
+    //
+    // IT IS NOT HELD INSIDE THE RANGE OF ONE. Its standard deviation is one
+    // and its tails run as far as a normal spread's tails run. Holding it
+    // inside a range would cut off exactly the tails it exists to provide, and
+    // a threshold measured against a spread with no tails is a threshold
+    // measured against nothing. The table below says how far it reached.
+    GENERATE_GAUSSIAN_NOISE,
+
+    // A rectangular pulse that is high for a chosen part of each turn, band
+    // limited at both of its corners. GENERATE_SQUARE is this with the part
+    // set to a half. Set the part with generate_set_part.
+    GENERATE_PULSE,
+
+    // A gaussian bump once each turn, as wide as generate_set_part says.
+    //
+    // This is the shape a sounder or a radar sends and the shape matched and
+    // delay are built to find. UNLIKE THE OSCILLATING SHAPES IT DOES NOT ADD
+    // UP TO NOTHING: it stands between 0 and 1 and never below, because a
+    // pulse is a thing that happens rather than a thing that swings.
+    GENERATE_GAUSSIAN_PULSE,
+
+    // One sample of one at the start of each turn and nothing between them.
+    //
+    // Give it a frequency low enough that one turn is longer than the block
+    // being made, and the block holds exactly one impulse. That is what the
+    // response of a filter is measured with.
+    GENERATE_IMPULSE
+}generate_kind_t;
+```
+
 ### `generate_t`
 
 ```c

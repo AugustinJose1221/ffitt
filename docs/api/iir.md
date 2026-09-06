@@ -170,6 +170,90 @@ typedef struct{
 }iir_t;
 ```
 
+### `iir_shape_t`
+
+WHICH SHAPE OF FILTER TO ASK FOR
+
+A filter trades three things against each other: how flat the band that
+passes is, how sharply it falls, and how much of the band that is stopped
+gets through. NO FILTER IS BEST AT ALL THREE, and the shapes here sit at
+different corners of that trade.
+
+Measured, on a low pass of order 8 at a cutoff of a tenth of the sample
+rate, asked for 1 dB of ripple and a stop band 60 dB down:
+
+  shape           at nothing   ripple in the band   falls to 60 dB below
+                               that passes
+  Butterworth        1.000     none                  0.209
+  Chebyshev I        0.891     1.000 dB              0.151
+  Chebyshev II       1.000     none                  0.100
+  Elliptic           0.891     1.000 dB              0.110
+
+And the same trade seen the other way round. To pass everything below 0.1
+and stop everything above 0.15, 60 dB down, with 1 dB of ripple allowed:
+
+  shape           sections needed   order
+  Butterworth            9           18
+  Chebyshev I            5           10
+  Chebyshev II           5           10
+  Elliptic               3            6
+
+A THIRD OF THE SECTIONS FOR THE SAME WORK. That is what ripple in both bands
+buys, and iir_sections_for is how to ask before choosing. Every filter in
+that table was built and measured, and every one really meets what was
+asked.
+
+  TAKE BUTTERWORTH where the band that passes must be flat and there is room
+  for the fall. It is the safe answer and the one to start from.
+  TAKE CHEBYSHEV I where the fall must be sharper and a known ripple in the
+  band that passes can be borne.
+  TAKE CHEBYSHEV II where the band that passes must stay flat but the fall
+  must still be sharp. The ripple goes into the band that is stopped, where
+  it usually matters less.
+  TAKE ELLIPTIC where the two bands stand close together and nothing else
+  will fit. It ripples in both bands and it has the worst phase of the four,
+  and in exchange it needs a third of the sections.
+
+ONE THING TO KNOW ABOUT AN ELLIPTIC FILTER AT 32 BITS. It holds its band
+that is stopped down with a set of notches, and a notch must be placed
+exactly to reach all the way down. At 32 bits the coefficients cannot always
+place them exactly, and the floor between them then sits a little higher
+than was asked. Measured, at a cutoff of 0.05 with 70 dB asked for:
+
+    ripple asked   0.5    1.0    2.0    3.0    5.0  dB
+    32 bits       -70.0  -70.0  -66.9  -69.2  -69.6  dB delivered
+    64 bits       -70.0  -70.0  -70.0  -70.0  -70.0  dB delivered
+
+The shortfall is at most about 3 dB and MORE SECTIONS DO NOT MEND IT,
+because the fault is in placing the notches and not in having too few. Ask
+for a few dB more than is needed at 32 bits, or build at 64. No other shape
+here shows this: a Chebyshev II delivers exactly what is asked at either
+width, all the way to 110 dB.
+
+A WORD ON PHASE, WHICH IS THE PART THAT IS FORGOTTEN. Every shape here moves
+the different frequencies by different times, and the sharper the fall the
+worse that gets. Where the shape of a waveform matters, and not only which
+frequencies it holds, use iir_group_delay to see what the filter will do to
+it, or use filtfilt, which runs the filter both ways and leaves no phase
+shift at all.
+
+```c
+typedef enum{
+    // The band that passes is as flat as it can be. No ripple anywhere.
+    IIR_BUTTERWORTH = 0,
+
+    // Ripples in the band that passes by the amount asked for, and falls
+    // faster than Butterworth for the same order.
+    IIR_CHEBYSHEV_I,
+
+    // Flat in the band that passes, and ripples in the band that is stopped.
+    IIR_CHEBYSHEV_II,
+
+    // Ripples in both bands and falls fastest of all for the order.
+    IIR_ELLIPTIC
+}iir_shape_t;
+```
+
 ## Functions
 
 ### `iir_is_valid_cutoff`

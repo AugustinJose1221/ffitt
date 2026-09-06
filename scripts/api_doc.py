@@ -110,7 +110,10 @@ MODULES = [
 ]
 
 COMMENT = re.compile(r"^\s*//\s?(.*)$")
-TYPEDEF_START = re.compile(r"^\s*typedef\s+struct")
+# A type is a struct or an enum. Only a struct was read for a long time,
+# thus fifteen headers lost the comment above their enum and the fifty
+# public names inside it. Those names are the choices a caller must make.
+TYPEDEF_START = re.compile(r"^\s*typedef\s+enum|^\s*typedef\s+struct")
 TYPEDEF_END = re.compile(r"^\s*\}\s*(?P<name>\w+)\s*;")
 DEFINE = re.compile(r"^\s*#\s*define\s+(?P<name>[A-Z_][A-Z0-9_]*)")
 GUARD = re.compile(r"^\s*#\s*ifndef\s+(?P<name>\w+)")

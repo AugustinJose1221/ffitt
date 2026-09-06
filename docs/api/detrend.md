@@ -135,6 +135,25 @@ began is read as one period of something that repeats, and the join between
 the end and the next copy is a step. That step is not in the signal, and its
 energy spreads across EVERY frequency.
 
+## Types
+
+### `detrend_kind_t`
+
+Which trend to take away.
+
+```c
+typedef enum{
+    // The mean of the block. Use this where the readings sit at a level that
+    // does not move.
+    DETREND_CONSTANT = 0,
+
+    // The straight line of least squared error through the block. Use this
+    // where the level drifts across the block, which a sensor that warms up
+    // and almost any long recording will do.
+    DETREND_LINEAR
+}detrend_kind_t;
+```
+
 ## Functions
 
 ### `detrend_is_valid_kind`

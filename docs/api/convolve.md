@@ -94,6 +94,18 @@ long shape the library therefore transforms both, multiplies the bins, and
 transforms back, which costs n*log(n) rather than n*m. No conjugate is taken
 there, and that again is what parts this from a correlation.
 
+## Types
+
+### `convolve_mode_t`
+
+```c
+typedef enum{
+    CONVOLVE_FULL = 0,          // Every place the two touch
+    CONVOLVE_SAME,              // As long as the signal, lined up with it
+    CONVOLVE_VALID              // Only where the shape lies wholly inside
+}convolve_mode_t;
+```
+
 ## Functions
 
 ### `convolve_is_valid_mode`

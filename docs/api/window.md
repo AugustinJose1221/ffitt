@@ -89,6 +89,22 @@ not divide by it is wrong by a factor of two.
 
 This module gets no memory. It writes into a list that the caller holds.
 
+## Types
+
+### `window_kind_t`
+
+```c
+typedef enum{
+    WINDOW_RECTANGULAR = 0,     // No window. Every value is one
+    WINDOW_HANN,                // The usual choice
+    WINDOW_HAMMING,             // Lower first side lobe, higher far ones
+    WINDOW_BLACKMAN,            // Lower side lobes, wider main lobe
+    WINDOW_BLACKMAN_HARRIS,     // The lowest side lobes of the fixed windows
+    WINDOW_TUKEY,               // Flat in the middle, falls at the ends
+    WINDOW_KAISER               // The shape follows a parameter
+}window_kind_t;
+```
+
 ## Functions
 
 ### `window_is_valid_kind`

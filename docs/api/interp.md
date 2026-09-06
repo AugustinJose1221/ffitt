@@ -108,6 +108,17 @@ answer.
 How many working values interp_pchip needs for a table of the given size,
 which is one slope for each point.
 
+## Types
+
+### `interp_kind_t`
+
+```c
+typedef enum{
+    INTERP_LINEAR = 0,          // A straight line between the neighbours
+    INTERP_PCHIP                // Smooth, and never outside the neighbours
+}interp_kind_t;
+```
+
 ## Functions
 
 ### `interp_is_valid_kind`

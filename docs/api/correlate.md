@@ -128,6 +128,19 @@ COEFFICIENT is the only one that means the same thing for every signal, and
 it is the only one that takes the mean off first. The means are zero for the
 other three, thus one sum serves all four.
 
+## Types
+
+### `correlate_scaling_t`
+
+```c
+typedef enum{
+    CORRELATE_RAW = 0,          // The sum of the products
+    CORRELATE_BIASED,           // Divided by the number of samples
+    CORRELATE_UNBIASED,         // Divided by the overlap at each lag
+    CORRELATE_COEFFICIENT       // Between -1 and 1, with the mean taken off
+}correlate_scaling_t;
+```
+
 ## Functions
 
 ### `correlate_is_valid_scaling`

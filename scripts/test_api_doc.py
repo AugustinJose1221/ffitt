@@ -312,8 +312,7 @@ def test_no_text_above_the_first_declaration_is_lost():
 
     It may arrive as the Overview or as the Method. The block that sits
     directly on the first declaration is left out here, because it belongs to
-    that declaration: for a struct it is printed beside the type, and for an
-    enum it is lost, which is the fault that issue #92 holds.
+    that declaration, and is printed beside it.
     """
     for name, path, title in api_doc.MODULES:
         if name in api_doc.HEADERS_WITHOUT_A_MODULE:
@@ -523,3 +522,49 @@ def test_a_link_that_is_there_is_not_named(tmp_path, monkeypatch):
 
     monkeypatch.setattr(api_doc, "REPOSITORY", str(tmp_path))
     assert api_doc.find_links_that_point_nowhere() == []
+
+
+def test_an_enum_is_read_as_a_type(tmp_path):
+    """A typedef enum must be read, with the comment above it."""
+    text = "\n".join([
+        "#ifndef EXAMPLE_H",
+        "#define EXAMPLE_H",
+        "",
+        "// The example module.",
+        "",
+        "// Which way the thing is done.",
+        "typedef enum{",
+        "    EXAMPLE_ONE = 0,     // the first way",
+        "    EXAMPLE_TWO          // the second",
+        "}example_way_t;",
+        "",
+    ])
+    path = tmp_path / "example.h"
+    path.write_text(text, encoding="utf-8")
+
+    types, _, _ = api_doc.read_header(str(path))
+    names = {name for name, _, _ in types}
+    assert "example_way_t" in names
+
+    for name, body, comment in types:
+        if name == "example_way_t":
+            assert comment == ["Which way the thing is done."]
+            assert any("EXAMPLE_ONE" in line for line in body)
+            assert any("EXAMPLE_TWO" in line for line in body)
+
+
+def test_every_enum_of_the_repository_reaches_its_document():
+    """Fifteen headers write an enum, and each names choices a caller must make."""
+    seen = 0
+
+    for name, path, title in api_doc.MODULES:
+        full = os.path.join(api_doc.REPOSITORY, path)
+        with open(full, encoding="utf-8") as handle:
+            if "typedef enum" not in handle.read():
+                continue
+
+        seen += 1
+        document = api_doc.build_module_document(name, path, title)
+        assert "typedef enum" in document, "%s loses its enum" % name
+
+    assert seen >= 15, "expected at least fifteen headers with an enum"

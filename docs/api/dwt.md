@@ -78,6 +78,15 @@ The largest number of coefficients that a wavelet of this module holds.
 
 ## Types
 
+### `dwt_wavelet_t`
+
+```c
+typedef enum{
+    DWT_HAAR = 0,               // Two coefficients
+    DWT_DAUBECHIES4 = 1         // Four coefficients
+}dwt_wavelet_t;
+```
+
 ### `dwt_t`
 
 ```c

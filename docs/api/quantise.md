@@ -121,6 +121,26 @@ can tell across the range, and the quantiser stops quantising.
 
 ## Types
 
+### `quantise_way_t`
+
+Which way the rounding is done.
+
+```c
+typedef enum{
+    // Rounded to the nearest step. The error follows the signal and becomes
+    // harmonics of it.
+    QUANTISE_PLAIN = 0,
+
+    // A little noise added before rounding, which breaks the pattern and turns
+    // the error into noise that averages away.
+    QUANTISE_DITHER,
+
+    // The same, and the error of each sample taken off the next, which moves
+    // the noise up towards half the sample rate.
+    QUANTISE_SHAPED
+}quantise_way_t;
+```
+
 ### `quantise_t`
 
 ```c
