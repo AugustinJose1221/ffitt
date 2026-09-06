@@ -154,9 +154,19 @@ def read_module_comment(lines):
     """
     blocks = []
     current = []
+    continued = False
 
     for line in lines:
         stripped = line.strip()
+
+        # A #define whose line ends in a backslash runs on to the next one, and
+        # that next line begins with none of the marks below. Read as it
+        # stands it looks like a declaration and ends the search, thus
+        # everything the header says after such a macro would be lost.
+        if continued:
+            continued = line.rstrip().endswith("\\")
+            continue
+
         if stripped.startswith("//"):
             body = stripped[2:]
             if body.startswith(" "):
@@ -171,6 +181,7 @@ def read_module_comment(lines):
             if current:
                 blocks.append(current)
                 current = []
+            continued = line.rstrip().endswith("\\")
             continue
 
         # A comment that stands directly above a declaration, with no empty

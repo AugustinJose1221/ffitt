@@ -37,6 +37,25 @@
 // leaves a matched filter matched to something else, and the score falls away
 // with no sign of why.
 
+// Method:
+// The best thing to look for a known shape with is that shape itself, turned
+// round:
+//
+//     score[n] = sum over k of x[n+k] * shape[k]
+//
+// That is a correlation, and no filter of frequency can do this work: the shape
+// covers the same band as the noise, thus no band can be kept or thrown away.
+//
+// WHY THIS IS THE BEST THAT CAN BE DONE. Against noise that is spread evenly,
+// no other set of weights gives a larger score at the right place against the
+// score elsewhere. The score peaks where the shape sits, and the peak is
+// sharper the less the shape looks like itself shifted.
+//
+// The threshold is the difficulty, not the sum. A fixed number is wrong as soon
+// as the noise floor moves, thus the threshold is set from the score stream
+// itself, in deviations above what the stream has been doing.
+
+
 typedef struct{
     const real_t* pattern;      // The shape being looked for
     uint32_t length;            // How many samples long it is

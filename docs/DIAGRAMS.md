@@ -13,7 +13,7 @@ a few chapters that walk through it a step at a time.
 **Preview** opens the page in a browser. **File** is the page itself, which a
 reader with a clone can open with no service at all.
 
-52 of the 64 modules have a diagram.
+64 of the 64 modules have a diagram.
 
 ## Transforms
 
@@ -59,25 +59,25 @@ reader with a clone can open with no service at all.
 
 | Module | Diagram | File |
 |---|---|---|
-| [`kalman`](api/kalman.md) | not yet drawn | |
-| [`ekf`](api/ekf.md) | not yet drawn | |
-| [`ukf`](api/ukf.md) | not yet drawn | |
-| [`propagate`](api/propagate.md) | not yet drawn | |
-| [`pll`](api/pll.md) | not yet drawn | |
+| [`kalman`](api/kalman.md) | [preview](https://htmlpreview.github.io/?https://github.com/AugustinJose1221/ffitt/blob/development/docs/diagrams/estimate/kalman.html) | [kalman.html](diagrams/estimate/kalman.html) |
+| [`ekf`](api/ekf.md) | [preview](https://htmlpreview.github.io/?https://github.com/AugustinJose1221/ffitt/blob/development/docs/diagrams/estimate/ekf.html) | [ekf.html](diagrams/estimate/ekf.html) |
+| [`ukf`](api/ukf.md) | [preview](https://htmlpreview.github.io/?https://github.com/AugustinJose1221/ffitt/blob/development/docs/diagrams/estimate/ukf.html) | [ukf.html](diagrams/estimate/ukf.html) |
+| [`propagate`](api/propagate.md) | [preview](https://htmlpreview.github.io/?https://github.com/AugustinJose1221/ffitt/blob/development/docs/diagrams/estimate/propagate.html) | [propagate.html](diagrams/estimate/propagate.html) |
+| [`pll`](api/pll.md) | [preview](https://htmlpreview.github.io/?https://github.com/AugustinJose1221/ffitt/blob/development/docs/diagrams/estimate/pll.html) | [pll.html](diagrams/estimate/pll.html) |
 
 ## Decomposition
 
 | Module | Diagram | File |
 |---|---|---|
-| [`emd`](api/emd.md) | not yet drawn | |
-| [`imf`](api/imf.md) | not yet drawn | |
+| [`emd`](api/emd.md) | [preview](https://htmlpreview.github.io/?https://github.com/AugustinJose1221/ffitt/blob/development/docs/diagrams/decompose/emd.html) | [emd.html](diagrams/decompose/emd.html) |
+| [`imf`](api/imf.md) | [preview](https://htmlpreview.github.io/?https://github.com/AugustinJose1221/ffitt/blob/development/docs/diagrams/decompose/imf.html) | [imf.html](diagrams/decompose/imf.html) |
 
 ## Interpolation
 
 | Module | Diagram | File |
 |---|---|---|
-| [`cspline`](api/cspline.md) | not yet drawn | |
-| [`interp`](api/interp.md) | not yet drawn | |
+| [`cspline`](api/cspline.md) | [preview](https://htmlpreview.github.io/?https://github.com/AugustinJose1221/ffitt/blob/development/docs/diagrams/interpolate/cspline.html) | [cspline.html](diagrams/interpolate/cspline.html) |
+| [`interp`](api/interp.md) | [preview](https://htmlpreview.github.io/?https://github.com/AugustinJose1221/ffitt/blob/development/docs/diagrams/interpolate/interp.html) | [interp.html](diagrams/interpolate/interp.html) |
 
 ## Linear algebra
 
@@ -98,9 +98,9 @@ reader with a clone can open with no service at all.
 
 | Module | Diagram | File |
 |---|---|---|
-| [`matched`](api/matched.md) | not yet drawn | |
-| [`delay`](api/delay.md) | not yet drawn | |
-| [`changepoint`](api/changepoint.md) | not yet drawn | |
+| [`matched`](api/matched.md) | [preview](https://htmlpreview.github.io/?https://github.com/AugustinJose1221/ffitt/blob/development/docs/diagrams/detect/matched.html) | [matched.html](diagrams/detect/matched.html) |
+| [`delay`](api/delay.md) | [preview](https://htmlpreview.github.io/?https://github.com/AugustinJose1221/ffitt/blob/development/docs/diagrams/detect/delay.html) | [delay.html](diagrams/detect/delay.html) |
+| [`changepoint`](api/changepoint.md) | [preview](https://htmlpreview.github.io/?https://github.com/AugustinJose1221/ffitt/blob/development/docs/diagrams/detect/changepoint.html) | [changepoint.html](diagrams/detect/changepoint.html) |
 
 ## Utilities
 

@@ -9,7 +9,7 @@ python3 scripts/api_doc.py
 
 Carrying a state forward through a rate of change. Declared in `ffitt/estimate/propagate.h`.
 
-[Back to the index](../API.md) | [How the estimate modules work](../../ffitt/estimate/README.md)
+[Back to the index](../API.md) | [How the estimate modules work](../../ffitt/estimate/README.md) | [How it works](../diagrams/estimate/propagate.html) ([preview](https://htmlpreview.github.io/?https://github.com/AugustinJose1221/ffitt/blob/development/docs/diagrams/estimate/propagate.html))
 
 ## Overview
 
@@ -90,6 +90,30 @@ The most states a model may hold.
 
 The methods keep a few copies of the state on the stack, so that no memory
 is taken and none is asked of the caller. This is what bounds those copies.
+
+## Method
+
+Nobody writes a model as a step. A model of anything physical is written as a
+rate of change:
+
+    dx/dt = f(x, u, t)
+
+and the filters all want the other thing: the state at the next sample.
+
+This module is the bridge. It takes a step of the given size through that
+rate:
+
+    Euler        x = x + h*f(x)
+    Midpoint     one probe at the half step, then use its rate
+    Runge-Kutta  four probes, weighed 1, 2, 2, 1
+
+The error left after one step falls with the order: Euler is wrong in
+proportion to the square of the step, midpoint to its cube, Runge-Kutta to
+its fifth power. Thus halving the step buys a factor of 4, of 8 and of 32.
+
+The cost is the probes: one call of f, two, or four. A model that is cheap to
+evaluate should take the fourth-order step and a longer step with it, and a
+model that is dear should take a shorter step and a cheaper rule.
 
 ## Macros
 

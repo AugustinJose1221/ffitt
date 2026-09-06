@@ -1,0 +1,227 @@
+{
+  "schema_version": 1,
+  "diagram_type": "architecture",
+  "meta": {
+    "title": "Inside delay",
+    "animation": "trace",
+    "quality_profile": "showcase",
+    "views": [
+      {
+        "id": "below-one",
+        "label": "Below a single sample",
+        "focus": [
+          "whole",
+          "part"
+        ],
+        "note": "A whole number of samples is easy and correlate_best_lag gives it. This is the part below one."
+      },
+      {
+        "id": "the-slope",
+        "label": "A delay is a slope",
+        "focus": [
+          "cross",
+          "slope"
+        ],
+        "note": "A delay in time is a phase that rises steadily with frequency, and the rate it rises at is the delay."
+      },
+      {
+        "id": "unwrap",
+        "label": "Unwrap first",
+        "focus": [
+          "wrap"
+        ],
+        "note": "Each turn past pi would throw the slope out, thus the angles are unwrapped before the line is laid."
+      },
+      {
+        "id": "weighing",
+        "label": "Bins that share nothing",
+        "focus": [
+          "weigh"
+        ],
+        "note": "Where the two signals share nothing the angle is noise, thus bins are weighed by how much they actually share."
+      }
+    ]
+  },
+  "layout": {
+    "mode": "grid",
+    "origin": [
+      40,
+      120
+    ],
+    "cols": 6,
+    "gapX": 28,
+    "gapY": 56,
+    "cellW": 124,
+    "cellH": 62
+  },
+  "components": [
+    {
+      "id": "two",
+      "type": "external",
+      "label": "Two Readings",
+      "sublabel": "one hears it later",
+      "row": 1,
+      "col": 0
+    },
+    {
+      "id": "whole",
+      "type": "backend",
+      "label": "Whole Samples",
+      "sublabel": "correlate does this",
+      "row": 0,
+      "col": 1
+    },
+    {
+      "id": "cross",
+      "type": "backend",
+      "label": "Cross Spectrum",
+      "sublabel": "X * conj(Y)",
+      "row": 1,
+      "col": 1
+    },
+    {
+      "id": "wrap",
+      "type": "security",
+      "label": "Angles Wrap",
+      "sublabel": "past pi",
+      "row": 0,
+      "col": 2
+    },
+    {
+      "id": "weigh",
+      "type": "database",
+      "label": "How Much Shared",
+      "sublabel": "weighs each bin",
+      "row": 2,
+      "col": 2
+    },
+    {
+      "id": "slope",
+      "type": "backend",
+      "label": "Lay a Line",
+      "sublabel": "through the angles",
+      "row": 1,
+      "col": 2
+    },
+    {
+      "id": "part",
+      "type": "cloud",
+      "label": "A Fraction",
+      "sublabel": "2.35 samples",
+      "row": 1,
+      "col": 3
+    },
+    {
+      "id": "apply",
+      "type": "cloud",
+      "label": "farrow Applies It",
+      "sublabel": "the other half",
+      "row": 1,
+      "col": 4
+    }
+  ],
+  "boundaries": [
+    {
+      "kind": "region",
+      "label": "the slope of the phase, not any single bin",
+      "wraps": [
+        "slope",
+        "part"
+      ]
+    }
+  ],
+  "connections": [
+    {
+      "id": "both",
+      "from": "two",
+      "to": "cross",
+      "label": "x and y",
+      "variant": "emphasis",
+      "labelAt": [
+        176,
+        312
+      ]
+    },
+    {
+      "id": "easy",
+      "from": "two",
+      "to": "whole",
+      "label": "the whole part"
+    },
+    {
+      "id": "angles",
+      "from": "cross",
+      "to": "slope",
+      "label": "the phase",
+      "variant": "emphasis",
+      "labelAt": [
+        328.0,
+        312.0
+      ]
+    },
+    {
+      "id": "first",
+      "from": "wrap",
+      "to": "slope",
+      "label": "unwrap before",
+      "labelAt": [
+        404.0,
+        194.0
+      ]
+    },
+    {
+      "id": "byshare",
+      "from": "weigh",
+      "to": "slope",
+      "label": "noisy bins count less"
+    },
+    {
+      "id": "gives",
+      "from": "slope",
+      "to": "part",
+      "label": "the slope",
+      "variant": "emphasis",
+      "labelAt": [
+        480.0,
+        312.0
+      ]
+    },
+    {
+      "id": "then",
+      "from": "part",
+      "to": "apply",
+      "label": "having measured it",
+      "variant": "emphasis",
+      "labelDy": -24
+    }
+  ],
+  "cards": [
+    {
+      "dot": "cyan",
+      "title": "What it works out",
+      "items": [
+        "S_xy[k] = X[k] * conj(Y[k])",
+        "The angle of S_xy[k] is 2*pi*k*delay/size",
+        "delay = slope * size / (2*pi), read from a line through those angles"
+      ]
+    },
+    {
+      "dot": "emerald",
+      "title": "Why a slope and not a bin",
+      "items": [
+        "A delay in time is a phase that rises steadily with frequency",
+        "The RATE it rises at is the delay, thus no single bin holds the answer",
+        "Bins where the two share nothing carry an angle that is noise, and are weighed down"
+      ]
+    },
+    {
+      "dot": "amber",
+      "title": "What must be done first",
+      "items": [
+        "The angles must be unwrapped before the line is laid",
+        "Each turn past pi would otherwise throw the slope out",
+        "The answer is in samples, and farrow is what applies it"
+      ]
+    }
+  ]
+}

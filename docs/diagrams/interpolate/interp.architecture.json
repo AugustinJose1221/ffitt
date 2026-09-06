@@ -1,0 +1,220 @@
+{
+  "schema_version": 1,
+  "diagram_type": "architecture",
+  "meta": {
+    "title": "Inside interp",
+    "animation": "trace",
+    "quality_profile": "showcase",
+    "views": [
+      {
+        "id": "between",
+        "label": "Every reading falls between",
+        "focus": [
+          "table"
+        ],
+        "note": "A device is given a table: at these inputs, that output. Every real reading falls between two entries."
+      },
+      {
+        "id": "three-ways",
+        "label": "Three answers",
+        "focus": [
+          "lin",
+          "pchip",
+          "spline"
+        ],
+        "note": "A straight line, a curve that never leaves the range of its neighbours, or a curve whose curvature matches."
+      },
+      {
+        "id": "the-overshoot",
+        "label": "What smoothness costs",
+        "focus": [
+          "over"
+        ],
+        "note": "A spline may rise above the highest of the points it lies between. PCHIP will not."
+      },
+      {
+        "id": "which",
+        "label": "Which to take",
+        "focus": [
+          "choose"
+        ],
+        "note": "A physical limit or a calibration should be read with PCHIP. A curve that must look right should be read with a spline."
+      }
+    ]
+  },
+  "layout": {
+    "mode": "grid",
+    "origin": [
+      40,
+      120
+    ],
+    "cols": 6,
+    "gapX": 28,
+    "gapY": 56,
+    "cellW": 124,
+    "cellH": 62
+  },
+  "components": [
+    {
+      "id": "table",
+      "type": "external",
+      "label": "Your Table",
+      "sublabel": "input to output",
+      "row": 1,
+      "col": 0
+    },
+    {
+      "id": "between",
+      "type": "backend",
+      "label": "Falls Between Two",
+      "sublabel": "a fraction t",
+      "row": 1,
+      "col": 1
+    },
+    {
+      "id": "lin",
+      "type": "backend",
+      "label": "Linear",
+      "sublabel": "a corner at each point",
+      "row": 0,
+      "col": 2
+    },
+    {
+      "id": "pchip",
+      "type": "backend",
+      "label": "PCHIP",
+      "sublabel": "never leaves the range",
+      "row": 1,
+      "col": 2
+    },
+    {
+      "id": "spline",
+      "type": "backend",
+      "label": "Spline",
+      "sublabel": "curvature matches",
+      "row": 2,
+      "col": 2
+    },
+    {
+      "id": "over",
+      "type": "security",
+      "label": "May Overshoot",
+      "sublabel": "above the highest",
+      "row": 2,
+      "col": 3
+    },
+    {
+      "id": "choose",
+      "type": "cloud",
+      "label": "What It Is For",
+      "sublabel": "limit, or looks",
+      "row": 1,
+      "col": 3
+    },
+    {
+      "id": "out",
+      "type": "cloud",
+      "label": "A Value There",
+      "sublabel": "read at your input",
+      "row": 1,
+      "col": 4
+    }
+  ],
+  "boundaries": [
+    {
+      "kind": "region",
+      "label": "three answers to one question",
+      "wraps": [
+        "between",
+        "choose"
+      ]
+    }
+  ],
+  "connections": [
+    {
+      "id": "read",
+      "from": "table",
+      "to": "between",
+      "label": "your input",
+      "variant": "emphasis",
+      "labelAt": [
+        176,
+        312
+      ]
+    },
+    {
+      "id": "one",
+      "from": "between",
+      "to": "lin"
+    },
+    {
+      "id": "two",
+      "from": "between",
+      "to": "pchip",
+      "variant": "emphasis"
+    },
+    {
+      "id": "three",
+      "from": "between",
+      "to": "spline"
+    },
+    {
+      "id": "risk",
+      "from": "spline",
+      "to": "over",
+      "label": "to be that smooth",
+      "labelAt": [
+        480.0,
+        430.0
+      ]
+    },
+    {
+      "id": "decide",
+      "from": "pchip",
+      "to": "choose",
+      "label": "which matters",
+      "variant": "emphasis",
+      "labelAt": [
+        480.0,
+        312.0
+      ]
+    },
+    {
+      "id": "value",
+      "from": "choose",
+      "to": "out",
+      "label": "the answer",
+      "variant": "emphasis",
+      "labelDy": -24
+    }
+  ],
+  "cards": [
+    {
+      "dot": "cyan",
+      "title": "What it works out",
+      "items": [
+        "LINEAR: y = y[i] + (y[i+1] - y[i]) * t, with t the fraction between",
+        "PCHIP: a cubic whose slopes keep it inside the range of the two points",
+        "SPLINE: a cubic whose curvature matches at every point"
+      ]
+    },
+    {
+      "dot": "rose",
+      "title": "The difference that matters",
+      "items": [
+        "A spline is smoother, and to be that smooth it MAY OVERSHOOT",
+        "Given points that rise then flatten, it can rise above the highest of them",
+        "PCHIP gives up some smoothness and never leaves the range of the data"
+      ]
+    },
+    {
+      "dot": "amber",
+      "title": "Which to take",
+      "items": [
+        "A physical limit, a calibration or a duty cycle should be read with PCHIP",
+        "A curve that must look right to the eye should be read with a spline",
+        "Where the table is dense, linear's corner is smaller than the noise"
+      ]
+    }
+  ]
+}

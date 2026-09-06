@@ -9,7 +9,32 @@ python3 scripts/api_doc.py
 
 Cubic splines. Declared in `ffitt/interpolate/cspline.h`.
 
-[Back to the index](../API.md) | [How the interpolate modules work](../../ffitt/interpolate/README.md)
+[Back to the index](../API.md) | [How the interpolate modules work](../../ffitt/interpolate/README.md) | [How it works](../diagrams/interpolate/cspline.html) ([preview](https://htmlpreview.github.io/?https://github.com/AugustinJose1221/ffitt/blob/development/docs/diagrams/interpolate/cspline.html))
+
+## Method
+
+Between each pair of neighbouring points the curve is a polynomial of the
+third power:
+
+    S(x) = y[i] + b[i]*d + c[i]*d^2 + d[i]*d^3,  with d = x - x[i]
+
+The coefficients are not chosen for one interval at a time. They are found
+together, from the conditions that hold everywhere:
+
+    the curve meets every point
+    the slope matches on both sides of every point
+    the curvature matches on both sides of every point
+
+That is what makes the curve smooth: no step and no corner anywhere. It also
+means a spline is NOT LOCAL. Those conditions link every interval to its
+neighbours, thus moving one point changes the curve everywhere, a little.
+
+The conditions come out as a system whose matrix has three diagonals, and
+such a system is solved in one pass down and one pass back, which is why a
+spline of many points is still cheap.
+
+The arrays b, c and d hold one value for each interval, thus one fewer than
+the number of points.
 
 ## Types
 

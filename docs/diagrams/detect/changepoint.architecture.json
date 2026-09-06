@@ -1,0 +1,221 @@
+{
+  "schema_version": 1,
+  "diagram_type": "architecture",
+  "meta": {
+    "title": "Inside changepoint",
+    "animation": "trace",
+    "quality_profile": "showcase",
+    "views": [
+      {
+        "id": "too-small",
+        "label": "Smaller than the noise",
+        "focus": [
+          "single"
+        ],
+        "note": "A threshold low enough to catch the change fires on the noise all day; one high enough to be quiet never fires."
+      },
+      {
+        "id": "adding-up",
+        "label": "Evidence adds up",
+        "focus": [
+          "total",
+          "slack"
+        ],
+        "note": "A total that only grows when readings lean one way. Ordinary readings push it down as often as up."
+      },
+      {
+        "id": "two-totals",
+        "label": "Two totals, not one",
+        "focus": [
+          "up",
+          "down"
+        ],
+        "note": "A total that only grows upward cannot see a reading that has dropped, thus a second one runs for the fall."
+      },
+      {
+        "id": "the-trade",
+        "label": "Sooner, or fewer alarms",
+        "focus": [
+          "thresh"
+        ],
+        "note": "A smaller threshold finds the change sooner and gives more false alarms. That is the trade, not a fault to tune away."
+      }
+    ]
+  },
+  "layout": {
+    "mode": "grid",
+    "origin": [
+      40,
+      120
+    ],
+    "cols": 6,
+    "gapX": 28,
+    "gapY": 56,
+    "cellW": 124,
+    "cellH": 62
+  },
+  "components": [
+    {
+      "id": "readings",
+      "type": "external",
+      "label": "Your Readings",
+      "sublabel": "change is small",
+      "row": 1,
+      "col": 0
+    },
+    {
+      "id": "single",
+      "type": "security",
+      "label": "One Sample",
+      "sublabel": "cannot decide",
+      "row": 0,
+      "col": 1
+    },
+    {
+      "id": "slack",
+      "type": "database",
+      "label": "The Slack",
+      "sublabel": "what is allowed",
+      "row": 2,
+      "col": 1
+    },
+    {
+      "id": "total",
+      "type": "backend",
+      "label": "A Running Total",
+      "sublabel": "max(0, S + ...)",
+      "row": 1,
+      "col": 1
+    },
+    {
+      "id": "up",
+      "type": "backend",
+      "label": "For a Rise",
+      "sublabel": "one total",
+      "row": 0,
+      "col": 2
+    },
+    {
+      "id": "down",
+      "type": "backend",
+      "label": "For a Fall",
+      "sublabel": "the other",
+      "row": 2,
+      "col": 2
+    },
+    {
+      "id": "thresh",
+      "type": "database",
+      "label": "The Threshold",
+      "sublabel": "how much evidence",
+      "row": 1,
+      "col": 3
+    },
+    {
+      "id": "out",
+      "type": "cloud",
+      "label": "It Has Changed",
+      "sublabel": "and about when",
+      "row": 1,
+      "col": 4
+    }
+  ],
+  "boundaries": [
+    {
+      "kind": "region",
+      "label": "the evidence of many samples, added up",
+      "wraps": [
+        "total",
+        "thresh"
+      ]
+    }
+  ],
+  "connections": [
+    {
+      "id": "each",
+      "from": "readings",
+      "to": "total",
+      "label": "one at a time",
+      "variant": "emphasis",
+      "labelAt": [
+        176,
+        312
+      ]
+    },
+    {
+      "id": "cannot",
+      "from": "readings",
+      "to": "single",
+      "label": "far too small"
+    },
+    {
+      "id": "allowed",
+      "from": "slack",
+      "to": "total",
+      "label": "before it counts"
+    },
+    {
+      "id": "rise",
+      "from": "total",
+      "to": "up",
+      "label": "climbing",
+      "variant": "emphasis"
+    },
+    {
+      "id": "fall",
+      "from": "total",
+      "to": "down",
+      "label": "dropping",
+      "variant": "emphasis"
+    },
+    {
+      "id": "weighed",
+      "from": "up",
+      "to": "thresh",
+      "label": "enough yet"
+    },
+    {
+      "id": "also",
+      "from": "down",
+      "to": "thresh",
+      "label": "or enough here"
+    },
+    {
+      "id": "says",
+      "from": "thresh",
+      "to": "out",
+      "label": "when it is",
+      "variant": "emphasis",
+      "labelDy": -24
+    }
+  ],
+  "cards": [
+    {
+      "dot": "cyan",
+      "title": "What it works out",
+      "items": [
+        "S = max(0, S + (x[n] - mean - slack))",
+        "While the readings are ordinary, S is pushed down as often as up",
+        "Once the mean has moved, every reading pushes it the same way"
+      ]
+    },
+    {
+      "dot": "emerald",
+      "title": "Why two totals",
+      "items": [
+        "A total that only grows upward cannot see a reading that has dropped",
+        "Thus one runs for a rise and one for a fall",
+        "The slack is how far a reading may sit from the mean without counting at all"
+      ]
+    },
+    {
+      "dot": "amber",
+      "title": "The trade you are setting",
+      "items": [
+        "A smaller threshold finds the change sooner",
+        "It also gives more false alarms",
+        "This is the trade itself, and both directions are a real choice"
+      ]
+    }
+  ]
+}
