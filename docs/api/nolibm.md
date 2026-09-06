@@ -65,6 +65,9 @@ function raises a flag, and nothing here is written for speed. The library's
 own tests are run against these as well as against the system's, thus the
 table above is a tested number and not a hope.
 
+The square root, by the method of Newton from a guess made by halving the
+exponent. Gives a number that is not a number for a negative argument.
+
 ## Functions
 
 ### `nolibm_sqrt`

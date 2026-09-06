@@ -65,6 +65,14 @@ Thus a caller whose readings sit far from zero should either build in 64
 bits or take the level away first with the dcblock module. The tests hold
 both numbers, so that this cost is recorded and not forgotten.
 
+What the median absolute deviation must be multiplied by to estimate the
+standard deviation of samples that follow a normal spread.
+
+The number is 1/0.6745, because for a normal spread the median absolute
+deviation is 0.6745 of the deviation.
+
+Give the sum of the samples.
+
 ## Macros
 
 ### `STATS_MAD_TO_DEVIATION`

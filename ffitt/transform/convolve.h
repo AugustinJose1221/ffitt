@@ -43,6 +43,27 @@
 // correlation when you are asking HOW ALIKE two things are. The correlate
 // module answers the second.
 //
+
+// Method:
+//
+// The shape is turned round, then slid along the signal, and at every place
+// the overlapping samples are multiplied and added:
+//
+//     y[n] = sum over k of x[n-k] * h[k]
+//
+// The minus in x[n-k] is the whole difference from a correlation, which uses
+// x[n+k]. For a shape that reads the same forwards and backwards the two give
+// the same answer, and that is why the confusion survives.
+//
+// Outside itself the signal is taken to be nothing. Thus the ends of the full
+// and the same answers are partly assumed rather than measured, and the valid
+// answer holds only the places where nothing was assumed.
+//
+// A convolution in time is a multiplication in frequency, bin by bin. For a
+// long shape the library therefore transforms both, multiplies the bins, and
+// transforms back, which costs n*log(n) rather than n*m. No conjugate is taken
+// there, and that again is what parts this from a correlation.
+
 // HOW LONG THE ANSWER IS
 //
 // Sliding a shape of m along a signal of n touches n+m-1 places, and at most

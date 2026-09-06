@@ -72,6 +72,8 @@ This module carries the phase from one sample to the next and folds it into
 one turn each time, thus it runs for ever without losing digits and its
 frequency may be changed at any sample without a jump.
 
+Which shape to make.
+
 ## Macros
 
 ### `GENERATE_BROWN_KEEP`

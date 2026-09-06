@@ -9,7 +9,7 @@ python3 scripts/api_doc.py
 
 How alike two signals are. Declared in `ffitt/transform/correlate.h`.
 
-[Back to the index](../API.md) | [How the transform modules work](../../ffitt/transform/README.md)
+[Back to the index](../API.md) | [How the transform modules work](../../ffitt/transform/README.md) | [How it works](../diagrams/transform/correlate.html) ([preview](https://htmlpreview.github.io/?https://github.com/AugustinJose1221/ffitt/blob/main/docs/diagrams/transform/correlate.html))
 
 ## Overview
 
@@ -55,6 +55,7 @@ period.
 CORRELATE_COEFFICIENT takes the mean off, because a correlation coefficient
 is not defined any other way. The other three do not, because they are sums
 and a caller who asks for a sum should get one.
+
 
 A SIGNAL MUST HAVE A SHAPE ABOVE ITS OWN ROUNDING, OR THERE IS NOTHING TO
 MATCH
@@ -104,6 +105,28 @@ For the same numbers that is about 300 thousand operations, which is fifty
 times less. It needs memory to work in, which the caller gives, and the size
 must be a power of two. Below about 300 samples the plain method wins,
 because the transform has a fixed cost that the plain method does not.
+
+## Method
+
+At each lag the two signals are multiplied sample by sample and the products
+are added up:
+
+    r[lag] = sum over n of (a[n] - mean_a) * (b[n+lag] - mean_b)
+
+Only the samples that still overlap are counted, thus a longer lag adds up
+fewer products. That is why the scaling matters:
+
+    RAW          r[lag]
+    BIASED       r[lag] / size
+    UNBIASED     r[lag] / (size - lag)
+    COEFFICIENT  r[lag] / sqrt(r_aa[0] * r_bb[0])
+
+UNBIASED divides by how many samples actually overlapped, thus a long lag is
+not made to look weak by the ones that fell off the end.
+
+COEFFICIENT is the only one that means the same thing for every signal, and
+it is the only one that takes the mean off first. The means are zero for the
+other three, thus one sum serves all four.
 
 ## Functions
 

@@ -85,6 +85,9 @@ caller who wants the whole spectrum wants fft, which does all N bins for
 less than N of these. The crossover is the same one goertzel names: past
 about log2(N) frequencies the whole transform is cheaper.
 
+The bins are of a transform of this many samples, thus the size decides both
+the window and where the bins fall. It must be at least two.
+
 ## Macros
 
 ### `SLIDE_DAMPING`

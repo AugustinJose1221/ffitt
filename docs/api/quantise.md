@@ -81,6 +81,8 @@ WHEN TO USE WHICH
   sample rate, which is the usual case for anything sampled faster than it
   needs to be.
 
+Which way the rounding is done.
+
 ## Macros
 
 ### `QUANTISE_LARGEST_BITS`

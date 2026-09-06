@@ -31,6 +31,16 @@ and no clear answer.
 The Hilbert transform needs the size to be a power of two, because it uses
 the fast Fourier transform. Give the decomposition a signal of such a size.
 
+Give the amplitude and the frequency at each point of time, for one
+intrinsic mode function.
+
+The function writes size values into the amplitude list, and size-1 values
+into the frequency list, because a frequency needs two points of the phase.
+The work buffer must hold size complex numbers. The function gets no memory.
+
+The size must be the same as the size of the transform, and it must be a
+power of two.
+
 ## Functions
 
 ### `hht_transform_imf`

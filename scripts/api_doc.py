@@ -179,12 +179,17 @@ def read_module_comment(lines):
     overview = []
     method = []
     for block in blocks:
-        if block[0].lower().startswith("method:"):
-            if not method:
-                rest = block[0][len("method:"):].strip()
-                method = ([rest] if rest else []) + block[1:]
-        elif not overview:
-            overview = block
+        if block[0].lower().startswith("method:") and not method:
+            rest = block[0][len("method:"):].strip()
+            method = ([rest] if rest else []) + block[1:]
+            continue
+
+        # Every other block belongs to the overview, and not the first one
+        # alone. A header may say more after its method block, and what it says
+        # there must not be dropped.
+        if overview:
+            overview.append("")
+        overview.extend(block)
 
     for block in (overview, method):
         while block and block[0] == "":

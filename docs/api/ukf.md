@@ -132,6 +132,12 @@ rather than carrying on with points that mean nothing. ukf_predict and
 ukf_update both give false then, and that is the first sign that something
 upstream has gone wrong.
 
+The state function. It reads the state and the input and writes the state
+that follows. The three matrices have the orders nx x 1, ni x 1 and nx x 1.
+
+This is the same shape as the state function of the ekf module, thus a model
+written for one filter can be given to the other unchanged.
+
 ## Macros
 
 ### `UKF_POINT_COUNT`

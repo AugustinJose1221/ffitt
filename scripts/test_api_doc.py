@@ -279,3 +279,36 @@ def test_every_module_of_the_repository_carries_its_overview():
         with open(os.path.join(api_doc.REPOSITORY, path), encoding="utf-8") as handle:
             overview, _ = api_doc.read_module_comment(handle.read().splitlines())
         assert overview != [], "%s has no overview at the top of its header" % name
+
+
+def test_nothing_above_the_first_declaration_is_dropped():
+    """Every comment line at the top of a header must reach the document.
+
+    The reader took the first block only. A header that said more after its
+    method block lost that text without a sound. This holds the whole set.
+    """
+    for name, path, _ in api_doc.MODULES:
+        with open(os.path.join(api_doc.REPOSITORY, path), encoding="utf-8") as handle:
+            lines = handle.read().splitlines()
+
+        overview, method = api_doc.read_module_comment(lines)
+        carried = set(line for line in overview + method if line.strip())
+
+        # The same walk as the reader, gathering every comment line it passed.
+        seen = []
+        for line in lines:
+            stripped = line.strip()
+            if stripped.startswith("//"):
+                body = stripped[2:]
+                if body.startswith(" "):
+                    body = body[1:]
+                seen.append(body)
+                continue
+            if stripped == "" or stripped.startswith("#"):
+                continue
+            break
+
+        for line in seen:
+            if not line.strip() or line.lower().startswith("method:"):
+                continue
+            assert line in carried, "%s drops the line %r" % (name, line)

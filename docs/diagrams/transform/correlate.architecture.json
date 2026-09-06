@@ -1,0 +1,227 @@
+{
+  "schema_version": 1,
+  "diagram_type": "architecture",
+  "meta": {
+    "title": "Inside correlate",
+    "animation": "trace",
+    "quality_profile": "showcase",
+    "views": [
+      {
+        "id": "two-signals",
+        "label": "Two signals",
+        "focus": [
+          "siga",
+          "sigb",
+          "mean"
+        ],
+        "note": "Two signals go in. For the coefficient the mean comes off first, and for the three sums it does not."
+      },
+      {
+        "id": "each-lag",
+        "label": "At every lag",
+        "focus": [
+          "slide",
+          "overlap"
+        ],
+        "note": "One signal is moved by the lag, the two are multiplied sample by sample, and only the samples that still overlap are added."
+      },
+      {
+        "id": "the-scaling",
+        "label": "What the number means",
+        "focus": [
+          "scale",
+          "curve"
+        ],
+        "note": "The raw sum grows with the length and the size of the samples. The scaling decides whether two answers can be set beside each other."
+      },
+      {
+        "id": "the-answer",
+        "label": "Where it peaks",
+        "focus": [
+          "curve",
+          "peak"
+        ],
+        "note": "The lag of the largest value is the delay, the period, or the place the shape sits."
+      }
+    ]
+  },
+  "layout": {
+    "mode": "grid",
+    "origin": [
+      40,
+      120
+    ],
+    "cols": 6,
+    "gapX": 28,
+    "gapY": 56,
+    "cellW": 124,
+    "cellH": 62
+  },
+  "components": [
+    {
+      "id": "siga",
+      "type": "external",
+      "label": "Signal A",
+      "sublabel": "a[n]",
+      "row": 0,
+      "col": 0
+    },
+    {
+      "id": "sigb",
+      "type": "external",
+      "label": "Signal B",
+      "sublabel": "b[n]",
+      "row": 2,
+      "col": 0
+    },
+    {
+      "id": "mean",
+      "type": "backend",
+      "label": "Mean Off",
+      "sublabel": "coefficient only",
+      "row": 1,
+      "col": 1
+    },
+    {
+      "id": "slide",
+      "type": "backend",
+      "label": "Multiply and Add",
+      "sublabel": "at one lag",
+      "row": 1,
+      "col": 2
+    },
+    {
+      "id": "overlap",
+      "type": "security",
+      "label": "Only the Overlap",
+      "sublabel": "size minus lag",
+      "row": 0,
+      "col": 3
+    },
+    {
+      "id": "scale",
+      "type": "backend",
+      "label": "Scale the Sum",
+      "sublabel": "one of four ways",
+      "row": 1,
+      "col": 3
+    },
+    {
+      "id": "curve",
+      "type": "cloud",
+      "label": "One per Lag",
+      "sublabel": "r[lag]",
+      "row": 1,
+      "col": 4
+    },
+    {
+      "id": "peak",
+      "type": "backend",
+      "label": "Where It Peaks",
+      "sublabel": "delay or period",
+      "row": 1,
+      "col": 5
+    }
+  ],
+  "boundaries": [
+    {
+      "kind": "region",
+      "label": "done again for every lag",
+      "wraps": [
+        "slide",
+        "scale"
+      ]
+    }
+  ],
+  "connections": [
+    {
+      "id": "a-in",
+      "from": "siga",
+      "to": "mean",
+      "label": "held still"
+    },
+    {
+      "id": "b-in",
+      "from": "sigb",
+      "to": "mean",
+      "label": "moved by the lag"
+    },
+    {
+      "id": "levelled",
+      "from": "mean",
+      "to": "slide",
+      "label": "level gone",
+      "variant": "emphasis",
+      "labelAt": [
+        456,
+        312
+      ]
+    },
+    {
+      "id": "counted",
+      "from": "slide",
+      "to": "scale",
+      "label": "the raw sum",
+      "variant": "emphasis",
+      "labelAt": [
+        632,
+        312
+      ]
+    },
+    {
+      "id": "fewer",
+      "from": "overlap",
+      "to": "scale",
+      "label": "how many counted",
+      "labelAt": [
+        556,
+        194
+      ]
+    },
+    {
+      "id": "compared",
+      "from": "scale",
+      "to": "curve",
+      "label": "comparable now",
+      "variant": "emphasis",
+      "labelDy": -24
+    },
+    {
+      "id": "largest",
+      "from": "curve",
+      "to": "peak",
+      "label": "the largest",
+      "variant": "emphasis",
+      "labelDy": -24
+    }
+  ],
+  "cards": [
+    {
+      "dot": "cyan",
+      "title": "What it works out",
+      "items": [
+        "r[lag] = sum over n of (a[n] - mean_a) * (b[n+lag] - mean_b)",
+        "How long the delay is: the lag where the answer is largest",
+        "Whether a signal repeats: correlate it with itself"
+      ]
+    },
+    {
+      "dot": "emerald",
+      "title": "How the library gets there",
+      "items": [
+        "RAW is the sum; BIASED divides it by size",
+        "UNBIASED divides by size minus lag, which is how many actually overlapped",
+        "COEFFICIENT divides by sqrt(r_aa[0] * r_bb[0]), giving -1 to 1"
+      ]
+    },
+    {
+      "dot": "rose",
+      "title": "What will catch you",
+      "items": [
+        "A signal that never goes below zero correlates well with itself at every lag",
+        "Only COEFFICIENT takes the mean off, because it is not defined any other way",
+        "A threshold holds from one recording to the next on COEFFICIENT alone"
+      ]
+    }
+  ]
+}

@@ -93,6 +93,20 @@ gives directions that are right to seven digits. A method that worked
 through the normal equations, as lstsq does, would have nothing left at all
 by then.
 
+How many sweeps of the whole matrix to make before giving up.
+
+A sweep turns every element that is off the diagonal once. The off-diagonal
+part falls away faster than by half each sweep, thus a handful of sweeps
+carries any matrix this library works with past what either width can hold.
+This is well above that, and it is here so that a matrix which somehow will
+not settle cannot spin for ever.
+
+How small the off-diagonal part must be, against the diagonal, before the
+work is done.
+
+True if this matrix can be given to eigen_solve: square, at least one by
+one, and symmetric within the tolerance that eigen_solve uses.
+
 ## Macros
 
 ### `EIGEN_LARGEST_SWEEPS`

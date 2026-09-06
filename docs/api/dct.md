@@ -61,6 +61,10 @@ hundred times. The size is capped below for that reason. Against it, this
 takes any size at all rather than a power of two, and it needs no memory
 beyond what the caller gives.
 
+True if this is a size the transform can be taken at. It must be at least one
+and no more than the bound above, which is where the cost of working in the
+square of the size stops being worth paying.
+
 ## Macros
 
 ### `DCT_LARGEST_SIZE`
