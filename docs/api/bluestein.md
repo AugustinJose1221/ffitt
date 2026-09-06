@@ -9,7 +9,7 @@ python3 scripts/api_doc.py
 
 A transform of any size. Declared in `ffitt/transform/bluestein.h`.
 
-[Back to the index](../API.md) | [How the transform modules work](../../ffitt/transform/README.md)
+[Back to the index](../API.md) | [How the transform modules work](../../ffitt/transform/README.md) | [How it works](../diagrams/transform/bluestein.html) ([preview](https://htmlpreview.github.io/?https://github.com/AugustinJose1221/ffitt/blob/main/docs/diagrams/transform/bluestein.html))
 
 ## Overview
 
@@ -93,6 +93,33 @@ The fold holds the error flat across the whole range while the error without
 it grows with the size, and by 200000 it is fourteen thousand times worse.
 At 64 bits there are digits to spare at these sizes and the fold does not
 show; it is kept because the module must hold at either width.
+
+## Method
+
+A bin of the transform is:
+
+    X[k] = sum over n of x[n] * exp(-2*pi*i*k*n/size)
+
+The trick of Bluestein rewrites the product k*n using
+
+    k*n = (k^2 + n^2 - (k-n)^2) / 2
+
+which turns the sum into a convolution:
+
+    X[k] = conj(c[k]) * sum over n of (x[n] * conj(c[n])) * c[k-n]
+
+where c[j] = exp(-i*pi*j^2/size) is the chirp. A convolution of any length
+can be done with transforms of a power of two, and that is the whole point:
+the size the caller asked for never has to be a power of two.
+
+The convolution runs to 2*size-1 places. A transform works on a signal that
+repeats for ever, thus anything past the end wraps round and adds itself to
+the start. The library therefore takes the next power of two at or above
+2*size-1, which is why a transform of size n costs the memory of one about
+four times as large.
+
+The square of the index is folded by 2*size before the angle is taken, so
+that a large index does not lose its accuracy to a huge angle.
 
 ## Macros
 

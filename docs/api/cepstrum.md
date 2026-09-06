@@ -9,7 +9,7 @@ python3 scripts/api_doc.py
 
 Finding what repeats in a spectrum. Declared in `ffitt/transform/cepstrum.h`.
 
-[Back to the index](../API.md) | [How the transform modules work](../../ffitt/transform/README.md)
+[Back to the index](../API.md) | [How the transform modules work](../../ffitt/transform/README.md) | [How it works](../diagrams/transform/cepstrum.html) ([preview](https://htmlpreview.github.io/?https://github.com/AugustinJose1221/ffitt/blob/main/docs/diagrams/transform/cepstrum.html))
 
 ## Overview
 
@@ -84,6 +84,31 @@ WHAT IT CANNOT DO.
   It says nothing about WHEN, only about what repeats across the whole block.
   And it is fooled by anything else evenly spaced in the spectrum, a comb
   filter above all.
+
+## Method
+
+The cepstrum is a transform of a spectrum:
+
+    c[q] = inverse transform of log(|X[k]|)
+
+The logarithm is what makes it work. A signal made by a source passing
+through a shape is a MULTIPLICATION of the two in the spectrum, and a
+logarithm turns a multiplication into a SUM. The source and the shape can
+then be added apart, which no other road here offers.
+
+A row of harmonics standing evenly apart in the spectrum is itself a thing
+that repeats, thus it comes out of this transform as one peak.
+
+The place of that peak is called quefrency and it is a time, not a
+frequency. A peak at quefrency 80 says the harmonics stand a beat of
+rate/80 apart, thus the note repeats every 80 samples:
+
+    period in samples = quefrency
+    note in hertz     = rate / quefrency
+
+The slow part of the log spectrum is the shape of the thing that the sound
+passed through, and the fast part is the source. Cutting the cepstrum at a
+quefrency and transforming back keeps one and drops the other.
 
 ## Macros
 

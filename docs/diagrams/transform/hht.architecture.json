@@ -1,0 +1,211 @@
+{
+  "schema_version": 1,
+  "diagram_type": "architecture",
+  "meta": {
+    "title": "Inside hht",
+    "animation": "trace",
+    "quality_profile": "showcase",
+    "views": [
+      {
+        "id": "why",
+        "label": "Where a transform fails",
+        "focus": [
+          "signal",
+          "fourier"
+        ],
+        "note": "A Fourier transform gives the frequencies of the whole signal. Where the frequency changes it gives a wide band and no clear answer."
+      },
+      {
+        "id": "apart",
+        "label": "Taken apart first",
+        "focus": [
+          "emd",
+          "modes"
+        ],
+        "note": "The empirical mode decomposition splits the signal into modes, each holding one frequency at a time."
+      },
+      {
+        "id": "each-mode",
+        "label": "Each mode read",
+        "focus": [
+          "hilbert",
+          "curves"
+        ],
+        "note": "The Hilbert transform gives the amplitude and the angle of each mode at every sample."
+      },
+      {
+        "id": "the-rest",
+        "label": "What it rests on",
+        "focus": [
+          "weak"
+        ],
+        "note": "Every reading rests on each mode holding one frequency. Where emd fails to separate them, the answer describes nothing."
+      }
+    ]
+  },
+  "layout": {
+    "mode": "grid",
+    "origin": [
+      40,
+      120
+    ],
+    "cols": 6,
+    "gapX": 28,
+    "gapY": 56,
+    "cellW": 124,
+    "cellH": 62
+  },
+  "components": [
+    {
+      "id": "signal",
+      "type": "external",
+      "label": "Your Signal",
+      "sublabel": "frequency changes",
+      "row": 1,
+      "col": 0
+    },
+    {
+      "id": "fourier",
+      "type": "security",
+      "label": "One Transform",
+      "sublabel": "a wide band",
+      "row": 0,
+      "col": 1,
+      "tag": "no clear answer"
+    },
+    {
+      "id": "emd",
+      "type": "backend",
+      "label": "emd",
+      "sublabel": "sifts it apart",
+      "row": 1,
+      "col": 1
+    },
+    {
+      "id": "modes",
+      "type": "database",
+      "label": "The Modes",
+      "sublabel": "one frequency each",
+      "row": 1,
+      "col": 2
+    },
+    {
+      "id": "hilbert",
+      "type": "backend",
+      "label": "hilbert",
+      "sublabel": "per mode",
+      "row": 1,
+      "col": 3
+    },
+    {
+      "id": "curves",
+      "type": "cloud",
+      "label": "Curves in Time",
+      "sublabel": "strength and hertz",
+      "row": 1,
+      "col": 4
+    },
+    {
+      "id": "weak",
+      "type": "security",
+      "label": "Rests on emd",
+      "sublabel": "a mixed mode lies",
+      "row": 2,
+      "col": 3
+    }
+  ],
+  "boundaries": [
+    {
+      "kind": "region",
+      "label": "done once for every mode",
+      "wraps": [
+        "hilbert",
+        "curves"
+      ]
+    }
+  ],
+  "connections": [
+    {
+      "id": "badroad",
+      "from": "signal",
+      "to": "fourier",
+      "label": "the whole signal"
+    },
+    {
+      "id": "sifted",
+      "from": "signal",
+      "to": "emd",
+      "label": "x[n]",
+      "variant": "emphasis",
+      "labelAt": [
+        176,
+        312
+      ]
+    },
+    {
+      "id": "split",
+      "from": "emd",
+      "to": "modes",
+      "label": "imf_1 to imf_m",
+      "variant": "emphasis",
+      "labelAt": [
+        328.0,
+        312.0
+      ]
+    },
+    {
+      "id": "each",
+      "from": "modes",
+      "to": "hilbert",
+      "label": "one at a time",
+      "variant": "emphasis",
+      "labelAt": [
+        480.0,
+        312.0
+      ]
+    },
+    {
+      "id": "read",
+      "from": "hilbert",
+      "to": "curves",
+      "label": "z[n]",
+      "variant": "emphasis",
+      "labelDy": -24
+    },
+    {
+      "id": "rests",
+      "from": "weak",
+      "to": "curves",
+      "label": "if emd failed"
+    }
+  ],
+  "cards": [
+    {
+      "dot": "cyan",
+      "title": "What it works out",
+      "items": [
+        "Which frequency the signal holds at each moment, and how strong it is",
+        "amplitude[n] = the distance of z[n] from zero",
+        "frequency[n] = the change of the angle of z[n], times rate / (2*pi)"
+      ]
+    },
+    {
+      "dot": "emerald",
+      "title": "How the library gets there",
+      "items": [
+        "emd splits x[n] into modes, each of one frequency at a time",
+        "hilbert gives z[n] = imf[n] + i*H{imf}[n] for each of them",
+        "The answer is not a spectrum but a list of curves, one pair per mode"
+      ]
+    },
+    {
+      "dot": "rose",
+      "title": "What it rests on",
+      "items": [
+        "Each mode must hold one frequency at a time for any of this to mean something",
+        "Where emd fails to separate them, that mode gives a mean of several",
+        "That failure moves here unchanged, and nothing downstream can mend it"
+      ]
+    }
+  ]
+}

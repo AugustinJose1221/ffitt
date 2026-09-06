@@ -9,7 +9,7 @@ python3 scripts/api_doc.py
 
 What the short pieces mean. Declared in `ffitt/transform/spectrogram.h`.
 
-[Back to the index](../API.md) | [How the transform modules work](../../ffitt/transform/README.md)
+[Back to the index](../API.md) | [How the transform modules work](../../ffitt/transform/README.md) | [How it works](../diagrams/transform/spectrogram.html) ([preview](https://htmlpreview.github.io/?https://github.com/AugustinJose1221/ffitt/blob/main/docs/diagrams/transform/spectrogram.html))
 
 ## Overview
 
@@ -52,6 +52,30 @@ no value, and a bin that holds nothing is a thing that happens: a silent
 stretch of recording, or a bin above the cutoff of a filter. Without a floor
 the answer holds values that no arithmetic and no picture can use.
 SPECTROGRAM_FLOOR_DECIBEL is where this module stops.
+
+## Method
+
+One frame of the short-time transform gives a complex number for each bin.
+The size of that number is turned into a unit a reader can use:
+
+    amplitude = 2 * |X[k]| / (block * coherent_gain)
+    power     = amplitude^2 / 2
+    density   = |X[k]|^2 / (rate * block * noise_gain)
+    decibel   = 10 * log10(power), held above a floor
+
+Three corrections stand in those lines, and leaving any one out gives an
+answer that looks reasonable and means nothing:
+
+  divide by the block, because a longer block gives larger numbers for the
+  same signal;
+  divide by the gain of the window, because a window makes the signal
+  smaller;
+  double it, because half of the power sits in the mirrored half that a
+  real signal does not keep.
+
+The logarithm of nothing has no value, and a bin that holds nothing is a
+thing that happens. The decibel answer therefore stops at a floor rather
+than falling for ever.
 
 ## Macros
 

@@ -1,0 +1,227 @@
+{
+  "schema_version": 1,
+  "diagram_type": "architecture",
+  "meta": {
+    "title": "Inside stft",
+    "animation": "trace",
+    "quality_profile": "showcase",
+    "views": [
+      {
+        "id": "when-not-only-what",
+        "label": "When, not only what",
+        "focus": [
+          "record",
+          "one"
+        ],
+        "note": "One transform of a whole recording gives the same answer for a bird then a car as for a car then a bird."
+      },
+      {
+        "id": "cut-and-hop",
+        "label": "The hop",
+        "focus": [
+          "cut",
+          "hop"
+        ],
+        "note": "The window moves by the hop between blocks. Half the block is usual: the windows then add to a constant."
+      },
+      {
+        "id": "each-block",
+        "label": "Each block on its own",
+        "focus": [
+          "windowed",
+          "each"
+        ],
+        "note": "Every block is windowed and transformed, giving one column of the answer."
+      },
+      {
+        "id": "the-trade",
+        "label": "The trade nobody escapes",
+        "focus": [
+          "grid",
+          "trade"
+        ],
+        "note": "A block of n samples at rate r covers n/r seconds and its bins stand r/n apart. The product is 1 whatever is chosen."
+      }
+    ]
+  },
+  "layout": {
+    "mode": "grid",
+    "origin": [
+      40,
+      120
+    ],
+    "cols": 6,
+    "gapX": 28,
+    "gapY": 56,
+    "cellW": 124,
+    "cellH": 62
+  },
+  "components": [
+    {
+      "id": "record",
+      "type": "external",
+      "label": "Your Recording",
+      "sublabel": "a long signal",
+      "row": 1,
+      "col": 0
+    },
+    {
+      "id": "one",
+      "type": "security",
+      "label": "One Transform",
+      "sublabel": "says nothing of when",
+      "row": 0,
+      "col": 1,
+      "tag": "the poor road"
+    },
+    {
+      "id": "cut",
+      "type": "backend",
+      "label": "Cut Into Blocks",
+      "sublabel": "they overlap",
+      "row": 1,
+      "col": 1
+    },
+    {
+      "id": "hop",
+      "type": "database",
+      "label": "The Hop",
+      "sublabel": "half a block",
+      "row": 2,
+      "col": 1
+    },
+    {
+      "id": "windowed",
+      "type": "backend",
+      "label": "Window Each",
+      "sublabel": "no step at the ends",
+      "row": 1,
+      "col": 2
+    },
+    {
+      "id": "each",
+      "type": "backend",
+      "label": "Transform Each",
+      "sublabel": "one column",
+      "row": 1,
+      "col": 3
+    },
+    {
+      "id": "grid",
+      "type": "cloud",
+      "label": "A Grid",
+      "sublabel": "moment by bin",
+      "row": 1,
+      "col": 4
+    },
+    {
+      "id": "trade",
+      "type": "external",
+      "label": "The Trade",
+      "sublabel": "time against frequency",
+      "row": 1,
+      "col": 5
+    }
+  ],
+  "boundaries": [
+    {
+      "kind": "region",
+      "label": "once for every block",
+      "wraps": [
+        "windowed",
+        "each"
+      ]
+    }
+  ],
+  "connections": [
+    {
+      "id": "whole",
+      "from": "record",
+      "to": "one",
+      "label": "frequencies only"
+    },
+    {
+      "id": "into",
+      "from": "record",
+      "to": "cut",
+      "label": "the pieces",
+      "variant": "emphasis",
+      "labelAt": [
+        176.0,
+        312.0
+      ]
+    },
+    {
+      "id": "moves",
+      "from": "hop",
+      "to": "cut",
+      "label": "how far it moves"
+    },
+    {
+      "id": "shaped",
+      "from": "cut",
+      "to": "windowed",
+      "label": "one block",
+      "variant": "emphasis",
+      "labelAt": [
+        328.0,
+        312.0
+      ]
+    },
+    {
+      "id": "turned",
+      "from": "windowed",
+      "to": "each",
+      "label": "its bins",
+      "variant": "emphasis",
+      "labelAt": [
+        480.0,
+        312.0
+      ]
+    },
+    {
+      "id": "stacked",
+      "from": "each",
+      "to": "grid",
+      "label": "X[m][k]",
+      "variant": "emphasis",
+      "labelDy": -24
+    },
+    {
+      "id": "bound",
+      "from": "grid",
+      "to": "trade",
+      "label": "what it cost",
+      "labelDy": -24
+    }
+  ],
+  "cards": [
+    {
+      "dot": "cyan",
+      "title": "What it works out",
+      "items": [
+        "X[m][k] = sum over n of x[n + m*hop] * w[n] * exp(-2*pi*i*k*n/block)",
+        "m counts the blocks and is the moment; k counts the bins and is the frequency",
+        "One transform of the whole recording says what, and nothing about when"
+      ]
+    },
+    {
+      "dot": "emerald",
+      "title": "How the library gets there",
+      "items": [
+        "The hop is how far the window moves between blocks",
+        "A hop of half the block makes the windows add up to a constant",
+        "What the window takes at the edge of one block is put back by the next"
+      ]
+    },
+    {
+      "dot": "amber",
+      "title": "The trade nobody escapes",
+      "items": [
+        "A block of n samples at rate r covers n/r seconds",
+        "Its bins stand r/n hertz apart, and the product of the two is 1",
+        "A short block says when and not what; a long block says what and not when"
+      ]
+    }
+  ]
+}

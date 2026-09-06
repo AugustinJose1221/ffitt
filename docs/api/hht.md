@@ -9,7 +9,7 @@ python3 scripts/api_doc.py
 
 The Hilbert-Huang transform. Declared in `ffitt/transform/hht.h`.
 
-[Back to the index](../API.md) | [How the transform modules work](../../ffitt/transform/README.md)
+[Back to the index](../API.md) | [How the transform modules work](../../ffitt/transform/README.md) | [How it works](../diagrams/transform/hht.html) ([preview](https://htmlpreview.github.io/?https://github.com/AugustinJose1221/ffitt/blob/main/docs/diagrams/transform/hht.html))
 
 ## Overview
 
@@ -30,6 +30,29 @@ and no clear answer.
 
 The Hilbert transform needs the size to be a power of two, because it uses
 the fast Fourier transform. Give the decomposition a signal of such a size.
+
+## Method
+
+A Fourier transform asks how much of each frequency the WHOLE signal holds.
+This asks which one frequency the signal holds AT EACH MOMENT, and that
+question needs the signal taken apart first.
+
+The road is two modules already here, one after the other:
+
+    emd      splits x[n] into imf_1 .. imf_m, each of one frequency at a time
+    hilbert  gives z[n] = imf[n] + i*H{imf}[n] for each of them
+
+From each analytic signal come two readings at every sample:
+
+    amplitude[n] = the distance of z[n] from zero
+    frequency[n] = the change of the angle of z[n], times rate / (2*pi)
+
+Thus the answer is not a spectrum but a list of curves: for each mode, how
+strong it is and what frequency it holds, at every moment.
+
+The whole thing rests on each mode holding one frequency at a time. Where
+emd fails to separate them, the frequency of that mode is a mean of several
+and describes nothing. That failure moves here unchanged.
 
 ## Functions
 
