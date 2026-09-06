@@ -9,7 +9,7 @@ python3 scripts/api_doc.py
 
 Fitting a curve through readings. Declared in `ffitt/linalg/lstsq.h`.
 
-[Back to the index](../API.md) | [How the linalg modules work](../../ffitt/linalg/README.md)
+[Back to the index](../API.md) | [How the linalg modules work](../../ffitt/linalg/README.md) | [How it works](../diagrams/linalg/lstsq.html) ([preview](https://htmlpreview.github.io/?https://github.com/AugustinJose1221/ffitt/blob/development/docs/diagrams/linalg/lstsq.html))
 
 ## Overview
 
@@ -157,6 +157,30 @@ by the guard on the diagonal, and rightly.
 
 How many numbers a polynomial of the given order holds, which is one more
 than the order: a line is of the first order and holds two.
+
+## Method
+
+The fit is the line, or the curve, that leaves the least total square error:
+
+    minimise sum over i of (y[i] - p(x[i]))^2
+
+Setting the derivative to nothing gives the normal equations:
+
+    (A' * A) * c = A' * y
+
+where A holds a power of x in each column. That is one square system, and the
+library solves it by the factor of Cholesky:
+
+    A' * A = L * L'
+
+which turns one square problem into two triangular ones. A triangle is solved
+by substitution alone: walk down it, then back up through the transpose, and
+no transpose ever has to be formed.
+
+The places are held about a centre and a width rather than as they came. A
+power of a large x runs out of digits quickly, and moving the places to sit
+about zero is what keeps the fit from failing on readings that are far from
+the origin.
 
 ## Macros
 

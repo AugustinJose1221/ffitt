@@ -9,7 +9,7 @@ python3 scripts/api_doc.py
 
 The directions a matrix stretches. Declared in `ffitt/linalg/eigen.h`.
 
-[Back to the index](../API.md) | [How the linalg modules work](../../ffitt/linalg/README.md)
+[Back to the index](../API.md) | [How the linalg modules work](../../ffitt/linalg/README.md) | [How it works](../diagrams/linalg/eigen.html) ([preview](https://htmlpreview.github.io/?https://github.com/AugustinJose1221/ffitt/blob/development/docs/diagrams/linalg/eigen.html))
 
 ## Overview
 
@@ -103,6 +103,33 @@ not settle cannot spin for ever.
 
 How small the off-diagonal part must be, against the diagonal, before the
 work is done.
+
+## Method
+
+A symmetric matrix stretches space by different amounts in directions that
+stand at right angles:
+
+    A * v = lambda * v
+
+The library finds them by the method of Jacobi, which turns the matrix a
+little at a time until nothing is left off the diagonal:
+
+    pick the largest element off the diagonal
+    turn the two rows and columns it joins, so that element becomes nothing
+    repeat
+
+Each turn undoes a little of what earlier turns settled, thus the work is
+measured by what is still off the diagonal, and that number is what says how
+much is left to do. The angle is chosen as the smaller of the two that would
+clear the element, because a small turn disturbs least of what is already
+settled.
+
+When nothing is left off the diagonal, the diagonal holds the eigenvalues and
+the turns multiplied together hold the directions.
+
+This works because the matrix is symmetric. For a matrix that is not, the
+directions need not stand at right angles and need not be real at all, and
+this method does not apply.
 
 ## Macros
 

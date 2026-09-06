@@ -1,0 +1,215 @@
+{
+  "schema_version": 1,
+  "diagram_type": "architecture",
+  "meta": {
+    "title": "Inside pmatrix",
+    "animation": "trace",
+    "quality_profile": "showcase",
+    "views": [
+      {
+        "id": "functions",
+        "label": "Elements that are functions",
+        "focus": [
+          "funcs"
+        ],
+        "note": "Each element is a pointer to a function of one parameter, rather than a number."
+      },
+      {
+        "id": "evaluate",
+        "label": "Give a value, get a matrix",
+        "focus": [
+          "give",
+          "plain"
+        ],
+        "note": "Calling every function once writes the answers into a plain matrix, which every other module can take."
+      },
+      {
+        "id": "nothing-else",
+        "label": "What it does not do",
+        "focus": [
+          "nope"
+        ],
+        "note": "Nothing is differentiated, nothing is solved, and no arithmetic is done on the functions themselves."
+      },
+      {
+        "id": "what-for",
+        "label": "Why it exists",
+        "focus": [
+          "once"
+        ],
+        "note": "A state that moves with time or with an angle is written once as a shape, then evaluated at each step."
+      }
+    ]
+  },
+  "layout": {
+    "mode": "grid",
+    "origin": [
+      40,
+      120
+    ],
+    "cols": 6,
+    "gapX": 28,
+    "gapY": 56,
+    "cellW": 124,
+    "cellH": 62
+  },
+  "components": [
+    {
+      "id": "shape",
+      "type": "external",
+      "label": "A Shape",
+      "sublabel": "sin(x), cos(x), 0, 1",
+      "row": 1,
+      "col": 0
+    },
+    {
+      "id": "funcs",
+      "type": "database",
+      "label": "Function Pointers",
+      "sublabel": "one per element",
+      "row": 1,
+      "col": 1
+    },
+    {
+      "id": "give",
+      "type": "backend",
+      "label": "Give x",
+      "sublabel": "one value",
+      "row": 1,
+      "col": 2
+    },
+    {
+      "id": "nope",
+      "type": "security",
+      "label": "No Arithmetic",
+      "sublabel": "on the functions",
+      "row": 0,
+      "col": 2
+    },
+    {
+      "id": "plain",
+      "type": "backend",
+      "label": "Call Each Once",
+      "sublabel": "one pass over them",
+      "row": 1,
+      "col": 3
+    },
+    {
+      "id": "once",
+      "type": "cloud",
+      "label": "Written Once",
+      "sublabel": "evaluated at each step",
+      "row": 0,
+      "col": 4
+    },
+    {
+      "id": "out",
+      "type": "cloud",
+      "label": "A Plain Matrix",
+      "sublabel": "every module takes it",
+      "row": 1,
+      "col": 4
+    }
+  ],
+  "boundaries": [
+    {
+      "kind": "region",
+      "label": "one pass over the elements, and nothing more",
+      "wraps": [
+        "give",
+        "plain"
+      ]
+    }
+  ],
+  "connections": [
+    {
+      "id": "held",
+      "from": "shape",
+      "to": "funcs",
+      "label": "not numbers",
+      "variant": "emphasis",
+      "labelAt": [
+        176,
+        312
+      ]
+    },
+    {
+      "id": "with",
+      "from": "funcs",
+      "to": "give",
+      "label": "the parameter",
+      "variant": "emphasis",
+      "labelAt": [
+        328.0,
+        312.0
+      ]
+    },
+    {
+      "id": "never",
+      "from": "nope",
+      "to": "give",
+      "label": "none is done",
+      "labelAt": [
+        404.0,
+        194.0
+      ]
+    },
+    {
+      "id": "calls",
+      "from": "give",
+      "to": "plain",
+      "label": "each function",
+      "variant": "emphasis",
+      "labelAt": [
+        480.0,
+        312.0
+      ]
+    },
+    {
+      "id": "gives",
+      "from": "plain",
+      "to": "out",
+      "label": "real values",
+      "variant": "emphasis",
+      "labelAt": [
+        632.0,
+        312.0
+      ]
+    },
+    {
+      "id": "reused",
+      "from": "plain",
+      "to": "once",
+      "label": "step after step"
+    }
+  ],
+  "cards": [
+    {
+      "dot": "cyan",
+      "title": "What it works out",
+      "items": [
+        "M(x)(i,j) = f_ij(x)",
+        "Giving a value for x calls every function once",
+        "matrix(i,j) = f_ij(x), which every other module can take"
+      ]
+    },
+    {
+      "dot": "emerald",
+      "title": "What it does not do",
+      "items": [
+        "Nothing is differentiated and nothing is solved",
+        "No arithmetic is done on the functions themselves",
+        "The evaluation is one pass over the elements"
+      ]
+    },
+    {
+      "dot": "amber",
+      "title": "Why it exists",
+      "items": [
+        "A state that moves with time or with an angle is written once as a shape",
+        "It is then evaluated at each step",
+        "The caller does not rebuild the matrix by hand at every step"
+      ]
+    }
+  ]
+}

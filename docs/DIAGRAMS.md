@@ -13,7 +13,7 @@ a few chapters that walk through it a step at a time.
 **Preview** opens the page in a browser. **File** is the page itself, which a
 reader with a clone can open with no service at all.
 
-30 of the 64 modules have a diagram.
+40 of the 64 modules have a diagram.
 
 ## Transforms
 
@@ -83,16 +83,16 @@ reader with a clone can open with no service at all.
 
 | Module | Diagram | File |
 |---|---|---|
-| [`matrix`](api/matrix.md) | not yet drawn | |
-| [`cmatrix`](api/cmatrix.md) | not yet drawn | |
-| [`pmatrix`](api/pmatrix.md) | not yet drawn | |
-| [`cnum`](api/cnum.md) | not yet drawn | |
-| [`quaternion`](api/quaternion.md) | not yet drawn | |
-| [`eigen`](api/eigen.md) | not yet drawn | |
-| [`poly`](api/poly.md) | not yet drawn | |
-| [`lstsq`](api/lstsq.md) | not yet drawn | |
-| [`vector`](api/vector.md) | not yet drawn | |
-| [`vector2d`](api/vector2d.md) | not yet drawn | |
+| [`matrix`](api/matrix.md) | [preview](https://htmlpreview.github.io/?https://github.com/AugustinJose1221/ffitt/blob/development/docs/diagrams/linalg/matrix.html) | [matrix.html](diagrams/linalg/matrix.html) |
+| [`cmatrix`](api/cmatrix.md) | [preview](https://htmlpreview.github.io/?https://github.com/AugustinJose1221/ffitt/blob/development/docs/diagrams/linalg/cmatrix.html) | [cmatrix.html](diagrams/linalg/cmatrix.html) |
+| [`pmatrix`](api/pmatrix.md) | [preview](https://htmlpreview.github.io/?https://github.com/AugustinJose1221/ffitt/blob/development/docs/diagrams/linalg/pmatrix.html) | [pmatrix.html](diagrams/linalg/pmatrix.html) |
+| [`cnum`](api/cnum.md) | [preview](https://htmlpreview.github.io/?https://github.com/AugustinJose1221/ffitt/blob/development/docs/diagrams/linalg/cnum.html) | [cnum.html](diagrams/linalg/cnum.html) |
+| [`quaternion`](api/quaternion.md) | [preview](https://htmlpreview.github.io/?https://github.com/AugustinJose1221/ffitt/blob/development/docs/diagrams/linalg/quaternion.html) | [quaternion.html](diagrams/linalg/quaternion.html) |
+| [`eigen`](api/eigen.md) | [preview](https://htmlpreview.github.io/?https://github.com/AugustinJose1221/ffitt/blob/development/docs/diagrams/linalg/eigen.html) | [eigen.html](diagrams/linalg/eigen.html) |
+| [`poly`](api/poly.md) | [preview](https://htmlpreview.github.io/?https://github.com/AugustinJose1221/ffitt/blob/development/docs/diagrams/linalg/poly.html) | [poly.html](diagrams/linalg/poly.html) |
+| [`lstsq`](api/lstsq.md) | [preview](https://htmlpreview.github.io/?https://github.com/AugustinJose1221/ffitt/blob/development/docs/diagrams/linalg/lstsq.html) | [lstsq.html](diagrams/linalg/lstsq.html) |
+| [`vector`](api/vector.md) | [preview](https://htmlpreview.github.io/?https://github.com/AugustinJose1221/ffitt/blob/development/docs/diagrams/linalg/vector.html) | [vector.html](diagrams/linalg/vector.html) |
+| [`vector2d`](api/vector2d.md) | [preview](https://htmlpreview.github.io/?https://github.com/AugustinJose1221/ffitt/blob/development/docs/diagrams/linalg/vector2d.html) | [vector2d.html](diagrams/linalg/vector2d.html) |
 
 ## Detection
 

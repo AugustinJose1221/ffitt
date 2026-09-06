@@ -9,7 +9,7 @@ python3 scripts/api_doc.py
 
 Which way something points. Declared in `ffitt/linalg/quaternion.h`.
 
-[Back to the index](../API.md) | [How the linalg modules work](../../ffitt/linalg/README.md)
+[Back to the index](../API.md) | [How the linalg modules work](../../ffitt/linalg/README.md) | [How it works](../diagrams/linalg/quaternion.html) ([preview](https://htmlpreview.github.io/?https://github.com/AugustinJose1221/ffitt/blob/development/docs/diagrams/linalg/quaternion.html))
 
 ## Overview
 
@@ -61,6 +61,29 @@ Multiplying two of them gives the turn that is one followed by the other,
 and THE ORDER MATTERS: a turn about x then about y is not a turn about y then
 about x. quaternion_multiply(a, b) gives a applied AFTER b, which is the
 order that matches multiplying rotation matrices.
+
+## Method
+
+An attitude is held as four numbers rather than three angles:
+
+    q = w + x*i + y*j + z*k,  with w^2 + x^2 + y^2 + z^2 = 1
+
+Turning by one attitude and then another is a multiplication:
+
+    q3 = q1 * q2
+
+and turning a vector v is a multiplication on both sides:
+
+    v' = q * v * conjugate(q)
+
+THREE ANGLES CANNOT DO THIS SAFELY. At one attitude two of the three axes
+line up, and from that moment a turn about one and a turn about another do
+the same thing. The third number is lost, and no arrangement of the axes
+removes the fault; it only moves it somewhere else.
+
+Four numbers have no such place. The cost is the constraint: the four must
+keep a length of one, and rounding slowly breaks that, thus the length must
+be brought back to one from time to time.
 
 ## Macros
 

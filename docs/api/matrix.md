@@ -9,7 +9,31 @@ python3 scripts/api_doc.py
 
 Matrices of float values. Declared in `ffitt/linalg/matrix.h`.
 
-[Back to the index](../API.md) | [How the linalg modules work](../../ffitt/linalg/README.md)
+[Back to the index](../API.md) | [How the linalg modules work](../../ffitt/linalg/README.md) | [How it works](../diagrams/linalg/matrix.html) ([preview](https://htmlpreview.github.io/?https://github.com/AugustinJose1221/ffitt/blob/development/docs/diagrams/linalg/matrix.html))
+
+## Method
+
+The elements lie in one block, one row after the other:
+
+    element(i, j) is at position (i * n) + j
+
+Everything else follows from that one line. A row is a run of n values
+side by side, thus walking a row is walking through memory in order, and
+walking a column steps n values at a time.
+
+The operations are the plain ones:
+
+    (A + B)(i,j) = A(i,j) + B(i,j)
+    (A * B)(i,j) = sum over k of A(i,k) * B(k,j)
+    A'(i,j)      = A(j,i)
+
+A multiplication costs m*n*p, and there is no trick here to make it less.
+This is a library for small matrices, where the tricks cost more than they
+save.
+
+Two functions give a matrix. One takes the memory from the heap, and one
+takes memory the caller already holds, so that a target with no heap can use
+every operation in this module.
 
 ## Types
 

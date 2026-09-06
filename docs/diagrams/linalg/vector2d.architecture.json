@@ -1,0 +1,178 @@
+{
+  "schema_version": 1,
+  "diagram_type": "architecture",
+  "meta": {
+    "title": "Inside vector2d",
+    "animation": "trace",
+    "quality_profile": "showcase",
+    "views": [
+      {
+        "id": "no-new-maths",
+        "label": "No new arithmetic",
+        "focus": [
+          "same"
+        ],
+        "note": "There is nothing here that the vector module does not already do. The dot and the norm are the same sums."
+      },
+      {
+        "id": "the-size",
+        "label": "The size is never given",
+        "focus": [
+          "fixed"
+        ],
+        "note": "The size is 2 and the caller never says so. That is the whole of what this module adds."
+      },
+      {
+        "id": "still-a-vector",
+        "label": "Still a vector_t",
+        "focus": [
+          "out"
+        ],
+        "note": "The answer is a vector_t, thus every function of the vector module takes it unchanged."
+      },
+      {
+        "id": "why",
+        "label": "Why a plane earns it",
+        "focus": [
+          "common"
+        ],
+        "note": "A point on a screen, a reading from two axes, a place in a picture. The size never changes, thus writing it is noise."
+      }
+    ]
+  },
+  "layout": {
+    "mode": "grid",
+    "origin": [
+      40,
+      120
+    ],
+    "cols": 6,
+    "gapX": 28,
+    "gapY": 56,
+    "cellW": 124,
+    "cellH": 62
+  },
+  "components": [
+    {
+      "id": "caller",
+      "type": "external",
+      "label": "Two Values",
+      "sublabel": "x and y",
+      "row": 1,
+      "col": 0
+    },
+    {
+      "id": "fixed",
+      "type": "backend",
+      "label": "Size Is 2",
+      "sublabel": "never given",
+      "row": 1,
+      "col": 1
+    },
+    {
+      "id": "same",
+      "type": "backend",
+      "label": "The Same Sums",
+      "sublabel": "dot and norm",
+      "row": 1,
+      "col": 2
+    },
+    {
+      "id": "common",
+      "type": "cloud",
+      "label": "A Plane Is Common",
+      "sublabel": "screens, axes, pictures",
+      "row": 0,
+      "col": 2
+    },
+    {
+      "id": "out",
+      "type": "cloud",
+      "label": "A vector_t",
+      "sublabel": "the vector module takes it",
+      "row": 1,
+      "col": 3
+    }
+  ],
+  "boundaries": [
+    {
+      "kind": "region",
+      "label": "the only thing added is not saying the size",
+      "wraps": [
+        "fixed",
+        "same"
+      ]
+    }
+  ],
+  "connections": [
+    {
+      "id": "given",
+      "from": "caller",
+      "to": "fixed",
+      "label": "x and y",
+      "variant": "emphasis",
+      "labelAt": [
+        176,
+        312
+      ]
+    },
+    {
+      "id": "worked",
+      "from": "fixed",
+      "to": "same",
+      "label": "a.x*b.x + a.y*b.y",
+      "variant": "emphasis",
+      "labelAt": [
+        328.0,
+        312.0
+      ]
+    },
+    {
+      "id": "often",
+      "from": "same",
+      "to": "common",
+      "label": "common enough",
+      "labelAt": [
+        480,
+        224
+      ]
+    },
+    {
+      "id": "gives",
+      "from": "same",
+      "to": "out",
+      "label": "unchanged",
+      "variant": "emphasis",
+      "labelDy": -24
+    }
+  ],
+  "cards": [
+    {
+      "dot": "cyan",
+      "title": "What it works out",
+      "items": [
+        "dot(a, b) = a.x*b.x + a.y*b.y",
+        "norm(a) = sqrt(dot(a, a))",
+        "There is no arithmetic here that the vector module does not already do"
+      ]
+    },
+    {
+      "dot": "emerald",
+      "title": "What it adds",
+      "items": [
+        "The size is 2 and the caller never says so",
+        "The answer is a vector_t, thus every function of the vector module takes it",
+        "That is the whole of what this module adds"
+      ]
+    },
+    {
+      "dot": "amber",
+      "title": "Why it earns its place",
+      "items": [
+        "A point on a screen, a reading from two axes, a place in a picture",
+        "A plane is common enough to be worth the saving",
+        "Writing a size that never changes is noise in the code that reads it"
+      ]
+    }
+  ]
+}
