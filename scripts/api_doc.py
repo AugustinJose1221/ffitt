@@ -215,6 +215,51 @@ AREAS = [
 GENERATED_NOTE = ("This file comes from the comments in the headers. Do not change it by "
                   "hand.\nTo make it again, give:\n\n```bash\npython3 scripts/api_doc.py\n```\n")
 
+# The diagrams lie under this directory, one for each module, in the directory
+# of its area.
+DIAGRAM_DIRECTORY = os.path.join("docs", "diagrams")
+
+# A page of HTML in a repository is given to a reader as source, not as a page.
+# This service fetches such a page and shows it.
+#
+# The link names a branch, and it names main. A reader opens the documentation
+# of the released library, thus the diagram beside it must be the released one.
+# The cost is that a diagram made on a branch cannot be previewed by this link
+# until it reaches main; until then, open the file from a clone.
+PREVIEW_SERVICE = "https://htmlpreview.github.io/?"
+PREVIEW_REPOSITORY = "https://github.com/AugustinJose1221/ffitt"
+PREVIEW_BRANCH = "main"
+
+
+def diagram_of(module):
+    """Give the path of the diagram of a module, or None when it has none.
+
+    A module with no diagram gets no link. A link that names a file which is
+    not there is worse than no link at all.
+    """
+    area = area_of(module)
+    if area is None:
+        return None
+
+    path = os.path.join(DIAGRAM_DIRECTORY, area, "%s.html" % module)
+    if not os.path.isfile(os.path.join(REPOSITORY, path)):
+        return None
+
+    return path
+
+
+def diagram_links(module):
+    """Give the markdown that points at the diagram of a module, or ''."""
+    path = diagram_of(module)
+    if path is None:
+        return ""
+
+    preview = "%s%s/blob/%s/%s" % (PREVIEW_SERVICE, PREVIEW_REPOSITORY,
+                                   PREVIEW_BRANCH, path)
+    beside = os.path.relpath(path, os.path.join("docs", "api"))
+
+    return " | [How it works](%s) ([preview](%s))" % (beside, preview)
+
 
 def area_of(module):
     """Give the area that a module belongs to, or None."""
@@ -274,10 +319,10 @@ def build_module_document(name, path, title):
     area = area_of(name)
     if area:
         parts.append("[Back to the index](../API.md) | "
-                     "[How the %s modules work](../../ffitt/%s/README.md)\n"
-                     % (area, area))
+                     "[How the %s modules work](../../ffitt/%s/README.md)%s\n"
+                     % (area, area, diagram_links(name)))
     else:
-        parts.append("[Back to the index](../API.md)\n")
+        parts.append("[Back to the index](../API.md)%s\n" % diagram_links(name))
 
     if macros:
         parts.append("## Macros\n")

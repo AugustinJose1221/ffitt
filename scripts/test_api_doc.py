@@ -181,3 +181,36 @@ def test_every_module_belongs_to_an_area():
         if name == "defs":
             continue
         assert api_doc.area_of(name) is not None, "%s belongs to no area" % name
+
+
+def test_a_module_with_a_diagram_gets_a_link(tmp_path, monkeypatch):
+    """A module whose diagram is there is given both ways to reach it."""
+    directory = tmp_path / "docs" / "diagrams" / "transform"
+    directory.mkdir(parents=True)
+    (directory / "example.html").write_text("<svg></svg>", encoding="utf-8")
+
+    monkeypatch.setattr(api_doc, "REPOSITORY", str(tmp_path))
+    monkeypatch.setattr(api_doc, "AREAS", [("transform", "Transforms", ["example"])])
+
+    links = api_doc.diagram_links("example")
+    assert "../diagrams/transform/example.html" in links
+    assert links.count("htmlpreview.github.io") == 1
+    assert "/blob/%s/" % api_doc.PREVIEW_BRANCH in links
+
+
+def test_a_module_with_no_diagram_gets_no_link(tmp_path, monkeypatch):
+    """A link that names a file which is not there is worse than no link."""
+    monkeypatch.setattr(api_doc, "REPOSITORY", str(tmp_path))
+    monkeypatch.setattr(api_doc, "AREAS", [("transform", "Transforms", ["example"])])
+
+    assert api_doc.diagram_links("example") == ""
+
+
+def test_the_preview_link_names_the_file_that_is_there():
+    """The link of a real module names the real file, in the real repository."""
+    links = api_doc.diagram_links("fft")
+    assert links != ""
+
+    path = os.path.join(api_doc.REPOSITORY, "docs", "diagrams", "transform", "fft.html")
+    assert os.path.isfile(path)
+    assert "docs/diagrams/transform/fft.html" in links
