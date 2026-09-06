@@ -3,7 +3,47 @@
   "diagram_type": "architecture",
   "meta": {
     "title": "Inside fft",
-    "quality_profile": "showcase"
+    "animation": "trace",
+    "quality_profile": "showcase",
+    "views": [
+      {
+        "id": "what-you-give",
+        "label": "What you give",
+        "focus": [
+          "size",
+          "alloc"
+        ],
+        "note": "A size that is a power of two, given one time to fft_alloc."
+      },
+      {
+        "id": "built-once",
+        "label": "Built one time",
+        "focus": [
+          "alloc",
+          "twiddle",
+          "reverse"
+        ],
+        "note": "Both tables depend on the size alone, thus they are built at the allocation and not again."
+      },
+      {
+        "id": "the-two-steps",
+        "label": "The two steps",
+        "focus": [
+          "reorder",
+          "butterfly"
+        ],
+        "note": "First the pairs are exchanged, then log2(size) passes work over the array in place."
+      },
+      {
+        "id": "what-you-get",
+        "label": "What you get",
+        "focus": [
+          "bins",
+          "binfreq"
+        ],
+        "note": "The same array now holds the bins; fft_bin_frequency says which hertz a bin stands for."
+      }
+    ]
   },
   "layout": {
     "mode": "grid",
