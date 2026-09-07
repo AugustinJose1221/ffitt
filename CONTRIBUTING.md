@@ -271,7 +271,7 @@ tag 0.1.0 set that rule.
 
 Each push runs the workflow in
 [.github/workflows/tests.yml](.github/workflows/tests.yml). It runs the
-documentation check, the naming check, the example check, the unit tests, the
-property based tests, the build, and a build with the warnings of the compiler
-switched on. Everything but the first three runs at both widths, which makes
-eleven jobs. A warning stops the workflow.
+documentation check, the naming check, the example check, the freeze check, the
+diagram check, the unit tests, the property based tests, the build, and a build
+with the warnings of the compiler switched on. Everything but the first five
+runs at both widths, which makes thirteen jobs. A warning stops the workflow.
