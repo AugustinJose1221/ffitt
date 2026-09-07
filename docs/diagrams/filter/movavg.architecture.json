@@ -1,0 +1,243 @@
+{
+  "schema_version": 1,
+  "diagram_type": "architecture",
+  "meta": {
+    "title": "Inside movavg",
+    "animation": "trace",
+    "quality_profile": "showcase",
+    "views": [
+      {
+        "id": "the-bad-road",
+        "label": "The road most take",
+        "focus": [
+          "naive"
+        ],
+        "note": "A finite filter of equal coefficients gives the right answer at N operations a sample. A window of 500 at 32 kHz is 16 million a second."
+      },
+      {
+        "id": "two-samples",
+        "label": "Only two change",
+        "focus": [
+          "arrived",
+          "left",
+          "total"
+        ],
+        "note": "The window that ends here differs from the one before it by the sample that arrived and the sample that fell off."
+      },
+      {
+        "id": "fixed-cost",
+        "label": "The same for any window",
+        "focus": [
+          "total",
+          "out"
+        ],
+        "note": "One addition, one subtraction and one division, whatever N is. A window of 500 costs what a window of 5 costs."
+      },
+      {
+        "id": "the-price",
+        "label": "What the running total costs",
+        "focus": [
+          "drift"
+        ],
+        "note": "A total added to for ever gathers the rounding of every sample that ever passed through it."
+      }
+    ]
+  },
+  "layout": {
+    "mode": "grid",
+    "origin": [
+      40,
+      120
+    ],
+    "cols": 6,
+    "gapX": 28,
+    "gapY": 56,
+    "cellW": 124,
+    "cellH": 62
+  },
+  "components": [
+    {
+      "id": "sample",
+      "type": "external",
+      "label": "Your Samples",
+      "sublabel": "one at a time",
+      "row": 1,
+      "col": 0
+    },
+    {
+      "id": "naive",
+      "type": "security",
+      "label": "N Operations",
+      "sublabel": "the usual road",
+      "row": 0,
+      "col": 1,
+      "tag": "16 million a second"
+    },
+    {
+      "id": "arrived",
+      "type": "backend",
+      "label": "Add the New",
+      "sublabel": "one addition",
+      "row": 1,
+      "col": 1
+    },
+    {
+      "id": "ring",
+      "type": "database",
+      "label": "Ring Buffer",
+      "sublabel": "holds the window",
+      "row": 2,
+      "col": 1
+    },
+    {
+      "id": "left",
+      "type": "backend",
+      "label": "Take the Old Off",
+      "sublabel": "one subtraction",
+      "row": 2,
+      "col": 2
+    },
+    {
+      "id": "total",
+      "type": "database",
+      "label": "Running Total",
+      "sublabel": "and of the squares",
+      "row": 1,
+      "col": 2
+    },
+    {
+      "id": "out",
+      "type": "cloud",
+      "label": "total / N",
+      "sublabel": "one division",
+      "row": 1,
+      "col": 3
+    },
+    {
+      "id": "drift",
+      "type": "security",
+      "label": "Rounding Gathers",
+      "sublabel": "the price of it",
+      "row": 2,
+      "col": 4
+    },
+    {
+      "id": "mean",
+      "type": "cloud",
+      "label": "The Mean",
+      "sublabel": "and the spread",
+      "row": 1,
+      "col": 4
+    }
+  ],
+  "boundaries": [
+    {
+      "kind": "region",
+      "label": "the same cost for any size of window",
+      "wraps": [
+        "total",
+        "out"
+      ]
+    }
+  ],
+  "connections": [
+    {
+      "id": "in",
+      "from": "sample",
+      "to": "arrived",
+      "label": "x[n]",
+      "variant": "emphasis",
+      "labelAt": [
+        176,
+        312
+      ]
+    },
+    {
+      "id": "bad",
+      "from": "sample",
+      "to": "naive",
+      "label": "N per sample"
+    },
+    {
+      "id": "kept",
+      "from": "ring",
+      "to": "left",
+      "label": "the one that leaves",
+      "labelAt": [
+        328.0,
+        430.0
+      ]
+    },
+    {
+      "id": "added",
+      "from": "arrived",
+      "to": "total",
+      "label": "total + arrived",
+      "variant": "emphasis",
+      "labelAt": [
+        328.0,
+        312.0
+      ]
+    },
+    {
+      "id": "removed",
+      "from": "left",
+      "to": "total",
+      "label": "minus left"
+    },
+    {
+      "id": "divided",
+      "from": "total",
+      "to": "out",
+      "label": "divide by N",
+      "variant": "emphasis",
+      "labelAt": [
+        480.0,
+        312.0
+      ]
+    },
+    {
+      "id": "read",
+      "from": "out",
+      "to": "mean",
+      "label": "y[n]",
+      "variant": "emphasis",
+      "labelDy": -24
+    },
+    {
+      "id": "cost",
+      "from": "drift",
+      "to": "mean",
+      "label": "over a long run"
+    }
+  ],
+  "cards": [
+    {
+      "dot": "cyan",
+      "title": "What it works out",
+      "items": [
+        "y[n] = (1/N) * sum over k of x[n-k], the mean of the last N samples",
+        "Worked out as it stands, that is N operations for each sample",
+        "A window of 500 samples at 32 kHz would be 16 million operations a second"
+      ]
+    },
+    {
+      "dot": "emerald",
+      "title": "How the library gets there",
+      "items": [
+        "total = total + arrived - left, and y[n] = total / N",
+        "One addition, one subtraction and one division, whatever N is",
+        "The window is still held, because the sample that left must be known"
+      ]
+    },
+    {
+      "dot": "rose",
+      "title": "What it costs you",
+      "items": [
+        "A total added to for ever gathers the rounding of every sample",
+        "That is the price of the running total, and it is the whole of the price",
+        "The total of the squares is kept too, thus the spread costs no more"
+      ]
+    }
+  ]
+}

@@ -9,7 +9,78 @@ python3 scripts/api_doc.py
 
 What two signals have in common. Declared in `ffitt/transform/csd.h`.
 
-[Back to the index](../API.md) | [How the transform modules work](../../ffitt/transform/README.md)
+[Back to the index](../API.md) | [How the transform modules work](../../ffitt/transform/README.md) | [How it works](../diagrams/transform/csd.html) ([preview](https://htmlpreview.github.io/?https://github.com/AugustinJose1221/ffitt/blob/development/docs/diagrams/transform/csd.html))
+
+## Overview
+
+What TWO signals have in common at each frequency, and how much of one
+explains the other.
+
+The psd module says what one signal holds. This one takes two, and answers
+questions that one signal cannot:
+
+  IS THIS VIBRATION COMING FROM THAT MOTOR? Both hold a peak at 50 hertz.
+  That alone proves nothing; half the building holds a peak at 50 hertz.
+  Coherence says whether the two peaks move together.
+  WHAT DOES THIS BOX DO TO A SIGNAL? Measure in and out, and the transfer
+  estimate gives the gain and the phase shift at every frequency at once,
+  without ever putting a single tone through it.
+  HOW FAR APART ARE THESE TWO MICROPHONES? The phase of the cross spectrum
+  rises steadily with frequency, and the rate it rises at is the delay.
+
+COHERENCE IS THE ONE THAT IS MOST USED AND MOST OFTEN WRONG
+
+It reads from 0 to 1: 1 means that at this frequency one signal explains the
+other completely, and 0 means they have nothing to do with each other.
+
+THE TRAP: A SINGLE BLOCK GIVES A COHERENCE OF EXACTLY 1, ALWAYS. Two signals
+of pure noise, with nothing whatever in common, read 1 at every frequency.
+It is not a rounding matter and no width fixes it: with one block the
+arithmetic reduces to a number divided by itself. The estimate only means
+anything once several blocks have been averaged, and what is being measured
+is whether the relation HOLDS STILL from block to block.
+
+Measured, on two signals of noise that are wholly unrelated, where the true
+coherence is 0 at every frequency. The mean reading across all bins:
+
+    blocks         1       2       4       8      16      32      64
+    reading     1.00    0.46    0.35    0.13    0.06    0.04    0.02
+
+The reading falls as about 1 divided by the number of blocks. A reading of
+0.35 is evidence of nothing at all if it came from 4 blocks. THIS MODULE
+REFUSES BELOW CSD_SMALLEST_BLOCK_COUNT BLOCKS, and above it the table is the
+rule of thumb: take a reading seriously when it stands well above 1 divided
+by the number of blocks.
+
+THE SIGNALS MUST BE MEASURED AT THE SAME MOMENTS. Two recordings started a
+second apart hold the same events at different sample numbers, and every
+answer here is then about a relation that is not there. Where a delay is
+what is being looked for, that is the point; where it is not, it is a fault.
+
+## Method
+
+The cross spectrum is one spectrum multiplied by the conjugate of the other,
+averaged over the blocks as psd averages its own:
+
+    S_xy[k] = (1/blocks) * sum over b of X_b[k] * conj(Y_b[k])
+
+Its size says how much the two share at that frequency, and its angle says
+how far one stands behind the other.
+
+Coherence is that, squared, against what each signal holds alone:
+
+    C[k] = |S_xy[k]|^2 / (S_xx[k] * S_yy[k])
+
+It reads from 0 to 1. Every correction for the window and for the rate
+stands both above and below in that ratio, thus all of them cancel and none
+is needed.
+
+A bin where one of the two signals holds nothing has nothing to share, and
+the answer there is set to zero rather than divided by almost nothing.
+
+COHERENCE OF ONE BLOCK IS ALWAYS 1, whatever the signals are, because a
+number divided by itself is one. The averaging over blocks is not an
+improvement here; it is the thing that makes the answer mean anything.
 
 ## Macros
 

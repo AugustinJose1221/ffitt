@@ -38,6 +38,30 @@
 // - Daubechies with four coefficients, which looks at four samples at a time.
 //   It follows a curve better, and it gives a smoother result.
 
+// Method:
+//
+// One level of the transform passes the signal through two filters and then
+// keeps every second sample of each:
+//
+//     approximation[n] = sum over k of x[2n + k] * low[k]
+//     detail[n]        = sum over k of x[2n + k] * high[k]
+//
+// Each answer holds half as many samples as the signal, thus the two together
+// hold exactly as many as went in and nothing is lost.
+//
+// The two filters are one filter and its mirror. The low one keeps the slow
+// part, the high one keeps the fast part, and the mirror is what makes the
+// pair undoable: dwt_inverse puts the samples back between the answers and
+// runs the same filters the other way round.
+//
+// A Fourier transform says which frequencies are there and not where. Here
+// each value of the detail belongs to one place of the signal, thus a step or
+// a spike shows as a few large details at the place it happened.
+//
+// That is why it is used to take noise out. Noise is spread thinly over every
+// detail while a real edge is a few large ones, thus setting the small details
+// to nothing removes the noise and leaves the edge.
+
 typedef enum{
     DWT_HAAR = 0,               // Two coefficients
     DWT_DAUBECHIES4 = 1         // Four coefficients

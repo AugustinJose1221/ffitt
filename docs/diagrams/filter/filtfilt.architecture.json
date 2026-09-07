@@ -1,0 +1,210 @@
+{
+  "schema_version": 1,
+  "diagram_type": "architecture",
+  "meta": {
+    "title": "Inside filtfilt",
+    "animation": "trace",
+    "quality_profile": "showcase",
+    "views": [
+      {
+        "id": "the-fault",
+        "label": "Why a filter bends a shape",
+        "focus": [
+          "forward",
+          "bent"
+        ],
+        "note": "A filter with feedback delays each frequency by a different amount, thus the parts arrive at different times and no longer line up."
+      },
+      {
+        "id": "both-ways",
+        "label": "Run it both ways",
+        "focus": [
+          "reverse",
+          "backward"
+        ],
+        "note": "Whatever the filter held back going forward it holds back again going back. The two shifts are equal and opposite."
+      },
+      {
+        "id": "twice",
+        "label": "The band is taken twice",
+        "focus": [
+          "twice"
+        ],
+        "note": "The filter is applied twice, thus the edge is sharper than the design asks and the stop band is deeper again."
+      },
+      {
+        "id": "not-live",
+        "label": "Never for a live signal",
+        "focus": [
+          "whole"
+        ],
+        "note": "The whole block must be in hand before the backward pass can start."
+      }
+    ]
+  },
+  "layout": {
+    "mode": "grid",
+    "origin": [
+      40,
+      120
+    ],
+    "cols": 6,
+    "gapX": 28,
+    "gapY": 56,
+    "cellW": 124,
+    "cellH": 62
+  },
+  "components": [
+    {
+      "id": "block",
+      "type": "external",
+      "label": "Your Block",
+      "sublabel": "the whole of it",
+      "row": 1,
+      "col": 0
+    },
+    {
+      "id": "forward",
+      "type": "backend",
+      "label": "Filter Forwards",
+      "sublabel": "delayed now",
+      "row": 1,
+      "col": 1
+    },
+    {
+      "id": "bent",
+      "type": "security",
+      "label": "Shape Is Bent",
+      "sublabel": "each frequency differs",
+      "row": 0,
+      "col": 1
+    },
+    {
+      "id": "reverse",
+      "type": "backend",
+      "label": "Turn It Round",
+      "sublabel": "end to start",
+      "row": 1,
+      "col": 2
+    },
+    {
+      "id": "backward",
+      "type": "backend",
+      "label": "Filter Again",
+      "sublabel": "the same filter",
+      "row": 1,
+      "col": 3
+    },
+    {
+      "id": "twice",
+      "type": "security",
+      "label": "Applied Twice",
+      "sublabel": "sharper than designed",
+      "row": 0,
+      "col": 4
+    },
+    {
+      "id": "whole",
+      "type": "cloud",
+      "label": "No Delay at All",
+      "sublabel": "shape survives",
+      "row": 1,
+      "col": 4
+    }
+  ],
+  "boundaries": [
+    {
+      "kind": "region",
+      "label": "the whole block must be in hand first",
+      "wraps": [
+        "reverse",
+        "backward"
+      ]
+    }
+  ],
+  "connections": [
+    {
+      "id": "in",
+      "from": "block",
+      "to": "forward",
+      "label": "x[n]",
+      "variant": "emphasis",
+      "labelDy": -24
+    },
+    {
+      "id": "harm",
+      "from": "forward",
+      "to": "bent",
+      "label": "if it stopped here"
+    },
+    {
+      "id": "flip",
+      "from": "forward",
+      "to": "reverse",
+      "label": "turned round",
+      "variant": "emphasis",
+      "labelAt": [
+        328.0,
+        312.0
+      ]
+    },
+    {
+      "id": "again",
+      "from": "reverse",
+      "to": "backward",
+      "label": "the same delay back",
+      "variant": "emphasis",
+      "labelAt": [
+        480.0,
+        312.0
+      ]
+    },
+    {
+      "id": "out",
+      "from": "backward",
+      "to": "whole",
+      "label": "turned back",
+      "variant": "emphasis",
+      "labelDy": -24
+    },
+    {
+      "id": "cost",
+      "from": "twice",
+      "to": "whole",
+      "label": "and twice the band",
+      "labelAt": [
+        708.0,
+        194.0
+      ]
+    }
+  ],
+  "cards": [
+    {
+      "dot": "cyan",
+      "title": "What it works out",
+      "items": [
+        "y = reverse(filter(reverse(filter(x))))",
+        "Every frequency comes out where it went in",
+        "The peak of a heartbeat does not move, and the edge of a step does not lean"
+      ]
+    },
+    {
+      "dot": "emerald",
+      "title": "How the library gets there",
+      "items": [
+        "Whatever the filter held back going forward, it holds back again going back",
+        "The two shifts are equal and opposite, thus they cancel exactly",
+        "Nothing about the filter itself is changed to make this work"
+      ]
+    },
+    {
+      "dot": "rose",
+      "title": "What you must know",
+      "items": [
+        "The filter is applied twice, thus the band is taken out twice",
+        "The edge is sharper than the design asks and the stop band deeper again",
+        "The whole block must be in hand, thus this is for a recording and never live"
+      ]
+    }
+  ]
+}

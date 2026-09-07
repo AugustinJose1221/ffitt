@@ -9,7 +9,120 @@ python3 scripts/api_doc.py
 
 A filter built as a ladder of stages. Declared in `ffitt/filter/lattice.h`.
 
-[Back to the index](../API.md) | [How the filter modules work](../../ffitt/filter/README.md)
+[Back to the index](../API.md) | [How the filter modules work](../../ffitt/filter/README.md) | [How it works](../diagrams/filter/lattice.html) ([preview](https://htmlpreview.github.io/?https://github.com/AugustinJose1221/ffitt/blob/development/docs/diagrams/filter/lattice.html))
+
+## Overview
+
+A filter built as a ladder of stages, each of which takes away what the
+stages before it already explained.
+
+The adaptive and rls modules both hold a straight list of coefficients and
+move all of them at once. THIS ONE IS BUILT DIFFERENTLY. Each stage holds
+one number, and its job is to take away from the signal whatever the stage
+before it could already account for. What comes out of the last stage is
+what none of them could explain.
+
+WHY THAT SHAPE IS WORTH HAVING, AND WHERE IT IS NOT
+
+A straight filter learns slowly when its input is not white, because the
+parts of the input that move together pull its coefficients about as a
+group. A ladder does not have that trouble: each stage sees only what the
+ones before it left behind, and each is divided by its own loudness, thus
+every stage learns at its own pace.
+
+THE MEASUREMENT IS MORE INTERESTING THAN THAT SUMMARY, AND IT IS RECORDED
+RATHER THAN THE SUMMARY. Twelve stages learning a response of three taps
+from an input that leans very heavily on itself, showing how far the error
+stands below the wanted signal:
+
+    samples          100     300    1000    3000   10000   30000
+    this module    -10.5   -23.0   -34.9   -43.0   -43.7   -40.0  dB
+    adaptive       -14.4   -21.3   -25.2   -63.6  -139.7  -139.5  dB
+    rls            -14.7   -24.4   -30.8   -41.9   -52.2   -58.1  dB
+
+READ IT ACROSS, NOT DOWN. There is a window, from about 300 samples to about
+3000, where the ladder is ahead of both. Before it the ladder is still
+finding its stages. AFTER IT THE LADDER STOPS IMPROVING AND THE OTHERS DO
+NOT: it settles near -43 dB while the adaptive module walks on down past
+-139 dB.
+
+SO TAKE A LADDER WHERE THE MIDDLE IS ALL THERE IS. Where the thing being
+learned changes every few thousand samples, no filter ever reaches its floor
+and only that window matters. Where the thing stands still and there is
+time, the adaptive module ends up far ahead and costs less.
+
+WHY IT SETTLES WHERE IT DOES, AND HOW TO MOVE IT
+
+The stages never stop moving, and their movement keeps stirring what the
+weights are trying to settle on. The rate says how much they move, thus it
+trades how fast the filter settles against how low. Measured, on the same
+arrangement:
+
+    rate            1.00    0.50    0.20    0.05    0.01
+    at 1000        +24.5   -25.2   -27.0   -17.5   -13.2  dB
+    at 10000        +1.9   -42.0   -45.4   -34.5   -18.2  dB
+    at 100000      -38.5   -42.1   -45.9   -53.2   -60.3  dB
+
+A rate of 1 does not settle at all in any useful time. About 0.2 is the best
+of both for most work, and it is what to start from. Below that the floor
+keeps falling and the filter takes longer than most callers have.
+
+AND WHAT IT COSTS AGAINST rls
+
+rls arrives faster still, and it carries a whole square matrix to do it. A
+ladder carries a handful of numbers for each stage:
+
+    length     adaptive    this module    rls        at 32 bits
+    16          0.1 kB       0.4 kB       1.3 kB
+    64          0.5 kB       1.6 kB      17 kB
+    256         2 kB         6 kB       266 kB
+
+AND IT CANNOT FALL APART THE WAY rls CAN. There is no matrix to lose its
+footing: every stage holds one number, and the arithmetic holds that number
+between -1 and 1 rather than trusting it to stay there. An rls filter
+written carelessly runs away after a few thousand samples; a ladder has
+nothing to run away with.
+
+THE TWO ERRORS, AND WHY BOTH ARE OFFERED
+
+A stage can be asked what was left over BEFORE it changed itself for this
+sample, or AFTER. The two are the error a priori and the error a posteriori,
+and the difference is not a nicety:
+
+  THE ERROR A PRIORI is what the filter would have said if it had not been
+  about to learn. It is the honest measure of how well the filter is doing,
+  and it is the one to watch, to record, and to compare against another
+  filter.
+  THE ERROR A POSTERIORI is what is left after this sample has been learned
+  from. It is always the smaller of the two, and it is the one to USE where
+  the filter is taking something away, because it has already accounted for
+  the sample in hand.
+
+USING THE SECOND WHERE THE FIRST BELONGS IS HOW AN ADAPTIVE FILTER COMES TO
+LOOK BETTER THAN IT IS. A filter measured on its error a posteriori always
+reports a smaller error, because it has been told the answer first.
+
+## Method
+
+The ladder carries two signals through the stages: what is still unexplained
+looking forward, and the same looking back one step further.
+
+    forward[m+1]  = forward[m]  - k[m] * held[m]
+    backward[m+1] = held[m]     - k[m] * forward[m]
+
+k[m] is the one number a stage holds. It is moved towards whatever the two
+still have in common, divided by how loud that stage has been:
+
+    k[m] = k[m] + rate * (what the two share) / (energy of the stage)
+
+DIVIDING BY THE LOUDNESS IS WHY A LADDER LEARNS QUICKLY. Each stage judges
+its own step against its own signal, thus a quiet stage is not held back by
+a loud one, and every stage learns at its own pace. A straight list of
+coefficients moves all of them against one rate and cannot do that.
+
+The energy is a running sum over a fading past, and not a running mean. Such
+a sum is about 1/(1-factor) times the mean, thus at a factor of 0.99 it is a
+hundred times larger, and the rate must be read with that in mind.
 
 ## Macros
 

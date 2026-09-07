@@ -9,7 +9,93 @@ python3 scripts/api_doc.py
 
 Reading between the points of a table. Declared in `ffitt/interpolate/interp.h`.
 
-[Back to the index](../API.md) | [How the interpolate modules work](../../ffitt/interpolate/README.md)
+[Back to the index](../API.md) | [How the interpolate modules work](../../ffitt/interpolate/README.md) | [How it works](../diagrams/interpolate/interp.html) ([preview](https://htmlpreview.github.io/?https://github.com/AugustinJose1221/ffitt/blob/development/docs/diagrams/interpolate/interp.html))
+
+## Overview
+
+Reading a value between the points of a table.
+
+A device is given a table: at these inputs, that output. Every real reading
+falls between two of them. What to do there is a choice, and the three ways
+here answer three different needs.
+
+  LINEAR      a straight line between the two neighbours.
+  PCHIP       a smooth curve that NEVER GOES OUTSIDE the two neighbours.
+  cspline     a smooth curve that may.
+
+THE ONE THAT MATTERS IS THE THIRD LINE, AND IT IS A TRAP
+
+A cubic spline lays a single smooth curve through every point, and it is the
+right answer when the thing behind the table really is smooth. It buys that
+smoothness by letting the curve OVERSHOOT: between two points the curve may
+rise above both of them or fall below both.
+
+For a calibration table that is wrong, and wrong in a way nobody notices. A
+thermistor table that rises from 20 to 30 degrees between two entries can be
+read by a spline as 31, which is a temperature the two entries do not
+bracket and the device never measured. Worse, a table that only ever rises
+can be read by a spline as falling.
+
+Measured, on a table that is flat, steps up from 0 to 10 once, and is flat
+again, which is what a calibration of something with a threshold looks like:
+
+                 lowest    highest    outside the table by
+    linear        0.000     10.000            nothing
+    pchip         0.000     10.000            nothing
+    cspline      -1.094     11.078            22 percent
+
+The spline reports MINUS ONE for a table that holds nothing below zero. Read
+as a temperature, that is a device saying it is below freezing because the
+table happened to step.
+
+And the shape is wrong as well as the range. Walking the same table from end
+to end at 600 places:
+
+    cspline goes DOWN at 262 of them
+    pchip   goes down at none
+
+The table only ever rises. A device watching for a fall would see 262 of
+them, and every one would be the reading and not the thing being read.
+
+PCHIP is the answer. It is smooth, its slope has no corners, and it cannot
+overshoot, because at each point it chooses a slope that the neighbours
+allow. Where the table rises the curve rises; where the table is flat the
+curve is flat.
+
+WHICH TO TAKE
+
+  the table is a MEASUREMENT and must not be exceeded    pchip
+  the thing behind the table is truly smooth             cspline
+  the cost must be as small as it can be                 linear
+  the table has only two points                          any; all agree
+
+THE INPUTS MUST RISE THROUGH THE TABLE. That is what lets a search find the
+place in a few steps rather than by walking it. A table written the other
+way round must be turned round first.
+
+## Method
+
+Every real reading falls between two entries of the table, and what to do
+there is a choice of three:
+
+    LINEAR   y = y[i] + (y[i+1] - y[i]) * t,  with t the fraction between
+    PCHIP    a curve of the third power, with slopes chosen so that the curve
+             never leaves the range of the two points it lies between
+    SPLINE   a curve of the third power, with slopes chosen so that the
+             curvature matches at every point
+
+The difference between the last two is the one that matters. A spline is
+smoother, and to be that smooth it MAY OVERSHOOT: given points that rise and
+then flatten, the curve can rise above the highest of them.
+
+PCHIP will not. It gives up some smoothness in exchange for never leaving the
+range of the data, thus a table of a physical limit, a calibration or a duty
+cycle should be read with it. A curve that must look right to the eye should
+be read with a spline.
+
+Linear costs almost nothing and has a corner at every point. Where the table
+is dense, that corner is smaller than the noise and linear is the right
+answer.
 
 ## Macros
 
@@ -21,6 +107,17 @@ Reading between the points of a table. Declared in `ffitt/interpolate/interp.h`.
 
 How many working values interp_pchip needs for a table of the given size,
 which is one slope for each point.
+
+## Types
+
+### `interp_kind_t`
+
+```c
+typedef enum{
+    INTERP_LINEAR = 0,          // A straight line between the neighbours
+    INTERP_PCHIP                // Smooth, and never outside the neighbours
+}interp_kind_t;
+```
 
 ## Functions
 

@@ -9,7 +9,156 @@ python3 scripts/api_doc.py
 
 The unscented Kalman filter. Declared in `ffitt/estimate/ukf.h`.
 
-[Back to the index](../API.md) | [How the estimate modules work](../../ffitt/estimate/README.md)
+[Back to the index](../API.md) | [How the estimate modules work](../../ffitt/estimate/README.md) | [How it works](../diagrams/estimate/ukf.html) ([preview](https://htmlpreview.github.io/?https://github.com/AugustinJose1221/ffitt/blob/development/docs/diagrams/estimate/ukf.html))
+
+## Overview
+
+The unscented Kalman filter: following a state through a model that bends,
+without ever taking a derivative.
+
+WHAT IT ANSWERS THAT THE EXTENDED FILTER DOES NOT
+
+The plain Kalman filter is exact when the model is straight. Most models are
+not. The extended filter answers that by laying a straight line against the
+model at the point where the state stands now, and then running the plain
+filter on that line. It works while the model bends gently over the width of
+the spread.
+
+It fails when the model bends sharply, and it fails in a particular way that
+is worth knowing: A STRAIGHT LINE THROUGH THE MIDDLE OF A SPREAD GIVES BACK
+A SPREAD WHOSE MIDDLE IS WRONG. Put a spread through a bend and its middle
+moves, and a straight line cannot show that at all.
+
+Measured, a spread put through a square, where the true middle of what comes
+out is the middle squared plus the spread:
+
+    middle in   spread in   truth   this filter   a straight line
+      0.0         9.0        9.0        9.0             0.0
+      1.0         4.0        5.0        5.0             1.0
+      3.0         1.0       10.0       10.0             9.0
+
+This filter is exact there. A straight line misses the spread entirely, and
+at a middle of zero it reports nothing at all where the answer is nine.
+
+It takes no derivative to do it. It puts a handful of chosen points through
+the model ITSELF and looks at where they land. The points are placed so that
+they carry the middle and the spread of the state exactly, thus where they
+land carries the middle and the spread AFTER the model, bend and all.
+
+WHAT THIS DOES NOT MEAN
+
+It does not mean this filter beats the extended one at everything. For a
+model that is smooth and a run with many measurements, both settle to the
+same answer, and the extended filter often gets there with slightly less
+work. Measured on a state that does not move, seen through a square over
+sixty readings, the two ended within 3 percent of each other and the
+extended one was marginally the closer.
+
+The gain is in ONE step through a bend, which is what matters when the
+readings are few, when the model is run far forward between them, or when
+the bend is sharp enough that a straight line is not merely less accurate
+but wrong. And it is in needing no derivative at all.
+
+WHEN TO TAKE WHICH
+
+  the model is straight        kalman. Exact, and the cheapest.
+  it bends gently              ekf. One Jacobian, less work than this.
+  it bends sharply             ukf.
+  the derivative is awkward    ukf. It needs none, thus a model that is a
+                               table, a piece of code with a condition in
+                               it, or anything else that cannot be
+                               differentiated is no trouble.
+
+The last line is often the real reason. The extended filter of this library
+works its Jacobians out by a central difference, which needs the model to be
+smooth and needs a step chosen for it. This filter needs neither.
+
+WHAT IT COSTS. The model is run 2*nx+1 times for each step where the
+extended filter runs it about 2*nx times to make its Jacobians, thus the
+work is similar. The memory is more, because the points must be held.
+
+THE THREE NUMBERS THAT PLACE THE POINTS
+
+ALPHA says how far out the points are spread, from a very small number up to
+1. Small keeps them near the middle, which suits a model that bends sharply
+near where the state stands.
+
+HOW SMALL ALPHA MAY BE DEPENDS ON THE WIDTH OF THE BUILD, and this is not a
+detail. The weights of the points are about 1/(alpha squared times nx) in
+size, and they must add up to 1. A small alpha therefore makes a set of very
+large weights that add to a very small number, and everything the filter
+works out is that sum.
+
+Measured, for nx of 3, what the weights really add up to:
+
+    alpha      0.001    0.010    0.050    0.100    0.500
+    32 bits    1.0625   1.0000   0.9999   1.0000   1.0000
+    64 bits    1.0000   1.0000   1.0000   1.0000   1.0000
+
+At 32 bits and an alpha of 0.001 the weights are 6 percent wrong before the
+filter has done anything at all, and every mean and every spread it works
+out afterwards carries that. The literature gives 0.001 as the usual choice
+because it assumes a wide number.
+
+UKF_DEFAULT_ALPHA therefore follows the width: 0.001 at 64 bits and 0.1 at
+32. ukf_is_valid_spread says whether a given alpha can be held.
+
+BETA carries what is known about the shape of the spread. For a spread that
+follows a normal law, 2 is the best value, and that is UKF_DEFAULT_BETA.
+
+KAPPA is a second spreading number. 0 suits most work, and 3-nx is the other
+value that is often used.
+
+A CALLER WHO DOES NOT WANT TO CHOOSE should leave all three alone. They are
+set to the usual values at allocation and the filter works.
+
+WHEN IT REFUSES
+
+The points are placed using the factor of Cholesky of the covariance, thus
+the covariance must stay a real spread: symmetric, and positive in every
+direction.
+
+The filter holds the first half of that itself. A covariance is symmetric in
+principle, and the arithmetic that builds it does not know that, thus its two
+halves drift apart in their last digits. Every step therefore averages each
+pair across the diagonal, which costs one pass and holds the invariant.
+Without it a filter of four states seen through three measurements ran for
+three hundred steps at 32 bits and stopped at 64, because the wider build
+notices a smaller drift.
+
+The second half it cannot hold. A covariance can lose its positive spread
+through a long chain of arithmetic, and when it does this filter says so
+rather than carrying on with points that mean nothing. ukf_predict and
+ukf_update both give false then, and that is the first sign that something
+upstream has gone wrong.
+
+## Method
+
+The extended filter lays a straight line against a model that bends. This one
+does not lay any line at all.
+
+Instead it picks a small set of points that between them carry the mean and
+the spread of the state:
+
+    2*nx + 1 sigma points, spread about x by the square root of P
+
+Each point is put through the TRUE function, bending as it will:
+
+    Y[i] = f(X[i], u)
+
+and the mean and spread of what comes out are read back from where the points
+landed:
+
+    x = sum over i of w[i] * Y[i]
+    P = sum over i of w[i] * (Y[i] - x)*(Y[i] - x)' + Q
+
+No derivative is taken anywhere. That is the whole difference: where the
+extended filter asks what the model does to a straight line, this asks what
+the model does to a handful of real points.
+
+The square root of P is what spreads the points, and it must exist, thus P
+must stay positive definite. Rounding can break that, and it is the one thing
+that makes this filter fail where the extended one would not.
 
 ## Macros
 

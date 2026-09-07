@@ -1,0 +1,197 @@
+{
+  "schema_version": 1,
+  "diagram_type": "architecture",
+  "meta": {
+    "title": "Inside dct",
+    "animation": "trace",
+    "quality_profile": "showcase",
+    "views": [
+      {
+        "id": "no-phase",
+        "label": "No phase kept",
+        "focus": [
+          "signal",
+          "cosines"
+        ],
+        "note": "A Fourier transform of n real samples gives n complex numbers, half of them mirrors. Here n samples give n numbers."
+      },
+      {
+        "id": "the-half",
+        "label": "The half sample",
+        "focus": [
+          "half",
+          "weigh"
+        ],
+        "note": "Setting the samples between the ends of the cosine, not on them, makes the signal even at both ends with no step."
+      },
+      {
+        "id": "gathered",
+        "label": "Gathered at the front",
+        "focus": [
+          "out",
+          "keep"
+        ],
+        "note": "A slow curve becomes a few large numbers and a long tail of nearly nothing, and the tail can be thrown away."
+      },
+      {
+        "id": "back-again",
+        "label": "And back again",
+        "focus": [
+          "out",
+          "undo"
+        ],
+        "note": "The weights make the two directions mirrors, thus taking one and then the other gives back what went in."
+      }
+    ]
+  },
+  "layout": {
+    "mode": "grid",
+    "origin": [
+      40,
+      120
+    ],
+    "cols": 6,
+    "gapX": 28,
+    "gapY": 56,
+    "cellW": 124,
+    "cellH": 62
+  },
+  "components": [
+    {
+      "id": "signal",
+      "type": "external",
+      "label": "Your Signal",
+      "sublabel": "n samples",
+      "row": 1,
+      "col": 0
+    },
+    {
+      "id": "cosines",
+      "type": "database",
+      "label": "n Cosines",
+      "sublabel": "one per output",
+      "row": 0,
+      "col": 1
+    },
+    {
+      "id": "half",
+      "type": "backend",
+      "label": "The Half Sample",
+      "sublabel": "n plus a half",
+      "row": 2,
+      "col": 1
+    },
+    {
+      "id": "weigh",
+      "type": "backend",
+      "label": "Weigh and Add",
+      "sublabel": "one output at a time",
+      "row": 1,
+      "col": 2
+    },
+    {
+      "id": "out",
+      "type": "cloud",
+      "label": "n Numbers",
+      "sublabel": "no phase kept",
+      "row": 1,
+      "col": 3
+    },
+    {
+      "id": "keep",
+      "type": "backend",
+      "label": "Keep the Front",
+      "sublabel": "throw the tail",
+      "row": 0,
+      "col": 4
+    },
+    {
+      "id": "undo",
+      "type": "backend",
+      "label": "dct_inverse",
+      "sublabel": "the mirror",
+      "row": 2,
+      "col": 4
+    }
+  ],
+  "boundaries": [
+    {
+      "kind": "region",
+      "label": "cost grows with the square of the size",
+      "wraps": [
+        "weigh",
+        "out"
+      ]
+    }
+  ],
+  "connections": [
+    {
+      "id": "in",
+      "from": "signal",
+      "to": "weigh",
+      "label": "x[n]",
+      "variant": "emphasis",
+      "labelDy": -24
+    },
+    {
+      "id": "against",
+      "from": "cosines",
+      "to": "weigh",
+      "label": "cos(pi*k*(n+0.5)/size)"
+    },
+    {
+      "id": "shifted",
+      "from": "half",
+      "to": "weigh",
+      "label": "no step at the ends"
+    },
+    {
+      "id": "made",
+      "from": "weigh",
+      "to": "out",
+      "label": "X[k]",
+      "variant": "emphasis"
+    },
+    {
+      "id": "front",
+      "from": "out",
+      "to": "keep",
+      "label": "4 of 64 hold 0.99"
+    },
+    {
+      "id": "mirror",
+      "from": "out",
+      "to": "undo",
+      "label": "gives back x[n]"
+    }
+  ],
+  "cards": [
+    {
+      "dot": "cyan",
+      "title": "What it works out",
+      "items": [
+        "X[k] = weight * sum over n of x[n] * cos(pi*k*(n+0.5)/size)",
+        "n real samples become n real numbers, and no phase is kept",
+        "A Fourier transform would give 2n numbers, half of them mirrors"
+      ]
+    },
+    {
+      "dot": "emerald",
+      "title": "How the library gets there",
+      "items": [
+        "The weight is sqrt(1/size) for the first output and sqrt(2/size) for the rest",
+        "Scaled that way the transform and its undoing are mirrors of each other",
+        "The half in (n+0.5) is what makes the signal even at both ends"
+      ]
+    },
+    {
+      "dot": "amber",
+      "title": "Why it is used everywhere",
+      "items": [
+        "A slow curve of 64 samples needs 4 numbers to hold 0.99 of it, against 20 for the transform",
+        "That is why it sits behind the compression of pictures and sound",
+        "The cost grows with the square of the size, thus the bound of 1024"
+      ]
+    }
+  ]
+}

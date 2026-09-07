@@ -1,0 +1,208 @@
+{
+  "schema_version": 1,
+  "diagram_type": "architecture",
+  "meta": {
+    "title": "Inside cnum",
+    "animation": "trace",
+    "quality_profile": "showcase",
+    "views": [
+      {
+        "id": "two-reals",
+        "label": "Two real values",
+        "focus": [
+          "parts"
+        ],
+        "note": "A complex number is held as a real part and an imaginary part, in the same width as everything else here."
+      },
+      {
+        "id": "the-product",
+        "label": "Four multiplies, two adds",
+        "focus": [
+          "mul"
+        ],
+        "note": "A complex multiplication is four real multiplications and two additions. That cost carries into every module that uses one."
+      },
+      {
+        "id": "polar",
+        "label": "Size and angle",
+        "focus": [
+          "size",
+          "angle"
+        ],
+        "note": "The size is the distance from zero and the angle says where in its turn the number stands."
+      },
+      {
+        "id": "why-not",
+        "label": "Why not complex.h",
+        "focus": [
+          "std"
+        ],
+        "note": "Many small compilers do not offer it, and it gives the macro complex, thus no module here could carry that name."
+      }
+    ]
+  },
+  "layout": {
+    "mode": "grid",
+    "origin": [
+      40,
+      120
+    ],
+    "cols": 6,
+    "gapX": 28,
+    "gapY": 56,
+    "cellW": 124,
+    "cellH": 62
+  },
+  "components": [
+    {
+      "id": "caller",
+      "type": "external",
+      "label": "Your Number",
+      "sublabel": "re and im",
+      "row": 1,
+      "col": 0
+    },
+    {
+      "id": "parts",
+      "type": "database",
+      "label": "Two Members",
+      "sublabel": "one structure",
+      "row": 1,
+      "col": 1
+    },
+    {
+      "id": "std",
+      "type": "security",
+      "label": "complex.h",
+      "sublabel": "not used here",
+      "row": 0,
+      "col": 1,
+      "tag": "the reason"
+    },
+    {
+      "id": "mul",
+      "type": "backend",
+      "label": "Multiply",
+      "sublabel": "4 multiplies, 2 adds",
+      "row": 1,
+      "col": 2
+    },
+    {
+      "id": "size",
+      "type": "backend",
+      "label": "Magnitude",
+      "sublabel": "distance from zero",
+      "row": 0,
+      "col": 3
+    },
+    {
+      "id": "angle",
+      "type": "backend",
+      "label": "Argument",
+      "sublabel": "atan2(im, re)",
+      "row": 2,
+      "col": 3
+    },
+    {
+      "id": "out",
+      "type": "cloud",
+      "label": "Used Everywhere",
+      "sublabel": "fft, cmatrix, poly",
+      "row": 1,
+      "col": 4
+    }
+  ],
+  "boundaries": [
+    {
+      "kind": "region",
+      "label": "the same width as every other number here",
+      "wraps": [
+        "parts",
+        "mul"
+      ]
+    }
+  ],
+  "connections": [
+    {
+      "id": "held",
+      "from": "caller",
+      "to": "parts",
+      "label": "two values",
+      "variant": "emphasis",
+      "labelAt": [
+        176,
+        312
+      ]
+    },
+    {
+      "id": "instead",
+      "from": "std",
+      "to": "parts",
+      "label": "would not carry",
+      "labelAt": [
+        252.0,
+        194.0
+      ]
+    },
+    {
+      "id": "times",
+      "from": "parts",
+      "to": "mul",
+      "label": "a*c - b*d",
+      "variant": "emphasis",
+      "labelAt": [
+        328.0,
+        312.0
+      ]
+    },
+    {
+      "id": "dist",
+      "from": "mul",
+      "to": "size",
+      "label": "sqrt of the squares"
+    },
+    {
+      "id": "turn",
+      "from": "mul",
+      "to": "angle",
+      "label": "where it points"
+    },
+    {
+      "id": "used",
+      "from": "mul",
+      "to": "out",
+      "label": "every transform",
+      "variant": "emphasis",
+      "labelDy": -24
+    }
+  ],
+  "cards": [
+    {
+      "dot": "cyan",
+      "title": "What it works out",
+      "items": [
+        "z = re + i*im",
+        "(a + i*b) * (c + i*d) = (a*c - b*d) + i*(a*d + b*c)",
+        "|z| = sqrt(re*re + im*im), and the angle is atan2(im, re)"
+      ]
+    },
+    {
+      "dot": "emerald",
+      "title": "Why a structure and not complex.h",
+      "items": [
+        "Many small compilers do not give <complex.h> or float _Complex",
+        "<complex.h> gives the macro complex, thus no module here could carry that name",
+        "A structure of two members works on every compiler"
+      ]
+    },
+    {
+      "dot": "amber",
+      "title": "What it costs you",
+      "items": [
+        "One complex multiplication is four real ones and two additions",
+        "That cost carries into every module built on it",
+        "It holds its values in the same width as the rest of the library"
+      ]
+    }
+  ]
+}

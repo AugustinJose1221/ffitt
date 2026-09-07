@@ -1,0 +1,216 @@
+{
+  "schema_version": 1,
+  "diagram_type": "architecture",
+  "meta": {
+    "title": "Inside cspline",
+    "animation": "trace",
+    "quality_profile": "showcase",
+    "views": [
+      {
+        "id": "each-interval",
+        "label": "A cubic between each pair",
+        "focus": [
+          "cubic"
+        ],
+        "note": "Between two neighbouring points the curve follows a polynomial of the third power."
+      },
+      {
+        "id": "together",
+        "label": "Found together, not one by one",
+        "focus": [
+          "cond",
+          "system"
+        ],
+        "note": "The coefficients come from conditions that hold everywhere: the curve meets every point, and slope and curvature match on both sides."
+      },
+      {
+        "id": "not-local",
+        "label": "A spline is not local",
+        "focus": [
+          "notlocal"
+        ],
+        "note": "Those conditions link every interval to its neighbours, thus moving one point changes the curve everywhere, a little."
+      },
+      {
+        "id": "cheap",
+        "label": "Three diagonals",
+        "focus": [
+          "tridiag"
+        ],
+        "note": "The system has three diagonals, and such a system is solved in one pass down and one back."
+      }
+    ]
+  },
+  "layout": {
+    "mode": "grid",
+    "origin": [
+      40,
+      120
+    ],
+    "cols": 6,
+    "gapX": 28,
+    "gapY": 56,
+    "cellW": 124,
+    "cellH": 62
+  },
+  "components": [
+    {
+      "id": "points",
+      "type": "external",
+      "label": "Your Points",
+      "sublabel": "x and y",
+      "row": 1,
+      "col": 0
+    },
+    {
+      "id": "cond",
+      "type": "backend",
+      "label": "The Conditions",
+      "sublabel": "meet, slope, curve",
+      "row": 1,
+      "col": 1
+    },
+    {
+      "id": "system",
+      "type": "backend",
+      "label": "One System",
+      "sublabel": "for all intervals",
+      "row": 1,
+      "col": 2
+    },
+    {
+      "id": "tridiag",
+      "type": "database",
+      "label": "Three Diagonals",
+      "sublabel": "down, then back",
+      "row": 2,
+      "col": 2
+    },
+    {
+      "id": "notlocal",
+      "type": "security",
+      "label": "Not Local",
+      "sublabel": "one point moves all",
+      "row": 0,
+      "col": 2
+    },
+    {
+      "id": "cubic",
+      "type": "backend",
+      "label": "b, c and d",
+      "sublabel": "one set per interval",
+      "row": 1,
+      "col": 3
+    },
+    {
+      "id": "curve",
+      "type": "cloud",
+      "label": "A Smooth Curve",
+      "sublabel": "no step, no corner",
+      "row": 1,
+      "col": 4
+    }
+  ],
+  "boundaries": [
+    {
+      "kind": "region",
+      "label": "every interval is linked to its neighbours",
+      "wraps": [
+        "cond",
+        "system"
+      ]
+    }
+  ],
+  "connections": [
+    {
+      "id": "given",
+      "from": "points",
+      "to": "cond",
+      "label": "the points",
+      "variant": "emphasis",
+      "labelAt": [
+        176,
+        312
+      ]
+    },
+    {
+      "id": "built",
+      "from": "cond",
+      "to": "system",
+      "label": "all at once",
+      "variant": "emphasis",
+      "labelAt": [
+        328.0,
+        312.0
+      ]
+    },
+    {
+      "id": "shape",
+      "from": "system",
+      "to": "tridiag",
+      "label": "three diagonals",
+      "labelAt": [
+        404.0,
+        312.0
+      ]
+    },
+    {
+      "id": "cost",
+      "from": "system",
+      "to": "notlocal",
+      "label": "and linked",
+      "labelAt": [
+        480,
+        194
+      ]
+    },
+    {
+      "id": "solved",
+      "from": "system",
+      "to": "cubic",
+      "label": "the coefficients",
+      "variant": "emphasis",
+      "labelAt": [
+        480.0,
+        312.0
+      ]
+    },
+    {
+      "id": "drawn",
+      "from": "cubic",
+      "to": "curve",
+      "label": "one per interval",
+      "variant": "emphasis",
+      "labelDy": -24
+    }
+  ],
+  "cards": [
+    {
+      "dot": "cyan",
+      "title": "What it works out",
+      "items": [
+        "S(x) = y[i] + b[i]*d + c[i]*d^2 + d[i]*d^3, with d = x - x[i]",
+        "The arrays b, c and d hold one value per interval",
+        "Thus they hold one value fewer than the number of points"
+      ]
+    },
+    {
+      "dot": "emerald",
+      "title": "Where the coefficients come from",
+      "items": [
+        "The curve meets every point",
+        "The slope matches on both sides of every point",
+        "The curvature matches too, and that is what makes it smooth"
+      ]
+    },
+    {
+      "dot": "amber",
+      "title": "What follows from that",
+      "items": [
+        "A spline is NOT local: moving one point changes the curve everywhere, a little",
+        "The conditions come out as a system with three diagonals",
+        "Such a system is solved in one pass down and one back, thus many points stay cheap"
+      ]
+    }
+  ]
+}

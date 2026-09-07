@@ -17,6 +17,25 @@
 // compiler, and it holds the values in the same way as the rest of the
 // library.
 
+// Method:
+// A complex number is held as two real values:
+//
+//     z = re + i*im
+//
+// and the operations are written out on those two:
+//
+//     (a + i*b) * (c + i*d) = (a*c - b*d) + i*(a*d + b*c)
+//     |z|                   = sqrt(re*re + im*im)
+//     angle of z            = atan2(im, re)
+//
+// The standard gives <complex.h> and float _Complex, and this library uses
+// neither. Many small compilers do not offer them. And <complex.h> gives the
+// macro `complex`, thus no module of this library could carry that name.
+//
+// A structure of two members works on every compiler and holds its values the
+// same way the rest of the library holds numbers.
+
+
 typedef struct{
     real_t re;                   // The real part
     real_t im;                   // The imaginary part

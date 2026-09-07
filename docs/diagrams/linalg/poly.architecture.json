@@ -1,0 +1,236 @@
+{
+  "schema_version": 1,
+  "diagram_type": "architecture",
+  "meta": {
+    "title": "Inside poly",
+    "animation": "trace",
+    "quality_profile": "showcase",
+    "views": [
+      {
+        "id": "the-list",
+        "label": "A list, lowest power first",
+        "focus": [
+          "coeffs"
+        ],
+        "note": "The list 2, 3, -1 means 2 plus 3x less x squared. That is the order lstsq gives its answers in."
+      },
+      {
+        "id": "downhill",
+        "label": "Walking downhill",
+        "focus": [
+          "step",
+          "found"
+        ],
+        "note": "Newton's step is the value divided by how fast the value is changing, taken in complex numbers so a root off the real line can be reached."
+      },
+      {
+        "id": "divide-out",
+        "label": "One root at a time",
+        "focus": [
+          "divide"
+        ],
+        "note": "Once a root is found it is divided out, and the walk starts again on what is left."
+      },
+      {
+        "id": "what-is-small",
+        "label": "What nearly nothing means",
+        "focus": [
+          "size",
+          "fixed"
+        ],
+        "note": "Adding up the terms loses digits to the largest of them, thus the threshold has to be measured and not fixed."
+      }
+    ]
+  },
+  "layout": {
+    "mode": "grid",
+    "origin": [
+      40,
+      120
+    ],
+    "cols": 6,
+    "gapX": 28,
+    "gapY": 56,
+    "cellW": 124,
+    "cellH": 62
+  },
+  "components": [
+    {
+      "id": "coeffs",
+      "type": "external",
+      "label": "Your Coefficients",
+      "sublabel": "lowest power first",
+      "row": 1,
+      "col": 0
+    },
+    {
+      "id": "start",
+      "type": "backend",
+      "label": "A Starting Place",
+      "sublabel": "in the complex plane",
+      "row": 1,
+      "col": 1
+    },
+    {
+      "id": "step",
+      "type": "backend",
+      "label": "Newton's Step",
+      "sublabel": "p(x) over p'(x)",
+      "row": 1,
+      "col": 2
+    },
+    {
+      "id": "size",
+      "type": "database",
+      "label": "Size of the Terms",
+      "sublabel": "measured here",
+      "row": 0,
+      "col": 2
+    },
+    {
+      "id": "fixed",
+      "type": "security",
+      "label": "A Fixed Threshold",
+      "sublabel": "wrong for one of them",
+      "row": 0,
+      "col": 3
+    },
+    {
+      "id": "found",
+      "type": "cloud",
+      "label": "One Root",
+      "sublabel": "x where p is nothing",
+      "row": 1,
+      "col": 3
+    },
+    {
+      "id": "divide",
+      "type": "backend",
+      "label": "Divide It Out",
+      "sublabel": "and walk again",
+      "row": 1,
+      "col": 4
+    },
+    {
+      "id": "all",
+      "type": "cloud",
+      "label": "Every Root",
+      "sublabel": "poles and zeros",
+      "row": 1,
+      "col": 5
+    }
+  ],
+  "boundaries": [
+    {
+      "kind": "region",
+      "label": "in complex numbers, so a root off the real line is reachable",
+      "wraps": [
+        "step",
+        "found"
+      ]
+    }
+  ],
+  "connections": [
+    {
+      "id": "given",
+      "from": "coeffs",
+      "to": "start",
+      "label": "p(x)",
+      "variant": "emphasis",
+      "labelAt": [
+        176,
+        312
+      ]
+    },
+    {
+      "id": "walk",
+      "from": "start",
+      "to": "step",
+      "label": "from there",
+      "variant": "emphasis",
+      "labelAt": [
+        328.0,
+        312.0
+      ]
+    },
+    {
+      "id": "judged",
+      "from": "size",
+      "to": "step",
+      "label": "how small is small",
+      "labelAt": [
+        404.0,
+        194.0
+      ]
+    },
+    {
+      "id": "wrong",
+      "from": "size",
+      "to": "fixed",
+      "label": "would be wrong",
+      "labelAt": [
+        480.0,
+        194.0
+      ]
+    },
+    {
+      "id": "arrives",
+      "from": "step",
+      "to": "found",
+      "label": "when it stops",
+      "variant": "emphasis",
+      "labelAt": [
+        480.0,
+        312.0
+      ]
+    },
+    {
+      "id": "again",
+      "from": "found",
+      "to": "divide",
+      "label": "take it out",
+      "variant": "emphasis",
+      "labelAt": [
+        632.0,
+        312.0
+      ]
+    },
+    {
+      "id": "loops",
+      "from": "divide",
+      "to": "all",
+      "label": "until none are left",
+      "variant": "emphasis",
+      "labelDy": -24
+    }
+  ],
+  "cards": [
+    {
+      "dot": "cyan",
+      "title": "What it works out",
+      "items": [
+        "p(x) = c[0] + c[1]*x + c[2]*x^2 + ...",
+        "The places where a polynomial crosses nothing",
+        "An iir filter is two polynomials divided: the roots below are its poles"
+      ]
+    },
+    {
+      "dot": "emerald",
+      "title": "How the library gets there",
+      "items": [
+        "x = x - p(x) / p'(x), the step of Newton",
+        "Taken in complex numbers, so that a root off the real line can be reached",
+        "Once a root is found it is divided out and the walk starts again"
+      ]
+    },
+    {
+      "dot": "rose",
+      "title": "Why the threshold is measured",
+      "items": [
+        "Adding up the terms loses digits to the largest of them",
+        "Thus a value can be trusted only down to about that largest term times the step of the width",
+        "A fixed number asks the same of terms in millions and terms in millionths"
+      ]
+    }
+  ]
+}

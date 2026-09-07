@@ -57,6 +57,29 @@
 // is not defined any other way. The other three do not, because they are sums
 // and a caller who asks for a sum should get one.
 //
+
+// Method:
+//
+// At each lag the two signals are multiplied sample by sample and the products
+// are added up:
+//
+//     r[lag] = sum over n of (a[n] - mean_a) * (b[n+lag] - mean_b)
+//
+// Only the samples that still overlap are counted, thus a longer lag adds up
+// fewer products. That is why the scaling matters:
+//
+//     RAW          r[lag]
+//     BIASED       r[lag] / size
+//     UNBIASED     r[lag] / (size - lag)
+//     COEFFICIENT  r[lag] / sqrt(r_aa[0] * r_bb[0])
+//
+// UNBIASED divides by how many samples actually overlapped, thus a long lag is
+// not made to look weak by the ones that fell off the end.
+//
+// COEFFICIENT is the only one that means the same thing for every signal, and
+// it is the only one that takes the mean off first. The means are zero for the
+// other three, thus one sum serves all four.
+
 // A SIGNAL MUST HAVE A SHAPE ABOVE ITS OWN ROUNDING, OR THERE IS NOTHING TO
 // MATCH
 //

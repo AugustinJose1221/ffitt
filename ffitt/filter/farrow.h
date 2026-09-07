@@ -110,6 +110,30 @@
 // give those. FOR A LARGER DELAY, take the whole samples with a ringbuf and
 // leave the part to this. That is the cheap way round and the only one.
 
+// Method:
+// A delay of a whole number of samples is reading further back in a buffer,
+// and costs nothing. A delay of a PART of a sample is a filter, because the
+// value between two samples is not in the reading and must be worked out.
+//
+// The filter lays a polynomial through the samples around the wanted place and
+// reads it there:
+//
+//     y[n] = sum over k of c_k(mu) * x[n-k]
+//
+// where mu is the fraction of a sample asked for. The coefficients depend on
+// mu, and that is the difficulty: a new mu would mean designing a new filter,
+// and a delay that drifts would mean designing one at every sample.
+//
+// The structure of Farrow avoids that. Each coefficient is written as a
+// polynomial in mu:
+//
+//     c_k(mu) = a0_k + a1_k*mu + a2_k*mu^2 + ...
+//
+// The a values are fixed and worked out once. A new mu costs only the
+// evaluation of those small polynomials, which is a few multiplications, thus
+// the delay can be changed at every sample for almost nothing.
+
+
 typedef struct{
     ringbuf_t history;          // The samples the answer is worked out from
     real_t* weight;             // The Farrow matrix, (order+1) by (order+1)

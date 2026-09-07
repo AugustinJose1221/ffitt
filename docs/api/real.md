@@ -9,7 +9,114 @@ python3 scripts/api_doc.py
 
 The one type that holds every number. Declared in `ffitt/core/real.h`.
 
-[Back to the index](../API.md) | [How the core modules work](../../ffitt/core/README.md)
+[Back to the index](../API.md) | [How the core modules work](../../ffitt/core/README.md) | [How it works](../diagrams/core/real.html) ([preview](https://htmlpreview.github.io/?https://github.com/AugustinJose1221/ffitt/blob/development/docs/diagrams/core/real.html))
+
+## Overview
+
+The one type that every number of this library is held in.
+
+The library holds every sample, every coefficient and every result in
+real_t. Nothing anywhere spells float or double directly. That is the whole
+point of this header: the width of a number is decided ONE time, for the
+whole build, and never module by module.
+
+HOW TO CHOOSE THE WIDTH
+
+Build with FFITT_REAL_64 defined for 64 bits, and with nothing defined, or
+with FFITT_REAL_32, for 32 bits. 32 bits is the default.
+
+    cc -DFFITT_REAL_64 ...        a double, about 16 digits
+    cc ...                       a float, about 7 digits
+
+WHICH TO USE
+
+Take 32 bits when the work runs on a small processor. A float is half the
+memory, and a processor with a unit for 32 bit arithmetic and none for 64
+bit will run the 64 bit build tens of times more slowly, because every
+operation becomes a call to a library that does it in software.
+
+Take 64 bits when the numbers are large, when the filters are slow, or when
+the answer matters more than the time. A float holds about seven digits, and
+three kinds of work run out of them:
+
+  A LARGE OFFSET. A reading that sits at 8 000 000 counts with a signal of a
+  few thousand on top spends six of the seven digits on the part that
+  carries nothing.
+
+  A LONG SUM. Adding a thousand samples that each sit near eight million
+  gives a total near eight thousand million, where one step of a float is
+  512. The low digits of every later sample fall away.
+
+  A SLOW FILTER. A section holds its poles near the circle when the cutoff
+  is low, and it lifts whatever error reaches it by a large factor.
+  IIR_MIN_CUTOFF holds the lowest cutoff that 32 bits can carry.
+
+The guides of each area give measured numbers for all three.
+
+WHAT THIS HEADER GIVES
+
+  real_t        the type
+  REAL_C(x)     a number written in the source, for example REAL_C(0.5)
+  REAL_SQRT     and the other functions of mathematics
+  REAL_EPSILON  the smallest step that the type can hold beside 1
+  REAL_DIGITS   how many digits of ten the type holds
+
+WHY A NUMBER IN THE SOURCE NEEDS REAL_C
+
+A number written as 0.5 is a double, and a number written as 0.5f is a
+float. Writing 0.5 in a 32 bit build does not fail; it quietly makes the
+arithmetic around it run in 64 bits and then throws the extra away. Measured
+on one line, that turned three instructions into six and made the work run
+in double where it should have run in float.
+
+Writing 0.5f in a 64 bit build is worse: the number is rounded to 7 digits
+before the 64 bit arithmetic ever sees it, thus the build says it holds 16
+digits and does not.
+
+REAL_C writes the right one for the build. Use it for EVERY number in the
+source that is not a whole number used as a count.
+
+WHERE THE ARITHMETIC COMES FROM.
+
+Every call this library makes into the mathematics of the system passes
+through the macros below, and that is on purpose: it is one seam, thus one
+place to stand behind.
+
+FFITT_NO_LIBM puts ffitt/core/nolibm.c behind it, and the library then links
+with no mathematics library at all. That file says what the swap costs, with
+the error of every function measured against the system's own. A target
+whose toolchain ships no libm, or whose libm is large beside a small flash,
+or who must account for every line in the image, wants that switch.
+
+The two lists that follow are the same names either way, thus nothing else
+in the library knows or cares which is in use.
+
+A build in 64 bits must have a double that is really wider than a float.
+On some small targets the two are the same type, and there the 64 bit build
+would cost the memory and give none of the accuracy. Better to stop than to
+promise something the target cannot give.
+
+## Method
+
+There is no arithmetic in this header. What it holds is one decision, made
+once for the whole build:
+
+    real_t          is float, or double when FFITT_REAL_64 is defined
+    REAL_C(1.5)     writes a constant at that width
+    REAL_SQRT(x)    calls the square root of that width
+    REAL_EPSILON    the smallest step the width can tell near one
+
+Nothing anywhere else in the library spells float or double. Every sample,
+every coefficient and every result is a real_t, thus the width is chosen one
+time and never module by module.
+
+That is what makes the two widths testable. The same sources are built twice
+and the same tests are run twice, and a fault that lives at one width and not
+the other is found rather than shipped.
+
+It also makes the seam. Every call into the arithmetic of the system passes
+through a REAL_ macro, thus one definition of those macros replaces the whole
+of it, which is what nolibm does.
 
 ## Macros
 

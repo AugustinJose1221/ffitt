@@ -49,6 +49,22 @@
 // mean the same thing, which they do not if one is given as a standard
 // deviation and another as a half width at half the top.
 
+// Method:
+// Each shape is one line, read at whatever place is asked for:
+//
+//     gaussian(x)   = height * exp(-(x - centre)^2 / (2*width^2))
+//     lorentzian(x) = height / (1 + ((x - centre)/width)^2)
+//
+// Nothing here holds state and nothing here has a sample rate. A wave goes on
+// for ever and has a frequency; these HAPPEN ONCE, and are read at a place.
+//
+// The difference between the two matters. A gaussian falls away as the
+// exponential of a square, thus it is nothing a few widths out. A lorentzian
+// falls away as one over a square, thus it still has something left far from
+// its centre. Fitting a gaussian to a peak that really has long tails
+// underestimates its area, and that is the usual fault.
+
+
 // True if this is a width a curve can be read at, which means above nothing.
 // A width of nothing is a peak of no width at all, and every shape here
 // divides by it.

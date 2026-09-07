@@ -131,6 +131,34 @@
 // ukf_update both give false then, and that is the first sign that something
 // upstream has gone wrong.
 
+// Method:
+// The extended filter lays a straight line against a model that bends. This one
+// does not lay any line at all.
+//
+// Instead it picks a small set of points that between them carry the mean and
+// the spread of the state:
+//
+//     2*nx + 1 sigma points, spread about x by the square root of P
+//
+// Each point is put through the TRUE function, bending as it will:
+//
+//     Y[i] = f(X[i], u)
+//
+// and the mean and spread of what comes out are read back from where the points
+// landed:
+//
+//     x = sum over i of w[i] * Y[i]
+//     P = sum over i of w[i] * (Y[i] - x)*(Y[i] - x)' + Q
+//
+// No derivative is taken anywhere. That is the whole difference: where the
+// extended filter asks what the model does to a straight line, this asks what
+// the model does to a handful of real points.
+//
+// The square root of P is what spreads the points, and it must exist, thus P
+// must stay positive definite. Rounding can break that, and it is the one thing
+// that makes this filter fail where the extended one would not.
+
+
 // The state function. It reads the state and the input and writes the state
 // that follows. The three matrices have the orders nx x 1, ni x 1 and nx x 1.
 //

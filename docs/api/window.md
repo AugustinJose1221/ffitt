@@ -9,7 +9,101 @@ python3 scripts/api_doc.py
 
 Windows for a transform. Declared in `ffitt/transform/window.h`.
 
-[Back to the index](../API.md) | [How the transform modules work](../../ffitt/transform/README.md)
+[Back to the index](../API.md) | [How the transform modules work](../../ffitt/transform/README.md) | [How it works](../diagrams/transform/window.html) ([preview](https://htmlpreview.github.io/?https://github.com/AugustinJose1221/ffitt/blob/development/docs/diagrams/transform/window.html))
+
+## Overview
+
+Windows.
+
+A transform reads a block of samples and takes it to be one period of a
+signal that repeats for ever. Almost no real signal fits a block exactly.
+The end of the block then does not meet its start, and the transform sees a
+step there. A step holds every frequency, thus one tone smears across the
+whole result and a small tone beside a large one disappears under it.
+
+A window is a list of numbers that the block is multiplied by before the
+transform. It falls to nothing at both ends, thus the block always meets
+itself and there is no step.
+
+WHICH ONE TO TAKE
+
+Every window trades two things against each other. A tone that does not sit
+exactly on a bin spreads over the bins beside it: that spread is the MAIN
+LOBE, and a wider one hides a tone that stands close. What is left over
+reaches further out: those are the SIDE LOBES, and higher ones hide a tone
+that stands far away but is weak.
+
+  Window            Main lobe   Highest side lobe   Take it when
+  ----------------  ---------   -----------------   ------------------------
+  Rectangular          1.0            -13 dB        The block already fits,
+                                                    as for one whole period
+  Hann                 2.0            -31 dB        Nothing else is known.
+                                                    This is the usual choice
+  Hamming              2.0            -43 dB        One tone must be seen
+                                                    beside a near one
+  Blackman             3.0            -58 dB        A weak tone must be seen
+                                                    beside a strong one
+  Blackman-Harris      4.0            -92 dB        The same, when the strong
+                                                    one is very much larger
+  Tukey                varies         varies        Only the ends need to
+                                                    fall, and the middle
+                                                    must stay as it is
+  Kaiser               varies         varies        The side lobes must meet
+                                                    a number that is given
+
+The main lobe is in bins, against the rectangular window.
+
+## Method
+
+The block is multiplied by the window before the transform reads it:
+
+    y[n] = x[n] * w[n]
+
+Most of these windows are one sum of cosines. With the turn of sample n
+written t = 2*pi*n/(size-1), the value is:
+
+    w[n] = a0 - a1*cos(t) + a2*cos(2*t) - a3*cos(3*t)
+
+The four numbers are all that separates one window from another:
+
+    Hann              0.5      0.5      0        0
+    Hamming           0.54     0.46     0        0
+    Blackman          0.42     0.5      0.08     0
+    Blackman-Harris   0.35875  0.48829  0.14128  0.01168
+
+The divisor is size-1 and not size, thus the window is symmetric and its
+last value equals its first. Tukey and Kaiser do not fit this sum and are
+worked out on their own.
+
+WHAT A WINDOW DOES TO THE ANSWER
+
+A window makes the signal smaller, thus every height in the result is too
+low, and by how much depends on the window. Two numbers put that right:
+
+  window_coherent_gain    divide a peak by this to get the height of a tone
+  window_noise_gain       divide by this to get the height of noise
+
+Forgetting them is the usual fault. A Hann window has a coherent gain of
+0.5, thus every tone comes out at half its height, and a reading that does
+not divide by it is wrong by a factor of two.
+
+This module gets no memory. It writes into a list that the caller holds.
+
+## Types
+
+### `window_kind_t`
+
+```c
+typedef enum{
+    WINDOW_RECTANGULAR = 0,     // No window. Every value is one
+    WINDOW_HANN,                // The usual choice
+    WINDOW_HAMMING,             // Lower first side lobe, higher far ones
+    WINDOW_BLACKMAN,            // Lower side lobes, wider main lobe
+    WINDOW_BLACKMAN_HARRIS,     // The lowest side lobes of the fixed windows
+    WINDOW_TUKEY,               // Flat in the middle, falls at the ends
+    WINDOW_KAISER               // The shape follows a parameter
+}window_kind_t;
+```
 
 ## Functions
 

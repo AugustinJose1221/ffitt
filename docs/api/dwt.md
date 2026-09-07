@@ -9,7 +9,62 @@ python3 scripts/api_doc.py
 
 The discrete wavelet transform. Declared in `ffitt/transform/dwt.h`.
 
-[Back to the index](../API.md) | [How the transform modules work](../../ffitt/transform/README.md)
+[Back to the index](../API.md) | [How the transform modules work](../../ffitt/transform/README.md) | [How it works](../diagrams/transform/dwt.html) ([preview](https://htmlpreview.github.io/?https://github.com/AugustinJose1221/ffitt/blob/development/docs/diagrams/transform/dwt.html))
+
+## Overview
+
+The discrete wavelet transform.
+
+The transform takes a signal apart into an approximation and a detail. The
+approximation holds the slow part of the signal at half the number of
+samples, and the detail holds the fast part, also at half the number of
+samples. Together they hold as many values as the signal, thus the transform
+loses nothing and dwt_inverse gives the signal again.
+
+A Fourier transform says which frequencies the signal holds but not where
+they are. A wavelet transform says both, because each value of the detail
+belongs to one place of the signal. Thus the transform suits a signal that
+holds a short event, such as a step or a spike.
+
+The main use is to take noise out of a signal. Take the transform, set every
+small value of the detail to zero, and take the inverse transform. The noise
+spreads over every value of the detail, while the signal itself holds few
+large values. Thus this step takes away much of the noise and keeps the
+edges of the signal, which a low pass filter would make round.
+
+The size of the signal must be even for one level. For several levels the
+size must divide by two as many times as there are levels.
+
+The module holds two wavelets:
+
+- Haar, which is the simplest one. It looks at two samples at a time, thus
+  it finds a step very well and a smooth curve badly.
+- Daubechies with four coefficients, which looks at four samples at a time.
+  It follows a curve better, and it gives a smoother result.
+
+## Method
+
+One level of the transform passes the signal through two filters and then
+keeps every second sample of each:
+
+    approximation[n] = sum over k of x[2n + k] * low[k]
+    detail[n]        = sum over k of x[2n + k] * high[k]
+
+Each answer holds half as many samples as the signal, thus the two together
+hold exactly as many as went in and nothing is lost.
+
+The two filters are one filter and its mirror. The low one keeps the slow
+part, the high one keeps the fast part, and the mirror is what makes the
+pair undoable: dwt_inverse puts the samples back between the answers and
+runs the same filters the other way round.
+
+A Fourier transform says which frequencies are there and not where. Here
+each value of the detail belongs to one place of the signal, thus a step or
+a spike shows as a few large details at the place it happened.
+
+That is why it is used to take noise out. Noise is spread thinly over every
+detail while a real edge is a few large ones, thus setting the small details
+to nothing removes the noise and leaves the edge.
 
 ## Macros
 
@@ -22,6 +77,15 @@ The discrete wavelet transform. Declared in `ffitt/transform/dwt.h`.
 The largest number of coefficients that a wavelet of this module holds.
 
 ## Types
+
+### `dwt_wavelet_t`
+
+```c
+typedef enum{
+    DWT_HAAR = 0,               // Two coefficients
+    DWT_DAUBECHIES4 = 1         // Four coefficients
+}dwt_wavelet_t;
+```
 
 ### `dwt_t`
 

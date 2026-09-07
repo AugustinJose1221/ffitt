@@ -1,0 +1,215 @@
+{
+  "schema_version": 1,
+  "diagram_type": "architecture",
+  "meta": {
+    "title": "Inside detrend",
+    "animation": "trace",
+    "quality_profile": "showcase",
+    "views": [
+      {
+        "id": "the-step",
+        "label": "The step that is not there",
+        "focus": [
+          "block",
+          "step"
+        ],
+        "note": "A transform reads the block as one period that repeats. A block ending higher than it began joins itself with a step."
+      },
+      {
+        "id": "the-level",
+        "label": "Taking the level off",
+        "focus": [
+          "mean",
+          "level"
+        ],
+        "note": "The mean of the block is subtracted. That alone moves the block down to sit about zero."
+      },
+      {
+        "id": "the-drift",
+        "label": "Taking the drift off",
+        "focus": [
+          "line",
+          "fit"
+        ],
+        "note": "A straight line is laid through the block by least squares, and that line is subtracted."
+      },
+      {
+        "id": "both-ends",
+        "label": "Why a block, not a stream",
+        "focus": [
+          "fit"
+        ],
+        "note": "A block can be measured from both ends, thus the line is the best one for it and not a guess that follows behind."
+      }
+    ]
+  },
+  "layout": {
+    "mode": "grid",
+    "origin": [
+      40,
+      120
+    ],
+    "cols": 6,
+    "gapX": 28,
+    "gapY": 56,
+    "cellW": 124,
+    "cellH": 62
+  },
+  "components": [
+    {
+      "id": "block",
+      "type": "external",
+      "label": "Your Block",
+      "sublabel": "level and drift",
+      "row": 1,
+      "col": 0
+    },
+    {
+      "id": "step",
+      "type": "security",
+      "label": "A Step at the Join",
+      "sublabel": "spreads everywhere",
+      "row": 0,
+      "col": 1,
+      "tag": "ruins the transform"
+    },
+    {
+      "id": "mean",
+      "type": "backend",
+      "label": "The Mean",
+      "sublabel": "one number",
+      "row": 1,
+      "col": 1
+    },
+    {
+      "id": "line",
+      "type": "backend",
+      "label": "Least Squares Line",
+      "sublabel": "a and b",
+      "row": 2,
+      "col": 1
+    },
+    {
+      "id": "level",
+      "type": "backend",
+      "label": "Subtract the Mean",
+      "sublabel": "sits about zero",
+      "row": 1,
+      "col": 2
+    },
+    {
+      "id": "fit",
+      "type": "backend",
+      "label": "Subtract the Line",
+      "sublabel": "drift gone too",
+      "row": 2,
+      "col": 2
+    },
+    {
+      "id": "flat",
+      "type": "cloud",
+      "label": "A Flat Block",
+      "sublabel": "ends meet",
+      "row": 1,
+      "col": 3
+    }
+  ],
+  "boundaries": [
+    {
+      "kind": "region",
+      "label": "measured from both ends of the block",
+      "wraps": [
+        "mean",
+        "line"
+      ]
+    }
+  ],
+  "connections": [
+    {
+      "id": "read",
+      "from": "block",
+      "to": "mean",
+      "variant": "emphasis"
+    },
+    {
+      "id": "also",
+      "from": "block",
+      "to": "line",
+      "label": "both ends",
+      "labelAt": [
+        176.0,
+        430.0
+      ]
+    },
+    {
+      "id": "harm",
+      "from": "block",
+      "to": "step",
+      "label": "if left alone"
+    },
+    {
+      "id": "off1",
+      "from": "mean",
+      "to": "level",
+      "label": "x - mean",
+      "variant": "emphasis",
+      "labelAt": [
+        328.0,
+        312.0
+      ]
+    },
+    {
+      "id": "off2",
+      "from": "line",
+      "to": "fit",
+      "label": "x - (a + b*n)",
+      "labelAt": [
+        328.0,
+        430.0
+      ]
+    },
+    {
+      "id": "done1",
+      "from": "level",
+      "to": "flat",
+      "label": "y[n]",
+      "variant": "emphasis",
+      "labelDy": -24
+    },
+    {
+      "id": "done2",
+      "from": "fit",
+      "to": "flat",
+      "label": "or with the drift"
+    }
+  ],
+  "cards": [
+    {
+      "dot": "cyan",
+      "title": "What it works out",
+      "items": [
+        "y[n] = x[n] - mean(x), for the level alone",
+        "y[n] = x[n] - (a + b*n), for the level and the drift",
+        "b is the slope the readings suggest, and a is where that line starts"
+      ]
+    },
+    {
+      "dot": "emerald",
+      "title": "Why a block and not a stream",
+      "items": [
+        "A block can be measured from both ends at once",
+        "Thus the line is the best one for that block, not a guess that follows behind",
+        "dcblock does the same work for a stream, and must follow rather than measure"
+      ]
+    },
+    {
+      "dot": "rose",
+      "title": "Why it matters more than it looks",
+      "items": [
+        "A transform reads a block as one period of something that repeats",
+        "A block that ends higher than it began joins the next copy with a step",
+        "That step is not in the signal, and its energy spreads across every frequency"
+      ]
+    }
+  ]
+}

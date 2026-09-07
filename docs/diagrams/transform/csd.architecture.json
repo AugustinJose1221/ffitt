@@ -1,0 +1,230 @@
+{
+  "schema_version": 1,
+  "diagram_type": "architecture",
+  "meta": {
+    "title": "Inside csd",
+    "animation": "trace",
+    "quality_profile": "showcase",
+    "views": [
+      {
+        "id": "two-signals",
+        "label": "Two signals, not one",
+        "focus": [
+          "first",
+          "second",
+          "cross"
+        ],
+        "note": "psd says what one signal holds. This takes two and asks what they share."
+      },
+      {
+        "id": "the-cross",
+        "label": "The cross spectrum",
+        "focus": [
+          "cross",
+          "averaged"
+        ],
+        "note": "One spectrum times the conjugate of the other. Its size is what they share, its angle is how far one stands behind."
+      },
+      {
+        "id": "coherence",
+        "label": "Coherence",
+        "focus": [
+          "coh",
+          "ratio"
+        ],
+        "note": "The share, squared, against what each holds alone. Every correction stands above and below, thus all of them cancel."
+      },
+      {
+        "id": "the-trap",
+        "label": "Why one block is useless",
+        "focus": [
+          "blocks",
+          "coh"
+        ],
+        "note": "Coherence of a single block is always 1, whatever the signals are. The averaging is what makes the answer mean anything."
+      }
+    ]
+  },
+  "layout": {
+    "mode": "grid",
+    "origin": [
+      40,
+      120
+    ],
+    "cols": 6,
+    "gapX": 28,
+    "gapY": 56,
+    "cellW": 124,
+    "cellH": 62
+  },
+  "components": [
+    {
+      "id": "first",
+      "type": "external",
+      "label": "Signal In",
+      "sublabel": "x[n]",
+      "row": 0,
+      "col": 0
+    },
+    {
+      "id": "second",
+      "type": "external",
+      "label": "Signal Out",
+      "sublabel": "y[n]",
+      "row": 2,
+      "col": 0
+    },
+    {
+      "id": "blocks",
+      "type": "backend",
+      "label": "Blocks, Windowed",
+      "sublabel": "they overlap",
+      "row": 1,
+      "col": 1
+    },
+    {
+      "id": "cross",
+      "type": "backend",
+      "label": "X * conj(Y)",
+      "sublabel": "per block",
+      "row": 1,
+      "col": 2
+    },
+    {
+      "id": "averaged",
+      "type": "backend",
+      "label": "Mean Over Blocks",
+      "sublabel": "S_xy[k]",
+      "row": 1,
+      "col": 3
+    },
+    {
+      "id": "ratio",
+      "type": "database",
+      "label": "What Each Holds",
+      "sublabel": "S_xx and S_yy",
+      "row": 0,
+      "col": 4
+    },
+    {
+      "id": "coh",
+      "type": "backend",
+      "label": "Coherence",
+      "sublabel": "0 to 1",
+      "row": 1,
+      "col": 4
+    },
+    {
+      "id": "out",
+      "type": "cloud",
+      "label": "Gain, Phase, Share",
+      "sublabel": "at every bin",
+      "row": 1,
+      "col": 5
+    }
+  ],
+  "boundaries": [
+    {
+      "kind": "region",
+      "label": "one block gives a coherence of 1, always",
+      "wraps": [
+        "cross",
+        "averaged"
+      ]
+    }
+  ],
+  "connections": [
+    {
+      "id": "inx",
+      "from": "first",
+      "to": "blocks",
+      "label": "cut the same way"
+    },
+    {
+      "id": "iny",
+      "from": "second",
+      "to": "blocks",
+      "label": "cut the same way"
+    },
+    {
+      "id": "paired",
+      "from": "blocks",
+      "to": "cross",
+      "label": "two spectra",
+      "variant": "emphasis",
+      "labelAt": [
+        328,
+        312
+      ]
+    },
+    {
+      "id": "meaned",
+      "from": "cross",
+      "to": "averaged",
+      "label": "block by block",
+      "variant": "emphasis",
+      "labelAt": [
+        480.0,
+        312.0
+      ]
+    },
+    {
+      "id": "divided",
+      "from": "ratio",
+      "to": "coh",
+      "label": "divides it",
+      "labelAt": [
+        708.0,
+        194.0
+      ]
+    },
+    {
+      "id": "judged",
+      "from": "averaged",
+      "to": "coh",
+      "label": "the share",
+      "variant": "emphasis",
+      "labelAt": [
+        632.0,
+        312.0
+      ]
+    },
+    {
+      "id": "read",
+      "from": "coh",
+      "to": "out",
+      "label": "C[k]",
+      "variant": "emphasis",
+      "labelDy": -24
+    }
+  ],
+  "cards": [
+    {
+      "dot": "cyan",
+      "title": "What it works out",
+      "items": [
+        "S_xy[k] = (1/blocks) * sum over b of X_b[k] * conj(Y_b[k])",
+        "C[k] = |S_xy[k]|^2 / (S_xx[k] * S_yy[k]), which reads 0 to 1",
+        "The angle of S_xy rising steadily with frequency is a delay"
+      ]
+    },
+    {
+      "dot": "emerald",
+      "title": "How the library gets there",
+      "items": [
+        "Both signals are cut and windowed the same way, then averaged as psd does",
+        "Every correction of the window and the rate cancels in the ratio",
+        "A bin where one signal holds nothing is set to zero, not divided by almost nothing"
+      ]
+    },
+    {
+      "dot": "rose",
+      "title": "What will catch you",
+      "items": [
+        "Coherence of ONE block is always 1, because a number divided by itself is one",
+        "Two peaks at 50 hertz prove nothing; half a building has one",
+        "Coherence says whether the two peaks move together"
+      ]
+    }
+  ]
+}

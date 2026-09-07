@@ -1,0 +1,221 @@
+{
+  "schema_version": 1,
+  "diagram_type": "architecture",
+  "meta": {
+    "title": "Inside matrix",
+    "animation": "trace",
+    "quality_profile": "showcase",
+    "views": [
+      {
+        "id": "one-block",
+        "label": "One block, row by row",
+        "focus": [
+          "block",
+          "index"
+        ],
+        "note": "The element at row i and column j lies at position (i*n)+j. Everything else in the module follows from that one line."
+      },
+      {
+        "id": "walking",
+        "label": "Rows are cheap, columns are not",
+        "focus": [
+          "row",
+          "column"
+        ],
+        "note": "Walking a row is walking through memory in order. Walking a column steps n values at a time."
+      },
+      {
+        "id": "the-ops",
+        "label": "The plain operations",
+        "focus": [
+          "ops"
+        ],
+        "note": "Add element by element, multiply as a sum over k, transpose by swapping the indices. No tricks."
+      },
+      {
+        "id": "two-roads",
+        "label": "Heap or your own memory",
+        "focus": [
+          "heap",
+          "given"
+        ],
+        "note": "One allocator takes memory from the heap and one takes memory you already hold, thus a target with no heap loses nothing."
+      }
+    ]
+  },
+  "layout": {
+    "mode": "grid",
+    "origin": [
+      40,
+      120
+    ],
+    "cols": 6,
+    "gapX": 28,
+    "gapY": 56,
+    "cellW": 124,
+    "cellH": 62
+  },
+  "components": [
+    {
+      "id": "caller",
+      "type": "external",
+      "label": "Your Matrix",
+      "sublabel": "m by n",
+      "row": 1,
+      "col": 0
+    },
+    {
+      "id": "block",
+      "type": "database",
+      "label": "One Block",
+      "sublabel": "row after row",
+      "row": 1,
+      "col": 1
+    },
+    {
+      "id": "index",
+      "type": "backend",
+      "label": "(i*n)+j",
+      "sublabel": "where an element is",
+      "row": 1,
+      "col": 2
+    },
+    {
+      "id": "row",
+      "type": "cloud",
+      "label": "A Row",
+      "sublabel": "in order",
+      "row": 0,
+      "col": 3
+    },
+    {
+      "id": "column",
+      "type": "security",
+      "label": "A Column",
+      "sublabel": "steps by n",
+      "row": 2,
+      "col": 3
+    },
+    {
+      "id": "ops",
+      "type": "backend",
+      "label": "Add, Multiply",
+      "sublabel": "and transpose",
+      "row": 1,
+      "col": 3
+    },
+    {
+      "id": "heap",
+      "type": "backend",
+      "label": "matrix_alloc",
+      "sublabel": "from the heap",
+      "row": 0,
+      "col": 1
+    },
+    {
+      "id": "given",
+      "type": "backend",
+      "label": "matrix_static_alloc",
+      "sublabel": "memory you hold",
+      "row": 2,
+      "col": 1
+    }
+  ],
+  "boundaries": [
+    {
+      "kind": "region",
+      "label": "the multiply costs m*n*p, and there is no trick here",
+      "wraps": [
+        "index",
+        "ops"
+      ]
+    }
+  ],
+  "connections": [
+    {
+      "id": "laid",
+      "from": "caller",
+      "to": "block",
+      "label": "the elements",
+      "variant": "emphasis",
+      "labelAt": [
+        176,
+        312
+      ]
+    },
+    {
+      "id": "from1",
+      "from": "heap",
+      "to": "block",
+      "label": "one road",
+      "labelAt": [
+        252.0,
+        194.0
+      ]
+    },
+    {
+      "id": "from2",
+      "from": "given",
+      "to": "block",
+      "label": "the other"
+    },
+    {
+      "id": "found",
+      "from": "block",
+      "to": "index",
+      "label": "one line",
+      "variant": "emphasis",
+      "labelAt": [
+        328.0,
+        312.0
+      ]
+    },
+    {
+      "id": "fast",
+      "from": "index",
+      "to": "row",
+      "label": "along memory"
+    },
+    {
+      "id": "slow",
+      "from": "index",
+      "to": "column",
+      "label": "across it"
+    },
+    {
+      "id": "used",
+      "from": "index",
+      "to": "ops",
+      "variant": "emphasis"
+    }
+  ],
+  "cards": [
+    {
+      "dot": "cyan",
+      "title": "What it works out",
+      "items": [
+        "element(i, j) is at position (i * n) + j",
+        "(A + B)(i,j) = A(i,j) + B(i,j)",
+        "(A * B)(i,j) = sum over k of A(i,k) * B(k,j)"
+      ]
+    },
+    {
+      "dot": "emerald",
+      "title": "What follows from the layout",
+      "items": [
+        "A row is a run of n values side by side, thus walking one walks memory in order",
+        "A column steps n values at a time",
+        "The transpose is A'(i,j) = A(j,i), which is the same block read the other way"
+      ]
+    },
+    {
+      "dot": "amber",
+      "title": "What it costs you",
+      "items": [
+        "A multiplication costs m*n*p, and there is no trick here to make it less",
+        "This is a library for small matrices, where the tricks cost more than they save",
+        "Two allocators, thus a target with no heap can use every operation"
+      ]
+    }
+  ]
+}

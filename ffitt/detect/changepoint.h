@@ -40,6 +40,34 @@
 // alarm that follows is about the drift. Where the level drifts, take it off
 // first with dcblock or detrend, and give this what is left.
 
+// Method:
+// The change is smaller than the noise, thus no threshold on one sample can
+// find it. What can find it is a running total that only ever grows when the
+// readings lean one way:
+//
+//     S = max(0, S + (x[n] - mean - slack))
+//
+// The slack is what a reading is allowed to be above the mean without counting.
+// While the readings are ordinary they fall above and below it, S is pushed down
+// as often as up, and the max at zero keeps it near nothing. Once the mean has
+// really moved, every reading pushes S the same way and it climbs steadily.
+//
+// Thus the evidence ADDS UP over many samples, and a change too small to see in
+// any one of them is found after enough of them.
+//
+// Two numbers set the behaviour, and they trade against each other:
+//
+//     slack      how large a change is worth finding at all
+//     threshold  how much evidence is wanted before saying so
+//
+// A smaller threshold finds the change sooner and gives more false alarms. This
+// is not a fault to be tuned away; it is the trade itself, and both directions
+// are a real choice.
+//
+// Two totals run, one for a rise and one for a fall, because a total that only
+// grows upward cannot see a reading that has dropped.
+
+
 typedef enum{
     CHANGEPOINT_NONE = 0,       // Nothing has changed
     CHANGEPOINT_ROSE,           // The reading has run above where it should be

@@ -9,7 +9,111 @@ python3 scripts/api_doc.py
 
 Carrying a state forward through a rate of change. Declared in `ffitt/estimate/propagate.h`.
 
-[Back to the index](../API.md) | [How the estimate modules work](../../ffitt/estimate/README.md)
+[Back to the index](../API.md) | [How the estimate modules work](../../ffitt/estimate/README.md) | [How it works](../diagrams/estimate/propagate.html) ([preview](https://htmlpreview.github.io/?https://github.com/AugustinJose1221/ffitt/blob/development/docs/diagrams/estimate/propagate.html))
+
+## Overview
+
+Carry a state forward through a model that is written as a RATE OF CHANGE.
+
+THE GAP THIS FILLS
+
+The kalman, ekf and ukf modules all ask for a function that takes the state
+now and gives the state at the next sample. But nobody writes a model that
+way. A model of anything physical is written as how fast each thing is
+changing: a temperature falls at a rate that follows how far above the room
+it is, a wheel slows at a rate that follows how fast it is turning, a
+pendulum turns back at a rate that follows how far over it leans.
+
+Turning one into the other is what this module does, and until now every
+caller with a model of that kind had to do it by hand.
+
+WHICH METHOD TO USE, AND WHY IT IS NOT A MATTER OF TASTE
+
+All three take the rate of change and step forward with it. They differ in
+how many times they ask for the rate along the way, and that decides how the
+error falls as the step is made smaller:
+
+  PROPAGATE_EULER      one ask.    Halve the step and the error HALVES.
+  PROPAGATE_MIDPOINT   two asks.   Halve the step and the error QUARTERS.
+  PROPAGATE_RUNGE      four asks.  Halve the step and the error falls to a
+                                   SIXTEENTH.
+
+Measured, on a turning that has a known answer, the worst the state is out
+by across one second, at 64 bits:
+
+    step            0.1        0.05       0.025      0.0125
+    euler        5.1e-02     2.5e-02     1.3e-02     6.3e-03
+    midpoint     1.7e-03     4.2e-04     1.0e-04     2.6e-05
+    runge        8.3e-07     5.2e-08     3.3e-09     2.0e-10
+
+READ ALONG EACH ROW. Euler halves, midpoint quarters, Runge falls to a
+sixteenth, exactly. That is what the order of a method MEANS, and it is why
+the four asks of Runge are not four times the cost of Euler but a million
+times the accuracy.
+
+AND AT 32 BITS THE METHOD OUTRUNS THE WIDTH, which is worth knowing before
+choosing a step. The same measurement:
+
+    step            0.1        0.05       0.025      0.0125
+    euler        5.1e-02     2.5e-02     1.3e-02     6.3e-03
+    midpoint     1.7e-03     4.2e-04     1.0e-04     2.6e-05
+    runge        8.5e-07     1.4e-07     2.3e-07     1.2e-07
+
+Euler and midpoint fall exactly as before. RUNGE STOPS AT ABOUT A PART IN
+TEN MILLION AND GOES NO FURTHER, because by then the error of the method is
+below the rounding of the state itself and halving the step only adds more
+roundings. There is nothing to be gained by a smaller step than that, and a
+little to be lost.
+
+TAKE PROPAGATE_RUNGE unless there is a reason not to. Its four asks cost
+four times as much for each step, and it reaches a given accuracy with such
+larger steps that it is cheaper in the end for anything but the roughest
+work.
+
+TAKE PROPAGATE_EULER where the rate is very cheap to work out, the step is
+already small because the sample rate is high, and the model is nearly
+straight anyway. A filter running at 1000 samples in a second is taking
+steps of a millisecond, and at that size Euler is often enough.
+
+WHAT THIS MODULE DOES NOT DO
+
+IT DOES NOT CHOOSE THE STEP FOR YOU. Every method here takes the step it is
+given and takes it once. A model whose rate changes sharply within one step
+will be carried badly however good the method, and no warning is given
+because none can be: the module never sees the true answer.
+
+Where the sample rate is fixed by the measurements, as it is for every
+filter in the estimate area, split one sample interval into several steps
+with propagate_state_over rather than taking one large step.
+
+The most states a model may hold.
+
+The methods keep a few copies of the state on the stack, so that no memory
+is taken and none is asked of the caller. This is what bounds those copies.
+
+## Method
+
+Nobody writes a model as a step. A model of anything physical is written as a
+rate of change:
+
+    dx/dt = f(x, u, t)
+
+and the filters all want the other thing: the state at the next sample.
+
+This module is the bridge. It takes a step of the given size through that
+rate:
+
+    Euler        x = x + h*f(x)
+    Midpoint     one probe at the half step, then use its rate
+    Runge-Kutta  four probes, weighed 1, 2, 2, 1
+
+The error left after one step falls with the order: Euler is wrong in
+proportion to the square of the step, midpoint to its cube, Runge-Kutta to
+its fifth power. Thus halving the step buys a factor of 4, of 8 and of 32.
+
+The cost is the probes: one call of f, two, or four. A model that is cheap to
+evaluate should take the fourth-order step and a longer step with it, and a
+model that is dear should take a shorter step and a cheaper rule.
 
 ## Macros
 
@@ -17,6 +121,26 @@ Carrying a state forward through a rate of change. Declared in `ffitt/estimate/p
 
 ```c
 #define PROPAGATE_LARGEST_STATE     16u
+```
+
+## Types
+
+### `propagate_method_t`
+
+Which method carries the state forward.
+
+```c
+typedef enum{
+    // One ask for the rate. The error halves when the step halves.
+    PROPAGATE_EULER = 0,
+
+    // Two asks. The error quarters when the step halves.
+    PROPAGATE_MIDPOINT,
+
+    // Four asks, by the method of Runge and Kutta. The error falls to a
+    // sixteenth when the step halves, and this is what to use.
+    PROPAGATE_RUNGE
+}propagate_method_t;
 ```
 
 ## Functions

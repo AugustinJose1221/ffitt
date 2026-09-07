@@ -9,7 +9,106 @@ python3 scripts/api_doc.py
 
 Filters with a finite impulse response. Declared in `ffitt/filter/fir.h`.
 
-[Back to the index](../API.md) | [How the filter modules work](../../ffitt/filter/README.md)
+[Back to the index](../API.md) | [How the filter modules work](../../ffitt/filter/README.md) | [How it works](../diagrams/filter/fir.html) ([preview](https://htmlpreview.github.io/?https://github.com/AugustinJose1221/ffitt/blob/development/docs/diagrams/filter/fir.html))
+
+## Overview
+
+A filter with a finite impulse response.
+
+The filter multiplies the last few samples of the signal by a set of
+coefficients and adds the products. It holds no feedback, thus it is always
+stable, and it moves every frequency by the same time. That second point
+matters when the shape of the signal must stay as it is.
+
+The cost is the length: such a filter needs many more coefficients than an
+IIR filter for the same sharpness. Use the iir module when the number of
+operations for each sample matters more than the shape.
+
+The design functions build the coefficients with the method of the windowed
+sinc, with the window of Hamming. Give the cutoff as a part of the sample
+rate, thus 0.25 means one quarter of the sample rate. The value must lie
+between 0 and 0.5, because half the sample rate is the highest frequency
+that a sampled signal can hold.
+
+A longer filter gives a sharper edge between the band that passes and the
+band that stops. A length of about 4/width gives an edge of that width,
+where the width is also a part of the sample rate.
+
+How wide the change from the pass band to the stop band is, as a number
+divided by the length of the filter.
+
+A filter with a finite impulse response cannot turn from passing to stopping
+at once. The turn takes a band of frequencies, and that band is narrower only
+when the filter is longer. This is the width of that turn, and it is the
+reason a low cutoff needs a long filter.
+
+CHOOSING THE WINDOW, WHICH IS THE ONE DECISION THIS MODULE ASKS OF YOU
+
+The plain sinc is the perfect filter and it runs for ever. Cutting it to a
+finite length is what a window does, and the window decides two things that
+trade against each other:
+
+  HOW WIDE THE TURN IS from passing to stopping, which wants a narrow window
+  HOW FAR DOWN THE BAND THAT IS STOPPED LIES, which wants a gentle one
+
+Measured, for a low pass of 101 coefficients at a cutoff of 0.25. The turn
+is from where the answer last stands at 0.9 to where it first reaches 0.1:
+
+  window             turn is wide   times the length   band that is stopped
+  rectangular           0.0090            0.90              -26 dB
+  hamming               0.0182            1.84              -58 dB
+  hann                  0.0194            1.96              -55 dB
+  kaiser, beta 6        0.0198            1.99              -68 dB
+  blackman              0.0238            2.40              -75 dB
+  blackman-harris       0.0281            2.83             -104 dB
+
+READ BOTH ENDS TOGETHER. A rectangular window turns three times as sharply
+as a Blackman-Harris for the same length, and lets 26 dB through where the
+Blackman-Harris lets 104. Neither is better; they answer different
+questions.
+
+The third column is the second multiplied by the length, and it is the same
+at 101 coefficients and at 201. That is what says the turn belongs to the
+shape of the window and to the length, and to nothing else.
+
+  TAKE HAMMING where nothing else is known. It is the default of this module
+  and a reasonable answer to most questions.
+  TAKE BLACKMAN or BLACKMAN-HARRIS where a weak signal must be seen beside a
+  strong one, and the filter can afford to be longer.
+  TAKE KAISER where a number has been given for the stop band. Its parameter
+  follows from that number through window_kaiser_beta, thus it is the only
+  window here that can be asked for a specification rather than chosen by
+  name.
+
+A LONGER FILTER MAKES THE TURN NARROWER AND CHANGES NOTHING ELSE. The stop
+band of a window is a property of its shape alone, thus doubling the length
+halves the turn and leaves the depth exactly where it was. To go deeper,
+change the window; to turn faster, lengthen the filter.
+
+How far either side of a frequency the group delay is measured, for a filter
+that is not symmetric.
+
+## Method
+
+Each output is the last few samples weighed against the coefficients:
+
+    y[n] = sum over k of x[n-k] * h[k]
+
+There is no feedback in that line, and that is the whole character of the
+filter. Nothing it has produced comes back in, thus it cannot run away and
+it is stable whatever the coefficients are.
+
+Every frequency is held back by the same time, which is half the length of
+the filter. Thus the shape of a signal survives it, and that is why a filter
+whose output must keep its shape is built this way.
+
+The coefficients come from the windowed sinc: the ideal filter is a sinc in
+time, which runs for ever, and a window cuts it to a length that can be
+held. The window decides how deep the stop band is, and the length decides
+how sharp the edge is.
+
+The cost is that length. For the same sharpness this needs dozens of
+coefficients where a biquad needs five.
 
 ## Macros
 

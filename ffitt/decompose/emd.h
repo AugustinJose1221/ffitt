@@ -16,6 +16,33 @@
 // the decomposition cannot take anything out of it.
 #define EMD_MINIMUM_SIZE    3u
 
+// Method:
+// The decomposition takes a signal apart by SIFTING, which is one loop:
+//
+//     find every peak and every valley
+//     lay a spline through the peaks, and another through the valleys
+//     take the mean of those two envelopes away from the signal
+//     repeat until what is left is an intrinsic mode function
+//
+//     imf = the part taken out;  residue = signal - imf
+//
+// Then the whole loop runs again on the residue, thus each mode holds a slower
+// range of frequency than the one before it, and the last residue is the trend
+// that no sifting could take out.
+//
+// What stops the inner loop is that the result is a mode: as many crossings of
+// zero as it has peaks and valleys, and envelopes that sit about zero.
+//
+// NOTHING HERE IS DERIVED FROM A MODEL. The signal decides the modes, not a set
+// of basis functions chosen in advance, and that is both the strength and the
+// weakness. It follows a signal no fixed basis fits; and where two frequencies
+// sit close together one sift can take pieces of both, which is mode mixing and
+// this module does not answer it.
+//
+// A signal of fewer than three samples holds no peak and no valley, thus
+// nothing can be taken out of it.
+
+
 // The empirical mode decomposition.
 //
 // The decomposition takes a signal apart into intrinsic mode functions and a

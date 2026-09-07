@@ -9,7 +9,55 @@ python3 scripts/api_doc.py
 
 Detection of one frequency. Declared in `ffitt/transform/goertzel.h`.
 
-[Back to the index](../API.md) | [How the transform modules work](../../ffitt/transform/README.md)
+[Back to the index](../API.md) | [How the transform modules work](../../ffitt/transform/README.md) | [How it works](../diagrams/transform/goertzel.html) ([preview](https://htmlpreview.github.io/?https://github.com/AugustinJose1221/ffitt/blob/development/docs/diagrams/transform/goertzel.html))
+
+## Overview
+
+The algorithm of Goertzel.
+
+The algorithm says how much of one frequency a signal holds. A fast Fourier
+transform gives every frequency at one time and needs memory for the whole
+block. This algorithm gives one frequency and holds three float values only.
+Thus it suits a small target that watches for a few known tones, such as the
+tones of a telephone keypad.
+
+The cost for one frequency is one multiplication and two additions for each
+sample. For a few frequencies that is much less work than a transform. When
+you need more than about log2(n) frequencies, the transform costs less.
+
+The algorithm reads a block of a fixed number of samples. Give each sample
+to goertzel_process_sample, and then read the result. The block size and the
+sample rate decide which frequencies the algorithm can see clearly: a
+frequency that holds a whole number of turns inside the block gives the
+clearest answer.
+
+Call goertzel_reset before each new block.
+
+## Method
+
+One bin of a Fourier transform is the whole block weighed against one
+turning rate:
+
+    X[k] = sum over n of x[n] * exp(-2*pi*i*k*n/size)
+
+The library does not work that sum out. The same answer comes from a filter
+with two poles that is fed one sample at a time. With the angle of the bin
+written w, and coefficient = 2*cos(w), each sample carries two values
+forward:
+
+    s[n] = x[n] + coefficient*s[n-1] - s[n-2]
+
+After the whole block those two values hold the answer:
+
+    real      = s[n] - s[n-1]*cos(w)
+    imaginary = s[n-1]*sin(w)
+
+Thus the cost is one multiplication and two additions for each sample, and
+the state is two values and the two constants. Nothing holds the block.
+
+The angle is taken from the bin that lies nearest the frequency you ask
+for, because the answer is clearest when a whole number of turns fits
+inside the block.
 
 ## Types
 

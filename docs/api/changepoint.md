@@ -9,7 +9,67 @@ python3 scripts/api_doc.py
 
 Saying when a reading has changed. Declared in `ffitt/detect/changepoint.h`.
 
-[Back to the index](../API.md) | [How the detect modules work](../../ffitt/detect/README.md)
+[Back to the index](../API.md) | [How the detect modules work](../../ffitt/detect/README.md) | [How it works](../diagrams/detect/changepoint.html) ([preview](https://htmlpreview.github.io/?https://github.com/AugustinJose1221/ffitt/blob/development/docs/diagrams/detect/changepoint.html))
+
+## Overview
+
+Say when a reading has changed, as soon as it has.
+
+A bearing runs a little warmer than it did. A pump draws a little more
+current. A tank leaks slowly enough that any one reading looks ordinary. In
+each of them the change is SMALLER THAN THE NOISE, thus no threshold on a
+single sample can find it: a threshold low enough to catch the change fires
+on the noise all day, and one high enough to be quiet never fires at all.
+
+What finds it is that the change KEEPS HAPPENING and the noise does not. Add
+up how far each sample stands from where it should be, and the noise wanders
+about nothing while a change walks steadily away. The running sum is held at
+nothing from below, so that a long quiet spell cannot build up credit that a
+later change spends: what is measured is how far the reading has run since it
+last looked ordinary, and not how far it has run since the beginning.
+
+TWO SUMS AND NOT ONE. A rise and a fall usually mean different things -- a
+bearing that warms is wearing, one that cools has lost its load -- thus they
+are counted apart and the answer says which happened.
+
+WHAT IT COSTS. This is not a way of seeing a change sooner than the numbers
+allow. It is a way of trading: a smaller change can be found, and finding it
+takes longer. The delay is roughly the threshold divided by half the smallest
+change worth finding, in samples, and changepoint_delay_for gives it.
+
+THE ONE WAY THIS FAILS QUIETLY: it is told what ordinary looks like, once,
+and it believes that for ever. A reading whose ordinary level drifts of its
+own accord walks away from a level that no longer means anything, and the
+alarm that follows is about the drift. Where the level drifts, take it off
+first with dcblock or detrend, and give this what is left.
+
+## Method
+
+The change is smaller than the noise, thus no threshold on one sample can
+find it. What can find it is a running total that only ever grows when the
+readings lean one way:
+
+    S = max(0, S + (x[n] - mean - slack))
+
+The slack is what a reading is allowed to be above the mean without counting.
+While the readings are ordinary they fall above and below it, S is pushed down
+as often as up, and the max at zero keeps it near nothing. Once the mean has
+really moved, every reading pushes S the same way and it climbs steadily.
+
+Thus the evidence ADDS UP over many samples, and a change too small to see in
+any one of them is found after enough of them.
+
+Two numbers set the behaviour, and they trade against each other:
+
+    slack      how large a change is worth finding at all
+    threshold  how much evidence is wanted before saying so
+
+A smaller threshold finds the change sooner and gives more false alarms. This
+is not a fault to be tuned away; it is the trade itself, and both directions
+are a real choice.
+
+Two totals run, one for a rise and one for a fall, because a total that only
+grows upward cannot see a reading that has dropped.
 
 ## Macros
 
@@ -26,6 +86,16 @@ Saying when a reading has changed. Declared in `ffitt/detect/changepoint.h`.
 ```
 
 ## Types
+
+### `changepoint_way_t`
+
+```c
+typedef enum{
+    CHANGEPOINT_NONE = 0,       // Nothing has changed
+    CHANGEPOINT_ROSE,           // The reading has run above where it should be
+    CHANGEPOINT_FELL            // And below
+}changepoint_way_t;
+```
 
 ### `changepoint_t`
 

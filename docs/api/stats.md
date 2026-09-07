@@ -9,7 +9,92 @@ python3 scripts/api_doc.py
 
 Measures of a list of samples. Declared in `ffitt/util/stats.h`.
 
-[Back to the index](../API.md) | [How the util modules work](../../ffitt/util/README.md)
+[Back to the index](../API.md) | [How the util modules work](../../ffitt/util/README.md) | [How it works](../diagrams/util/stats.html) ([preview](https://htmlpreview.github.io/?https://github.com/AugustinJose1221/ffitt/blob/development/docs/diagrams/util/stats.html))
+
+## Overview
+
+Measures of a list of samples.
+
+Two kinds stand here, and the difference between them decides which one a
+piece of work needs.
+
+THE PLAIN MEASURES: mean, variance, deviation, root mean square, smallest
+and largest. Each one reads the list once and changes nothing. Each one also
+follows every sample, and that is their weakness: ONE bad sample moves them
+all. A knock on an electrode, a sample lost in a wire, a spike from a
+switching supply -- any of these pulls the mean and pulls the deviation far
+more, because the deviation squares the distance.
+
+THE ROBUST MEASURES: median, percentile, and the median absolute deviation.
+These follow the middle of the list and not its edges. Half of the samples
+may be wrong before the median moves at all. They cost more, because they
+must put the list in order, and they reorder the list that the caller gives.
+
+WHICH TO TAKE
+
+Take the plain ones when the samples are known to be sound, as inside a
+block that some other step has already cleaned.
+
+Take the robust ones to set a threshold from live data. This is the usual
+case and the plain ones are the usual mistake in it. A detector that puts
+its threshold at a few deviations above the mean is undone by the first
+spike: the spike raises the threshold that was meant to catch it, and the
+detector then sees nothing at all.
+
+The median absolute deviation answers that. For samples that follow a normal
+spread it estimates the same number as the deviation does, but a spike does
+not move it. Multiply it by STATS_MAD_TO_DEVIATION to get a number that
+stands beside a deviation.
+
+Every function gives 0 for an empty list.
+
+WHAT THE WIDTH OF real_t COSTS HERE
+
+Every sum in this module runs at the width of the build, and a sum is where
+the digits run out first. Five samples that sit at eight million and move by
+one have a variance of exactly 2. The variance already takes the mean away
+before it squares, which is the careful way, and even so:
+
+    32 bits    2.25      out by an eighth
+    64 bits    2.00      right
+
+The reason is the SUM, not the squaring: adding five samples near eight
+million gives a total near forty million, where one step of a float is 4.
+
+Thus a caller whose readings sit far from zero should either build in 64
+bits or take the level away first with the dcblock module. The tests hold
+both numbers, so that this cost is recorded and not forgotten.
+
+What the median absolute deviation must be multiplied by to estimate the
+standard deviation of samples that follow a normal spread.
+
+The number is 1/0.6745, because for a normal spread the median absolute
+deviation is 0.6745 of the deviation.
+
+## Method
+
+The plain measures each read the list once:
+
+    mean     = sum over i of x[i] / n
+    variance = sum over i of (x[i] - mean)^2 / n
+    rms      = sqrt(sum over i of x[i]^2 / n)
+
+Every one of those follows every sample, and that is their weakness. One
+sample that is wrong moves all of them, and moves them by more the further
+wrong it is.
+
+The robust measures do not:
+
+    median = the middle value once the list is in order
+    mad    = the median of |x[i] - median|
+
+Nearly half the list may be wrong before a median moves at all. The cost is
+the ordering, which is why they are not free.
+
+STATS_MAD_TO_DEVIATION is 1.4826. Multiplying the median absolute deviation
+by it gives a number that means what a standard deviation means for samples
+of the usual shape, thus a threshold written in deviations can be set from
+data that already holds faults.
 
 ## Macros
 

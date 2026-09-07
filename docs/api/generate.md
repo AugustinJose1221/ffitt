@@ -9,7 +9,91 @@ python3 scripts/api_doc.py
 
 Making the signals to test with. Declared in `ffitt/util/generate.h`.
 
-[Back to the index](../API.md) | [How the util modules work](../../ffitt/util/README.md)
+[Back to the index](../API.md) | [How the util modules work](../../ffitt/util/README.md) | [How it works](../diagrams/util/generate.html) ([preview](https://htmlpreview.github.io/?https://github.com/AugustinJose1221/ffitt/blob/development/docs/diagrams/util/generate.html))
+
+## Overview
+
+Making the signals to test with, without making the faults that come free
+with them.
+
+Every test and every example in this library used to write its own sine
+wave. That is fine for a sine, and it is a trap for anything else.
+
+WHY A SQUARE WAVE IS NOT A ROW OF ONES AND MINUS ONES
+
+Write a square wave the obvious way, by taking the sign of a sine, and it
+holds every odd harmonic of its frequency, out to infinity. A sampled signal
+cannot hold anything above half the sample rate, so every harmonic above
+that FOLDS BACK and lands somewhere below it. Where it lands has nothing to
+do with the note being played.
+
+Measured, a square wave at 8000 samples in a second: the loudest thing in
+the answer that is NOT a harmonic of the tone, against the tone itself.
+
+    tone Hz        100     300     700    1300    1900    3100
+    samples a turn  80      27      11     6.2     4.2     2.6
+    naive        -39.3   -23.9   -17.3   -13.9    -9.2    -9.2  dB
+    this module  -49.3   -33.7   -29.6   -39.6   -25.7   -39.6  dB
+
+READ THE NAIVE ROW ACROSS. The fewer samples there are to a turn, the worse
+it gets, until at 1900 Hz the loudest false tone is only 9 dB below the one
+that was asked for. A filter tested with that wave is being tested against a
+signal nobody meant to make.
+
+This module holds the folding between 26 and 50 dB down across the whole
+range, which is 10 to 26 dB better than the naive one at every frequency.
+
+HOW IT IS HELD DOWN
+
+The fold comes from the corner. A square wave steps from one value to the
+other between two samples, and a step between samples is a thing a sampled
+signal cannot hold. The module works out WHERE BETWEEN THE TWO SAMPLES the
+step really falls and smooths the corner across them by that much, which is
+the method of the polynomial band-limited step.
+
+It costs a handful of operations at each corner and nothing anywhere else,
+thus a square wave costs about what the naive one costs.
+
+IT DOES NOT REMOVE THE FOLDING ALTOGETHER, and the table above is honest
+about that: the best it reaches is about 50 dB down and the worst about 26.
+Nothing that runs in constant time does better. A TEST THAT NEEDS BETTER
+THAN THAT WANTS A SINE, which folds nothing because it holds one frequency
+and no other.
+
+THE PHASE IS CARRIED AND NOT WORKED OUT FROM THE SAMPLE NUMBER
+
+Working out sin(2*pi*f*n/rate) from the sample number n looks simpler and
+goes wrong in two ways. The angle grows without bound, so a long run loses
+its digits exactly as the bluestein module records. And a frequency that
+changes cannot be written that way at all: the phase would jump every time
+the frequency did.
+
+This module carries the phase from one sample to the next and folds it into
+one turn each time, thus it runs for ever without losing digits and its
+frequency may be changed at any sample without a jump.
+
+## Method
+
+A sine is one line, and every other shape is a trap:
+
+    sine[n] = amplitude * sin(2*pi*f*n/rate + phase)
+
+A SQUARE WAVE IS NOT A ROW OF ONES AND MINUS ONES. Written that way its
+edges are instant, and an instant edge holds every frequency up to infinity.
+Sampled, everything above half the rate folds back and lands on frequencies
+the wave never had. The result looks right on a screen and is wrong in every
+transform of it.
+
+The shapes here are built from their harmonics instead, and only the
+harmonics that fit below half the rate are added:
+
+    square[n] = sum over odd k, while k*f < rate/2, of sin(2*pi*k*f*n/rate)/k
+
+Thus what is generated is the closest thing to that shape which the rate can
+actually hold, and nothing folds back.
+
+The noise is made from a generator whose seed the caller gives, thus a test
+that fails can be run again and fail the same way.
 
 ## Macros
 
@@ -41,6 +125,82 @@ slope across about seven octaves, which covers any sample rate this library
 is used at.
 
 ## Types
+
+### `generate_kind_t`
+
+Which shape to make.
+
+```c
+typedef enum{
+    // A sine. It holds one frequency and nothing else, thus it needs no
+    // band-limiting and gets none.
+    GENERATE_SINE = 0,
+
+    // A square wave, band-limited at its corners.
+    GENERATE_SQUARE,
+
+    // A sawtooth, band-limited at its one corner in each turn.
+    GENERATE_SAWTOOTH,
+
+    // A triangle. It has no step, only a change of slope, thus it folds far
+    // less than the other two even when written naively.
+    GENERATE_TRIANGLE,
+
+    // Random values spread evenly, holding every frequency alike.
+    GENERATE_WHITE_NOISE,
+
+    // Random values holding twice the power in each halving of frequency,
+    // which is what most natural noise does.
+    GENERATE_PINK_NOISE,
+
+    // A random walk: four times the power in each halving of frequency. This
+    // is what DRIFT looks like -- a reading that wanders away and does not
+    // come back on its own. Reach for it to test dcblock, detrend, and the one
+    // way changepoint is documented to fail.
+    GENERATE_BROWN_NOISE,
+
+    // The mirror of pink: twice the power in each DOUBLING of frequency.
+    GENERATE_BLUE_NOISE,
+
+    // Random values drawn from a normal spread rather than an even one.
+    //
+    // THIS IS THE ONE THE REST OF THE LIBRARY ASSUMES. matched_threshold_for
+    // turns a rate of false alarms into a threshold by inverting the tail of a
+    // normal spread; the table of thresholds in changepoint.h was measured on
+    // normal noise; kalman, ekf and ukf all take the noise of the process and
+    // of the measurement to be normal. GENERATE_WHITE_NOISE is drawn EVENLY,
+    // thus none of those claims can be examined with it: measured, the same
+    // changepoint threshold gave one wrong alarm in every 372 samples on an
+    // even spread and one in every 465 on a normal one.
+    //
+    // IT IS NOT HELD INSIDE THE RANGE OF ONE. Its standard deviation is one
+    // and its tails run as far as a normal spread's tails run. Holding it
+    // inside a range would cut off exactly the tails it exists to provide, and
+    // a threshold measured against a spread with no tails is a threshold
+    // measured against nothing. The table below says how far it reached.
+    GENERATE_GAUSSIAN_NOISE,
+
+    // A rectangular pulse that is high for a chosen part of each turn, band
+    // limited at both of its corners. GENERATE_SQUARE is this with the part
+    // set to a half. Set the part with generate_set_part.
+    GENERATE_PULSE,
+
+    // A gaussian bump once each turn, as wide as generate_set_part says.
+    //
+    // This is the shape a sounder or a radar sends and the shape matched and
+    // delay are built to find. UNLIKE THE OSCILLATING SHAPES IT DOES NOT ADD
+    // UP TO NOTHING: it stands between 0 and 1 and never below, because a
+    // pulse is a thing that happens rather than a thing that swings.
+    GENERATE_GAUSSIAN_PULSE,
+
+    // One sample of one at the start of each turn and nothing between them.
+    //
+    // Give it a frequency low enough that one turn is longer than the block
+    // being made, and the block holds exactly one impulse. That is what the
+    // response of a filter is measured with.
+    GENERATE_IMPULSE
+}generate_kind_t;
+```
 
 ### `generate_t`
 

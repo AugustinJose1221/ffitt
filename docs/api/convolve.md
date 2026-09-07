@@ -9,7 +9,102 @@ python3 scripts/api_doc.py
 
 Sliding one signal along another. Declared in `ffitt/transform/convolve.h`.
 
-[Back to the index](../API.md) | [How the transform modules work](../../ffitt/transform/README.md)
+[Back to the index](../API.md) | [How the transform modules work](../../ffitt/transform/README.md) | [How it works](../diagrams/transform/convolve.html) ([preview](https://htmlpreview.github.io/?https://github.com/AugustinJose1221/ffitt/blob/development/docs/diagrams/transform/convolve.html))
+
+## Overview
+
+Sliding one signal along another, multiplying and adding at every place.
+
+This is the most basic operation there is in the field. Passing a signal
+through a filter IS a convolution with the coefficients of that filter, and
+the fir module is this operation done one sample at a time. This module does
+the same thing to a whole block at once, which is what a caller wants when
+the signal is already in hand.
+
+WHAT IT IS FOR, BESIDE FILTERING
+
+A SHAPE THAT A SIGNAL PASSES THROUGH. The answer of a room to a clap, of a
+spring to a knock, of a cable to a step: measure that answer once, and
+convolving any signal with it says what comes out the other side.
+
+SMOOTHING BY A SHAPE OF THE CALLER'S OWN. A mean over a window is a
+convolution with a block of equal values. Any other shape is a convolution
+with that shape, and the caller need not build a filter to use one.
+
+HOW IT DIFFERS FROM CORRELATION, WHICH IS THE USUAL CONFUSION
+
+The two are the same sum with one difference: a convolution TURNS ONE SIGNAL
+ROUND before sliding it. For a shape that is the same forwards and backwards
+they give the same answer, and a great deal of code is written on that
+assumption and then meets a shape that is not.
+
+Take a convolution when a signal PASSES THROUGH something. Take a
+correlation when you are asking HOW ALIKE two things are. The correlate
+module answers the second.
+
+
+HOW LONG THE ANSWER IS
+
+Sliding a shape of m along a signal of n touches n+m-1 places, and at most
+of them the two hang over each other's ends. What to do about that is the
+mode, and it must be chosen deliberately:
+
+  CONVOLVE_FULL   every place, n+m-1 values. Nothing is thrown away, and the
+                  ends are built from a signal that was taken to be zero
+                  outside itself.
+  CONVOLVE_SAME   n values, the middle of the full answer. This lines up
+                  with the input sample for sample, which is what smoothing
+                  wants, and the two ends are still built from that
+                  assumed zero.
+  CONVOLVE_VALID  n-m+1 values, only where the shape lies wholly inside the
+                  signal. NOTHING IS ASSUMED here, thus every value is
+                  real, and the answer is shorter than the input.
+
+TAKE CONVOLVE_VALID WHEN THE ENDS MATTER. The other two report values at the
+ends that were partly invented, and they look no different from the rest.
+
+WHAT IT COSTS
+
+The plain way multiplies and adds once for each sample of the shape at every
+place, thus n times m. For a signal of 4096 and a shape of 512 that is two
+million operations.
+
+A convolution in time is a multiplication in frequency, thus the transform
+does the same work in three transforms. For those numbers that is about 400
+thousand, which is five times less. Below a shape of about 60 the plain way
+wins, because the transform has a fixed cost that it has not.
+
+## Method
+
+The shape is turned round, then slid along the signal, and at every place
+the overlapping samples are multiplied and added:
+
+    y[n] = sum over k of x[n-k] * h[k]
+
+The minus in x[n-k] is the whole difference from a correlation, which uses
+x[n+k]. For a shape that reads the same forwards and backwards the two give
+the same answer, and that is why the confusion survives.
+
+Outside itself the signal is taken to be nothing. Thus the ends of the full
+and the same answers are partly assumed rather than measured, and the valid
+answer holds only the places where nothing was assumed.
+
+A convolution in time is a multiplication in frequency, bin by bin. For a
+long shape the library therefore transforms both, multiplies the bins, and
+transforms back, which costs n*log(n) rather than n*m. No conjugate is taken
+there, and that again is what parts this from a correlation.
+
+## Types
+
+### `convolve_mode_t`
+
+```c
+typedef enum{
+    CONVOLVE_FULL = 0,          // Every place the two touch
+    CONVOLVE_SAME,              // As long as the signal, lined up with it
+    CONVOLVE_VALID              // Only where the shape lies wholly inside
+}convolve_mode_t;
+```
 
 ## Functions
 

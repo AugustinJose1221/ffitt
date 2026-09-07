@@ -107,13 +107,14 @@ def test_the_program_writes_one_file_for_each_module_and_an_index():
     documents = api_doc.build_documents()
 
     assert api_doc.INDEX_PATH in documents
+    assert api_doc.DIAGRAM_INDEX_PATH in documents
 
     for name, path, title in api_doc.MODULES:
         expected = os.path.join(api_doc.MODULE_DIRECTORY, "%s.md" % name)
         assert expected in documents, "no file for the module %s" % name
 
-    # The index and one file for each module.
-    assert len(documents) == len(api_doc.MODULES) + 1
+    # Two indexes, the API and the diagrams, and one file for each module.
+    assert len(documents) == len(api_doc.MODULES) + 2
 
 
 def test_the_index_points_to_the_file_of_each_module():
@@ -181,3 +182,389 @@ def test_every_module_belongs_to_an_area():
         if name == "defs":
             continue
         assert api_doc.area_of(name) is not None, "%s belongs to no area" % name
+
+
+def test_a_module_with_a_diagram_gets_a_link(tmp_path, monkeypatch):
+    """A module whose diagram is there is given both ways to reach it."""
+    directory = tmp_path / "docs" / "diagrams" / "transform"
+    directory.mkdir(parents=True)
+    (directory / "example.html").write_text("<svg></svg>", encoding="utf-8")
+
+    monkeypatch.setattr(api_doc, "REPOSITORY", str(tmp_path))
+    monkeypatch.setattr(api_doc, "AREAS", [("transform", "Transforms", ["example"])])
+
+    links = api_doc.diagram_links("example")
+    assert "../diagrams/transform/example.html" in links
+    assert links.count("htmlpreview.github.io") == 1
+    assert "/blob/%s/" % api_doc.PREVIEW_BRANCH in links
+
+
+def test_a_module_with_no_diagram_gets_no_link(tmp_path, monkeypatch):
+    """A link that names a file which is not there is worse than no link."""
+    monkeypatch.setattr(api_doc, "REPOSITORY", str(tmp_path))
+    monkeypatch.setattr(api_doc, "AREAS", [("transform", "Transforms", ["example"])])
+
+    assert api_doc.diagram_links("example") == ""
+
+
+def test_the_preview_link_names_the_file_that_is_there():
+    """The link of a real module names the real file, in the real repository."""
+    links = api_doc.diagram_links("fft")
+    assert links != ""
+
+    path = os.path.join(api_doc.REPOSITORY, "docs", "diagrams", "transform", "fft.html")
+    assert os.path.isfile(path)
+    assert "docs/diagrams/transform/fft.html" in links
+
+
+HEADER_WITH_A_METHOD = """#ifndef EXAMPLE_H
+#define EXAMPLE_H
+
+#include <stdint.h>
+
+// The example module.
+//
+// It stands here to be read by the test.
+
+// Method:
+//
+// The value is the mean of the samples:
+//
+//     y = sum over n of x[n] / count
+//
+// The library keeps a running total, thus each sample costs one addition.
+
+typedef struct{
+    uint32_t size;
+}example_t;
+"""
+
+
+def test_the_overview_of_a_module_is_read():
+    lines = HEADER_WITH_A_METHOD.splitlines()
+    overview, _ = api_doc.read_module_comment(lines)
+    assert overview[0] == "The example module."
+    assert overview[-1] == "It stands here to be read by the test."
+
+
+def test_the_method_of_a_module_is_read_and_keeps_its_shape():
+    """An equation is written indented, and the indent must survive."""
+    lines = HEADER_WITH_A_METHOD.splitlines()
+    _, method = api_doc.read_module_comment(lines)
+    assert method[0] == "The value is the mean of the samples:"
+    assert "    y = sum over n of x[n] / count" in method
+    assert method[-1].startswith("The library keeps a running total")
+
+
+def test_the_method_is_not_taken_into_the_overview():
+    lines = HEADER_WITH_A_METHOD.splitlines()
+    overview, _ = api_doc.read_module_comment(lines)
+    assert not any("mean of the samples" in line for line in overview)
+
+
+def test_a_module_with_no_method_gives_none(tmp_path):
+    text = HEADER_WITH_A_METHOD.split("// Method:")[0] + "typedef struct{\n    int a;\n}example_t;\n"
+    overview, method = api_doc.read_module_comment(text.splitlines())
+    assert overview != []
+    assert method == []
+
+
+def test_the_comment_of_a_declaration_is_not_read_twice():
+    """A comment directly above a declaration belongs to that declaration.
+
+    Reading it into the overview as well printed the same words twice in one
+    document, once at the top and once beside the function.
+    """
+    text = "\n".join([
+        "#ifndef EXAMPLE_H",
+        "#define EXAMPLE_H",
+        "",
+        "// The example module.",
+        "",
+        "// True if the size can be used.",
+        "bool example_is_valid_size(uint32_t size);",
+        "",
+    ])
+    overview, method = api_doc.read_module_comment(text.splitlines())
+    assert overview == ["The example module."]
+    assert method == []
+    assert not any("size can be used" in line for line in overview)
+
+
+def test_no_module_says_the_same_thing_twice():
+    """No line of an overview may also stand as the comment of a function."""
+    for name, path, _ in api_doc.MODULES:
+        full = os.path.join(api_doc.REPOSITORY, path)
+        with open(full, encoding="utf-8") as handle:
+            overview, _ = api_doc.read_module_comment(handle.read().splitlines())
+
+        _, _, functions = api_doc.read_header(full)
+        for function_name, _, comment in functions:
+            if not comment:
+                continue
+            assert comment[0] not in overview, (
+                "%s says the comment of %s in its overview as well"
+                % (name, function_name))
+
+
+def test_no_text_above_the_first_declaration_is_lost():
+    """Every comment block at the top of a header must reach the document.
+
+    It may arrive as the Overview or as the Method. The block that sits
+    directly on the first declaration is left out here, because it belongs to
+    that declaration, and is printed beside it.
+    """
+    for name, path, title in api_doc.MODULES:
+        if name in api_doc.HEADERS_WITHOUT_A_MODULE:
+            continue
+
+        with open(os.path.join(api_doc.REPOSITORY, path), encoding="utf-8") as handle:
+            lines = handle.read().splitlines()
+
+        document = api_doc.build_module_document(name, path, title)
+
+        standalone = []
+        pending = []
+        for line in lines:
+            stripped = line.strip()
+            if stripped.startswith("//"):
+                body = stripped[2:]
+                if body.startswith(" "):
+                    body = body[1:]
+                pending.append(body)
+                continue
+            if stripped == "" or stripped.startswith("#"):
+                standalone.extend(pending)
+                pending = []
+                continue
+            # The declaration ends the search, and takes its own comment away.
+            break
+
+        for body in standalone:
+            if not body.strip() or body.lower().startswith("method:"):
+                continue
+            assert body in document, "%s loses the line %r" % (name, body)
+
+
+def test_a_module_whose_comment_sits_on_its_declaration_keeps_it():
+    """Some headers put their whole description on the first declaration.
+
+    Those modules get no Overview, because the words already stand beside the
+    declaration. They must not be printed twice, and must not be lost.
+    """
+    name, path, title = "point2d", "ffitt/core/point2d.h", "A point on a plane"
+    with open(os.path.join(api_doc.REPOSITORY, path), encoding="utf-8") as handle:
+        overview, _ = api_doc.read_module_comment(handle.read().splitlines())
+
+    assert overview == []
+    document = api_doc.build_module_document(name, path, title)
+    # No Overview section, because the words stand beside the type instead.
+    assert "## Overview" not in document
+    assert "A point on a plane." in document
+
+
+def test_a_method_written_in_a_header_reaches_its_document():
+    """A header that writes `Method:` must get a Method section.
+
+    A method block needs an empty line above it, or it joins the block before
+    it and becomes part of the overview. That happened twice, and both times
+    the block sat in the header saying nothing to anybody.
+    """
+    for name, path, title in api_doc.MODULES:
+        if name in api_doc.HEADERS_WITHOUT_A_MODULE:
+            continue
+
+        with open(os.path.join(api_doc.REPOSITORY, path), encoding="utf-8") as handle:
+            text = handle.read()
+
+        if "// Method:" not in text:
+            continue
+
+        document = api_doc.build_module_document(name, path, title)
+        assert "## Method" in document, (
+            "%s writes a method block that never reaches its document; "
+            "an empty line above it is what that needs" % name)
+
+
+def test_the_preview_branch_holds_the_diagrams():
+    """The branch the link names must be one that actually holds the files.
+
+    main was named first and holds no diagram at all until a release, thus
+    every link written that way gave nothing. This holds the branch to one
+    that has them.
+    """
+    import subprocess
+
+    links = api_doc.diagram_links("fft")
+    assert "/blob/%s/" % api_doc.PREVIEW_BRANCH in links
+
+    listing = subprocess.run(
+        ["git", "ls-tree", "-r", "--name-only", api_doc.PREVIEW_BRANCH],
+        cwd=api_doc.REPOSITORY, capture_output=True, text=True)
+    if listing.returncode != 0:
+        return  # no such branch here, which a shallow clone can give
+
+    assert "docs/diagrams/" in listing.stdout, (
+        "the branch %s holds no diagram, thus every preview link is dead"
+        % api_doc.PREVIEW_BRANCH)
+
+
+def test_the_diagram_index_lists_every_module():
+    """Every module must stand in the index, drawn or not yet drawn."""
+    page = api_doc.build_diagram_index()
+
+    for name, path, _ in api_doc.MODULES:
+        if name in api_doc.HEADERS_WITHOUT_A_MODULE:
+            continue
+        assert "[`%s`](api/%s.md)" % (name, name) in page, (
+            "%s is missing from the diagram index" % name)
+
+
+def test_the_diagram_index_counts_what_is_really_there():
+    """The count at the top must be the number of diagrams on disk."""
+    page = api_doc.build_diagram_index()
+
+    drawn = sum(1 for name, _, _ in api_doc.MODULES
+                if api_doc.diagram_of(name) is not None)
+    known = sum(1 for name, _, _ in api_doc.MODULES
+                if api_doc.area_of(name) is not None)
+
+    assert "%d of the %d modules have a diagram." % (drawn, known) in page
+
+
+def test_a_module_with_no_diagram_says_so_rather_than_linking_nowhere():
+    """A row with no diagram must not carry a link that gives nothing."""
+    page = api_doc.build_diagram_index()
+
+    for line in page.splitlines():
+        if "not yet drawn" in line:
+            assert "htmlpreview" not in line
+            assert line.count("|") == 4, "the row must keep its three columns"
+
+
+def test_a_macro_that_runs_over_lines_does_not_end_the_search():
+    """A #define may continue on the next line, which begins with no mark.
+
+    Read as it stands that line looks like a declaration and ends the search,
+    thus everything the header says after such a macro is lost. kalman has
+    one, and its whole method block went missing that way.
+    """
+    text = "\n".join([
+        "#ifndef EXAMPLE_H",
+        "#define EXAMPLE_H",
+        "",
+        "// How much memory the thing needs.",
+        "#define EXAMPLE_SIZE(a, b)   ((6*(a)*(a)) + (5*(a)*(b)) \\",
+        "                             + (4*(a)) + (b))",
+        "",
+        "// Method:",
+        "// The value is the mean of the samples.",
+        "",
+        "// The thing itself.",
+        "typedef struct{",
+        "    int a;",
+        "}example_t;",
+        "",
+    ])
+    overview, method = api_doc.read_module_comment(text.splitlines())
+    assert method == ["The value is the mean of the samples."]
+    assert "How much memory the thing needs." in overview
+
+
+def test_kalman_carries_its_method():
+    """kalman has a macro that runs over two lines, and lost everything after."""
+    with open(os.path.join(api_doc.REPOSITORY, "ffitt/estimate/kalman.h"),
+              encoding="utf-8") as handle:
+        _, method = api_doc.read_module_comment(handle.read().splitlines())
+
+    assert method != [], "kalman writes a method block that never arrives"
+    assert any("K is the whole idea" in line for line in method)
+
+
+def test_code_is_not_read_as_a_link(tmp_path):
+    """An equation between backticks or inside a block is not a link.
+
+    An equation of the shape c[k](mu) was reported as a link to mu, and it
+    stands inside a block of code where Markdown reads no link at all.
+    """
+    text = "\n".join([
+        "# Example",
+        "",
+        "Inline: `c[k](mu)` is code.",
+        "",
+        "    y[n] = sum over k of c[k](mu) * x[n-k]",
+        "",
+        "```",
+        "f[i][j](x)",
+        "```",
+        "",
+    ])
+    kept = api_doc.without_code(text)
+    assert "c[k](mu)" not in kept
+    assert "f[i][j](x)" not in kept
+
+
+def test_a_real_broken_link_is_still_found(tmp_path, monkeypatch):
+    """Taking code out must not blind the check to a link that is broken."""
+    page = tmp_path / "example.md"
+    page.write_text("See [the guide](guide-that-is-not-there.md).\n", encoding="utf-8")
+
+    monkeypatch.setattr(api_doc, "REPOSITORY", str(tmp_path))
+    faults = api_doc.find_links_that_point_nowhere()
+
+    assert any("guide-that-is-not-there.md" in fault for fault in faults)
+
+
+def test_a_link_that_is_there_is_not_named(tmp_path, monkeypatch):
+    page = tmp_path / "example.md"
+    page.write_text("See [the guide](guide.md).\n", encoding="utf-8")
+    (tmp_path / "guide.md").write_text("# Guide\n", encoding="utf-8")
+
+    monkeypatch.setattr(api_doc, "REPOSITORY", str(tmp_path))
+    assert api_doc.find_links_that_point_nowhere() == []
+
+
+def test_an_enum_is_read_as_a_type(tmp_path):
+    """A typedef enum must be read, with the comment above it."""
+    text = "\n".join([
+        "#ifndef EXAMPLE_H",
+        "#define EXAMPLE_H",
+        "",
+        "// The example module.",
+        "",
+        "// Which way the thing is done.",
+        "typedef enum{",
+        "    EXAMPLE_ONE = 0,     // the first way",
+        "    EXAMPLE_TWO          // the second",
+        "}example_way_t;",
+        "",
+    ])
+    path = tmp_path / "example.h"
+    path.write_text(text, encoding="utf-8")
+
+    types, _, _ = api_doc.read_header(str(path))
+    names = {name for name, _, _ in types}
+    assert "example_way_t" in names
+
+    for name, body, comment in types:
+        if name == "example_way_t":
+            assert comment == ["Which way the thing is done."]
+            assert any("EXAMPLE_ONE" in line for line in body)
+            assert any("EXAMPLE_TWO" in line for line in body)
+
+
+def test_every_enum_of_the_repository_reaches_its_document():
+    """Fifteen headers write an enum, and each names choices a caller must make."""
+    seen = 0
+
+    for name, path, title in api_doc.MODULES:
+        full = os.path.join(api_doc.REPOSITORY, path)
+        with open(full, encoding="utf-8") as handle:
+            if "typedef enum" not in handle.read():
+                continue
+
+        seen += 1
+        document = api_doc.build_module_document(name, path, title)
+        assert "typedef enum" in document, "%s loses its enum" % name
+
+    assert seen >= 15, "expected at least fifteen headers with an enum"

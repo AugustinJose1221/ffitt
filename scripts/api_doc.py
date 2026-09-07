@@ -8,9 +8,10 @@ cannot say two different things.
     python3 scripts/api_doc.py            write the files under docs/
     python3 scripts/api_doc.py --check    examine, and give 1 if something is wrong
 
-The program writes one file for each module in docs/api/, and an index in
-docs/API.md. One file for each module keeps each file short, and a reader who
-works with one module opens one file only.
+The program writes one file for each module in docs/api/, an index in
+docs/API.md, and a list of the drawings in docs/DIAGRAMS.md. One file for each
+module keeps each file short, and a reader who works with one module opens one
+file only.
 
 The check finds four faults:
 
@@ -29,6 +30,7 @@ import check_naming  # noqa: E402
 
 REPOSITORY = check_naming.REPOSITORY
 INDEX_PATH = os.path.join(REPOSITORY, "docs", "API.md")
+DIAGRAM_INDEX_PATH = os.path.join(REPOSITORY, "docs", "DIAGRAMS.md")
 MODULE_DIRECTORY = os.path.join(REPOSITORY, "docs", "api")
 
 # The order of the modules in the documentation. A reader meets the simple
@@ -108,10 +110,14 @@ MODULES = [
 ]
 
 COMMENT = re.compile(r"^\s*//\s?(.*)$")
-TYPEDEF_START = re.compile(r"^\s*typedef\s+struct")
+# A type is a struct or an enum. Only a struct was read for a long time,
+# thus fifteen headers lost the comment above their enum and the fifty
+# public names inside it. Those names are the choices a caller must make.
+TYPEDEF_START = re.compile(r"^\s*typedef\s+enum|^\s*typedef\s+struct")
 TYPEDEF_END = re.compile(r"^\s*\}\s*(?P<name>\w+)\s*;")
 DEFINE = re.compile(r"^\s*#\s*define\s+(?P<name>[A-Z_][A-Z0-9_]*)")
 GUARD = re.compile(r"^\s*#\s*ifndef\s+(?P<name>\w+)")
+INLINE_CODE = re.compile(r"`[^`]*`")
 
 
 def comment_above(lines, index):
@@ -137,6 +143,85 @@ def comment_above(lines, index):
 
 def line_of_offset(text, offset):
     return text.count("\n", 0, offset)
+
+
+def read_module_comment(lines):
+    """Give the overview and the method that the top of a header holds.
+
+    The overview is the first block of comment that stands above the first
+    declaration. The method is the block that opens with `Method:`, and it
+    holds the simplified equation of what the module works out.
+
+    Exactly one space after the two slashes is taken away. What is left of the
+    indent stays, thus an equation that is written indented reaches the
+    documentation as a block of code and keeps its shape.
+    """
+    blocks = []
+    current = []
+    continued = False
+
+    for line in lines:
+        stripped = line.strip()
+
+        # A #define whose line ends in a backslash runs on to the next one, and
+        # that next line begins with none of the marks below. Read as it
+        # stands it looks like a declaration and ends the search, thus
+        # everything the header says after such a macro would be lost.
+        if continued:
+            continued = line.rstrip().endswith("\\")
+            continue
+
+        if stripped.startswith("//"):
+            body = stripped[2:]
+            if body.startswith(" "):
+                body = body[1:]
+            current.append(body)
+            continue
+
+        # An empty line and a line of the preprocessor stand between the guard,
+        # the includes and the comment of the module. A declaration does not,
+        # thus the first of those ends the search.
+        if stripped == "" or stripped.startswith("#"):
+            if current:
+                blocks.append(current)
+                current = []
+            continued = line.rstrip().endswith("\\")
+            continue
+
+        # A comment that stands directly above a declaration, with no empty
+        # line between, belongs to that declaration and not to the module.
+        # comment_above reads it there, and reading it here as well would say
+        # the same thing twice. Thus it is thrown away rather than kept.
+        current = []
+        break
+
+    # Anything still gathered ran to the end of the file with no declaration
+    # after it, thus it belongs to the module.
+    if current:
+        blocks.append(current)
+
+    overview = []
+    method = []
+    for block in blocks:
+        if block[0].lower().startswith("method:") and not method:
+            rest = block[0][len("method:"):].strip()
+            method = ([rest] if rest else []) + block[1:]
+            continue
+
+        # Every other block belongs to the overview, and not the first one
+        # alone. A header may say more after its method block, and what it says
+        # there must not be dropped.
+        if overview:
+            overview.append("")
+        overview.extend(block)
+
+    for block in (overview, method):
+        while block and block[0] == "":
+            block.pop(0)
+        while block and block[-1] == "":
+            block.pop()
+
+    return overview, method
 
 
 def read_header(path):
@@ -215,6 +300,58 @@ AREAS = [
 GENERATED_NOTE = ("This file comes from the comments in the headers. Do not change it by "
                   "hand.\nTo make it again, give:\n\n```bash\npython3 scripts/api_doc.py\n```\n")
 
+# The diagrams lie under this directory, one for each module, in the directory
+# of its area.
+DIAGRAM_DIRECTORY = os.path.join("docs", "diagrams")
+
+# A page of HTML in a repository is given to a reader as source, not as a page.
+# This service fetches such a page and shows it.
+#
+# The link names a branch, and it names development.
+#
+# main was tried first, on the thought that a reader opens the documentation of
+# the released library. That link is broken for as long as the diagrams are
+# being made, because they reach development first and main only at a release.
+# Every link written that way gave nothing at all.
+#
+# development always holds what main holds and usually more, thus a link that
+# names it resolves at every moment. The cost is that a reader on main may be
+# shown a diagram newer than the release beside it. A diagram that explains a
+# method changes rarely, thus that is the cheaper of the two faults.
+PREVIEW_SERVICE = "https://htmlpreview.github.io/?"
+PREVIEW_REPOSITORY = "https://github.com/AugustinJose1221/ffitt"
+PREVIEW_BRANCH = "development"
+
+
+def diagram_of(module):
+    """Give the path of the diagram of a module, or None when it has none.
+
+    A module with no diagram gets no link. A link that names a file which is
+    not there is worse than no link at all.
+    """
+    area = area_of(module)
+    if area is None:
+        return None
+
+    path = os.path.join(DIAGRAM_DIRECTORY, area, "%s.html" % module)
+    if not os.path.isfile(os.path.join(REPOSITORY, path)):
+        return None
+
+    return path
+
+
+def diagram_links(module):
+    """Give the markdown that points at the diagram of a module, or ''."""
+    path = diagram_of(module)
+    if path is None:
+        return ""
+
+    preview = "%s%s/blob/%s/%s" % (PREVIEW_SERVICE, PREVIEW_REPOSITORY,
+                                   PREVIEW_BRANCH, path)
+    beside = os.path.relpath(path, os.path.join("docs", "api"))
+
+    return " | [How it works](%s) ([preview](%s))" % (beside, preview)
+
 
 def area_of(module):
     """Give the area that a module belongs to, or None."""
@@ -268,16 +405,26 @@ def build_module_document(name, path, title):
     """Give the text of the file of one module."""
     full_path = os.path.join(REPOSITORY, path)
     types, macros, functions = read_header(full_path)
+    with open(full_path, encoding="utf-8") as handle:
+        overview, method = read_module_comment(handle.read().splitlines())
 
     parts = ["# %s\n" % name, GENERATED_NOTE]
     parts.append("%s. Declared in `%s`.\n" % (title, path))
     area = area_of(name)
     if area:
         parts.append("[Back to the index](../API.md) | "
-                     "[How the %s modules work](../../ffitt/%s/README.md)\n"
-                     % (area, area))
+                     "[How the %s modules work](../../ffitt/%s/README.md)%s\n"
+                     % (area, area, diagram_links(name)))
     else:
-        parts.append("[Back to the index](../API.md)\n")
+        parts.append("[Back to the index](../API.md)%s\n" % diagram_links(name))
+
+    if overview:
+        parts.append("## Overview\n")
+        parts.append("\n".join(overview) + "\n")
+
+    if method:
+        parts.append("## Method\n")
+        parts.append("\n".join(method) + "\n")
 
     if macros:
         parts.append("## Macros\n")
@@ -306,9 +453,66 @@ def build_module_document(name, path, title):
     return "\n".join(parts).rstrip() + "\n"
 
 
+def build_diagram_index():
+    """Give the text of docs/DIAGRAMS.md, which lists every diagram there is.
+
+    The page is made from the diagrams that are on disk, and not from a list
+    that somebody keeps. A list kept by hand is wrong within a month.
+    """
+    note = ("This file comes from the diagrams under docs/diagrams. Do not "
+            "change it by hand.\nTo make it again, give:\n\n```bash\n"
+            "python3 scripts/api_doc.py\n```\n")
+
+    parts = ["# Diagrams\n", note]
+    parts.append(
+        "One page for each module, showing how that module does its work. Each "
+        "page holds\na few chapters that walk through it a step at a time.\n")
+    parts.append(
+        "**Preview** opens the page in a browser. **File** is the page itself, "
+        "which a\nreader with a clone can open with no service at all.\n")
+
+    drawn = 0
+    known = 0
+    body = []
+
+    for area, area_title, names in AREAS:
+        rows = []
+        for name in names:
+            if not any(name == module for module, _, _ in MODULES):
+                continue
+
+            known += 1
+            path = diagram_of(name)
+            if path is None:
+                rows.append("| [`%s`](api/%s.md) | not yet drawn | |" % (name, name))
+                continue
+
+            drawn += 1
+            preview = "%s%s/blob/%s/%s" % (PREVIEW_SERVICE, PREVIEW_REPOSITORY,
+                                           PREVIEW_BRANCH, path)
+            rows.append("| [`%s`](api/%s.md) | [preview](%s) | [%s](%s) |"
+                        % (name, name, preview, os.path.basename(path),
+                           os.path.relpath(path, "docs")))
+
+        if not rows:
+            continue
+
+        body.append("## %s\n" % area_title)
+        body.append("| Module | Diagram | File |")
+        body.append("|---|---|---|")
+        body.extend(rows)
+        body.append("")
+
+    parts.append("%d of the %d modules have a diagram.\n" % (drawn, known))
+    parts.extend(body)
+
+    return "\n".join(parts).rstrip() + "\n"
+
+
 def build_documents():
     """Give a dictionary of the path of each file and the text that belongs in it."""
-    documents = {INDEX_PATH: build_index()}
+    documents = {INDEX_PATH: build_index(),
+                 DIAGRAM_INDEX_PATH: build_diagram_index()}
 
     for name, path, title in MODULES:
         if not os.path.exists(os.path.join(REPOSITORY, path)):
@@ -398,6 +602,34 @@ def find_functions_without_a_comment():
 MARKDOWN_LINK = re.compile(r"\[[^\]]*\]\(([^)#]+?)(?:#[^)]*)?\)")
 
 
+def without_code(text):
+    """Give the text with every piece of code taken out.
+
+    A link is a link only where Markdown reads one. Inside a fence, inside an
+    indented block, or between backticks, `name[index](argument)` is code and
+    means nothing. Reading those as links names faults that are not there, and
+    it did: an equation of the shape c[k](mu) was reported as a link to mu.
+    """
+    kept = []
+    fenced = False
+
+    for line in text.split("\n"):
+        if line.lstrip().startswith("```"):
+            fenced = not fenced
+            continue
+
+        if fenced:
+            continue
+
+        # Four spaces at the start of a line is a block of code in Markdown.
+        if line.startswith("    ") and line.strip():
+            continue
+
+        kept.append(INLINE_CODE.sub(" ", line))
+
+    return "\n".join(kept)
+
+
 def find_links_that_point_nowhere():
     """Name every link of a Markdown file that points at a file not there.
 
@@ -424,7 +656,7 @@ def find_links_that_point_nowhere():
             path = os.path.join(root, name)
 
             with open(path, encoding="utf-8", errors="replace") as handle:
-                text = handle.read()
+                text = without_code(handle.read())
 
             for match in MARKDOWN_LINK.finditer(text):
                 target = match.group(1).strip()

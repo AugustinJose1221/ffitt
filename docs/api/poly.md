@@ -9,7 +9,119 @@ python3 scripts/api_doc.py
 
 Polynomials, and where they cross nothing. Declared in `ffitt/linalg/poly.h`.
 
-[Back to the index](../API.md) | [How the linalg modules work](../../ffitt/linalg/README.md)
+[Back to the index](../API.md) | [How the linalg modules work](../../ffitt/linalg/README.md) | [How it works](../diagrams/linalg/poly.html) ([preview](https://htmlpreview.github.io/?https://github.com/AugustinJose1221/ffitt/blob/development/docs/diagrams/linalg/poly.html))
+
+## Overview
+
+Polynomials, and where they cross nothing.
+
+A polynomial is a list of numbers, lowest power first: the list 2, 3, -1
+means 2 plus 3x less x squared. That is the same order the lstsq module
+gives its answers in, and the same order this module reads and writes.
+
+WHAT THE ROOTS ARE FOR
+
+THE POLES AND ZEROS OF A FILTER. An iir filter is two polynomials divided by
+each other. Where the one below crosses nothing, the filter has a pole; and
+A POLE OUTSIDE THE CIRCLE IS A FILTER THAT RUNS AWAY. That is not a slow
+drift: the answer doubles every few samples until it is nothing but
+infinities. poly_is_inside_circle is how to find out before it happens.
+
+A filter designed by the iir module is stable by construction. One whose
+coefficients were worked out elsewhere, read from a file, or made by
+changing a design by hand, is stable only if somebody checked.
+
+HOW THE ROOTS ARE FOUND
+
+By the eigen module. The roots of a polynomial are exactly the eigenvalues
+of one particular matrix built from its coefficients, and that turns a hard
+problem into one the library already solves.
+
+THE ONE PLACE THAT COSTS SOMETHING. The eigen module takes symmetric
+matrices only, and the matrix built from a polynomial is not symmetric. Its
+roots may be complex, and they come in pairs.
+
+This module therefore does the work itself rather than through the eigen
+module.
+
+WHY THE ORDER IS CAPPED, AND IT IS NOT THE METHOD THAT CAPS IT
+
+Measured, on polynomials built by multiplying known roots together. Two
+numbers are taken: how far each root came back from the one it was built
+from, and how near nothing the polynomial really is at the root that came
+back.
+
+    order              2         3         4         5         6
+    32 bits
+      from intended  3.5e-05   6.0e-06   1.4e-05   4.3e-02   2.9e-01
+      p(root)        6.0e-08   7.5e-08   1.8e-07   1.8e-07   3.7e-07
+    64 bits
+      from intended  0.0       0.0       0.0       0.0       0.0
+      p(root)        5.6e-17   3.6e-16   3.6e-16   5.5e-16   7.0e-16
+
+READ THE TWO 32 BIT ROWS AGAINST EACH OTHER. At order 5 the roots come back
+a twentieth away from the ones they were built from, AND THE POLYNOMIAL IS
+STILL NEARLY NOTHING THERE. Both are true at once, and what it means is
+that the module found the right roots OF THE WRONG POLYNOMIAL.
+
+THE ROOTS OF A POLYNOMIAL ARE EXTREMELY SENSITIVE TO ITS COEFFICIENTS. By
+order 5 the coefficients themselves, held at 32 bits, no longer describe the
+polynomial that was meant: the rounding of the last digit of each moves the
+roots by a twentieth. No method finds roots that the coefficients no longer
+hold.
+
+That is why the cap follows the width, and why it is low at 32 bits. It is
+not a shortcoming of the walking below; it is a limit of what a list of 32
+bit numbers can say about where a curve crosses nothing.
+
+FOR A FILTER THIS IS RARELY A LIMIT. An iir filter is a chain of biquads and
+each is order 2, which is reached by a closed form and is exact. Ask about
+one section at a time: it is both accurate and what the caller usually wants
+to know anyway.
+
+HOW THE ROOTS ARE WALKED TO
+
+  ORDER 1 AND 2 have a closed form and it is used, thus every pole of every
+  filter in this library is reached exactly and with no walking at all.
+  ABOVE THAT one root is found at a time by the step of Newton and divided
+  out, and then EVERY ROOT IS POLISHED against the original polynomial. The
+  polishing is what takes back the error that each division carried into
+  what followed, and without it the answer at order 4 is out by a sixth
+  rather than by a part in fifty thousand.
+
+The highest order whose roots this module will find.
+
+Above this the dividing out has spent too many digits for the answer to be
+worth having, and the module says so rather than giving back roots that look
+like roots.
+
+How many numbers a polynomial of the given order holds, which is one more
+than the order.
+
+## Method
+
+A polynomial is a list of numbers, lowest power first:
+
+    p(x) = c[0] + c[1]*x + c[2]*x^2 + ...
+
+A root is found by walking downhill from a starting place, by the step of
+Newton:
+
+    x = x - p(x) / p'(x)
+
+The step is taken in complex numbers, so that a root off the real line can be
+reached at all. Once a root is found it is divided out, and the walk starts
+again on what is left.
+
+WHAT "NEARLY NOTHING" MEANS IS NOT A FIXED NUMBER. Adding up the terms loses
+digits to the largest of them, thus the value of a polynomial can be trusted
+only down to about the size of its largest term times the smallest step the
+width can tell. The module therefore measures the size of the polynomial at
+the place it is standing, and judges against that.
+
+A fixed threshold would ask the same of a polynomial whose terms are millions
+and of one whose terms are millionths, and it would be wrong for one of them
+whichever number was chosen.
 
 ## Macros
 

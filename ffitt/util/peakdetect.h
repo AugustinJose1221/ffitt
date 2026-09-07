@@ -56,6 +56,30 @@
 // same value. Treating each of them as no peak at all, which a test of
 // "larger than both neighbours" does, loses the peak completely.
 
+// Method:
+// A local maximum is one line:
+//
+//     x[n] > x[n-1] and x[n] > x[n+1]
+//
+// On a clean signal that is what a peak means. On a real one it is not: noise
+// puts a local maximum every few samples, and a recording of a heart at 500
+// samples in a second holds about a hundred of them for every beat.
+//
+// PROMINENCE is what separates the two. It asks how far you must descend from a
+// peak before you can climb to a higher one:
+//
+//     prominence = height - the highest of the two lowest points on either side,
+//                  walking out to a higher peak or to the end
+//
+// A ripple on the flank of a large peak has almost no prominence however high
+// it stands, because you need only step down a little to climb higher. A small
+// peak alone in a valley has a large prominence.
+//
+// Prominence does not care where the signal sits, thus a level that drifts does
+// not change it, and a threshold written in prominence holds over a whole
+// recording where a threshold on height does not.
+
+
 typedef struct{
     real_t minimum_height;      // A peak below this is not counted
     real_t minimum_prominence;  // A peak that stands out less is not counted

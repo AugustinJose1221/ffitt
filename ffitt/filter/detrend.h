@@ -109,6 +109,28 @@
 // detrend_trend_at to get the trend at a sample rather than working it out by
 // hand.
 
+// Method:
+// For the level alone, the mean of the block is taken off:
+//
+//     y[n] = x[n] - mean(x)
+//
+// For the drift as well, a straight line is laid through the block by least
+// squares and that line is taken off:
+//
+//     y[n] = x[n] - (a + b*n)
+//
+// where b is the slope the readings suggest and a is where that line starts.
+//
+// This works on a whole block, not on a stream, and that is the difference
+// from dcblock. A block can be measured from both ends, thus the line is the
+// best one for the block and not a guess that follows behind.
+//
+// The reason it matters is the transform. A block that ends higher than it
+// began is read as one period of something that repeats, and the join between
+// the end and the next copy is a step. That step is not in the signal, and its
+// energy spreads across EVERY frequency.
+
+
 // Which trend to take away.
 typedef enum{
     // The mean of the block. Use this where the readings sit at a level that

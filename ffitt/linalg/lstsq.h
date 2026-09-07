@@ -174,6 +174,30 @@
 // than the order: a line is of the first order and holds two.
 #define LSTSQ_COEFFICIENT_COUNT(order)      ((order) + 1u)
 
+// Method:
+// The fit is the line, or the curve, that leaves the least total square error:
+//
+//     minimise sum over i of (y[i] - p(x[i]))^2
+//
+// Setting the derivative to nothing gives the normal equations:
+//
+//     (A' * A) * c = A' * y
+//
+// where A holds a power of x in each column. That is one square system, and the
+// library solves it by the factor of Cholesky:
+//
+//     A' * A = L * L'
+//
+// which turns one square problem into two triangular ones. A triangle is solved
+// by substitution alone: walk down it, then back up through the transpose, and
+// no transpose ever has to be formed.
+//
+// The places are held about a centre and a width rather than as they came. A
+// power of a large x runs out of digits quickly, and moving the places to sit
+// about zero is what keeps the fit from failing on readings that are far from
+// the origin.
+
+
 // True if a polynomial of this order can be fitted through this many points at
 // the width of this build.
 //

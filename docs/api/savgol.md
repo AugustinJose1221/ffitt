@@ -9,7 +9,57 @@ python3 scripts/api_doc.py
 
 The filter of Savitzky and Golay. Declared in `ffitt/filter/savgol.h`.
 
-[Back to the index](../API.md) | [How the filter modules work](../../ffitt/filter/README.md)
+[Back to the index](../API.md) | [How the filter modules work](../../ffitt/filter/README.md) | [How it works](../diagrams/filter/savgol.html) ([preview](https://htmlpreview.github.io/?https://github.com/AugustinJose1221/ffitt/blob/development/docs/diagrams/filter/savgol.html))
+
+## Overview
+
+The filter of Savitzky and Golay.
+
+The filter smooths a signal and keeps its shape. It takes a window of
+samples, lays a polynomial through them by the method of the least squares,
+and gives the value of that polynomial at the middle of the window.
+
+A plain mean of a window makes a peak lower and wider. This filter does not,
+because a polynomial can follow a peak. Thus the filter suits a signal where
+the height and the width of a peak carry the information, such as the result
+of a spectrometer or a chromatograph.
+
+The filter can also give a derivative of the signal. The derivative of the
+polynomial at the middle of the window is a much better answer than the
+plain difference of two samples, which noise disturbs strongly.
+
+The window must hold an odd number of samples, so that it has a middle. The
+order of the polynomial must be below the size of the window. A higher order
+follows the signal more closely and takes away less noise.
+
+The design uses the matrix module: it builds the matrix of the powers of the
+positions in the window, and it solves the normal equations of the least
+squares. That work happens one time, at savgol_design. The filter itself
+then multiplies and adds only.
+
+## Method
+
+For each window the filter lays a polynomial through the samples by least
+squares, and gives the value of that polynomial at the middle:
+
+    y[n] = sum over k of x[n+k] * h[k]
+
+That is one weighed sum, exactly the shape of a finite filter. The fitting is
+not done again for every sample. A window of a given size and a polynomial of
+a given order always give the SAME weights, thus they are worked out once at
+the design and used for ever after.
+
+The weights come from the least squares fit itself:
+
+    h = row of the middle of (A' * A)^-1 * A'
+
+where A holds a power of the offset in each column. A derivative is the same
+fit read differently: the weights for the first derivative come from the
+second row rather than the middle one, and no new fitting is needed.
+
+That is why a peak survives. A mean can only give a flat answer over the
+window, thus a peak is made lower and wider. A polynomial can follow the
+curve of the peak, thus the height and the width come through.
 
 ## Types
 

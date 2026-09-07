@@ -1,0 +1,198 @@
+{
+  "schema_version": 1,
+  "diagram_type": "architecture",
+  "meta": {
+    "title": "Inside spectrogram",
+    "animation": "trace",
+    "quality_profile": "showcase",
+    "views": [
+      {
+        "id": "not-readable",
+        "label": "A complex number is not a picture",
+        "focus": [
+          "frames",
+          "pick"
+        ],
+        "note": "stft gives complex numbers. This turns each one into a real number in a unit that can be read."
+      },
+      {
+        "id": "three-corrections",
+        "label": "Three corrections",
+        "focus": [
+          "fix",
+          "out"
+        ],
+        "note": "Divide by the block, divide by the gain of the window, and double for the half that is not there."
+      },
+      {
+        "id": "the-units",
+        "label": "Four units",
+        "focus": [
+          "read"
+        ],
+        "note": "Amplitude, power, density or decibel, whichever the question asks for."
+      },
+      {
+        "id": "the-floor",
+        "label": "Why there is a floor",
+        "focus": [
+          "floor"
+        ],
+        "note": "The logarithm of nothing has no value, and a bin that holds nothing is a thing that happens."
+      }
+    ]
+  },
+  "layout": {
+    "mode": "grid",
+    "origin": [
+      40,
+      120
+    ],
+    "cols": 6,
+    "gapX": 28,
+    "gapY": 56,
+    "cellW": 124,
+    "cellH": 62
+  },
+  "components": [
+    {
+      "id": "frames",
+      "type": "external",
+      "label": "stft Frames",
+      "sublabel": "complex numbers",
+      "row": 1,
+      "col": 0
+    },
+    {
+      "id": "pick",
+      "type": "backend",
+      "label": "Take the Size",
+      "sublabel": "|X[k]|",
+      "row": 1,
+      "col": 1
+    },
+    {
+      "id": "fix",
+      "type": "database",
+      "label": "Three Corrections",
+      "sublabel": "block, gain, mirror",
+      "row": 0,
+      "col": 2
+    },
+    {
+      "id": "out",
+      "type": "backend",
+      "label": "One Real Number",
+      "sublabel": "in a real unit",
+      "row": 1,
+      "col": 2
+    },
+    {
+      "id": "floor",
+      "type": "security",
+      "label": "The Floor",
+      "sublabel": "log of nothing",
+      "row": 0,
+      "col": 3
+    },
+    {
+      "id": "read",
+      "type": "cloud",
+      "label": "Four Units",
+      "sublabel": "amplitude to decibel",
+      "row": 1,
+      "col": 3
+    }
+  ],
+  "boundaries": [
+    {
+      "kind": "region",
+      "label": "leave one out and the answer means nothing",
+      "wraps": [
+        "pick",
+        "out"
+      ]
+    }
+  ],
+  "connections": [
+    {
+      "id": "sized",
+      "from": "frames",
+      "to": "pick",
+      "label": "one bin at a time",
+      "variant": "emphasis",
+      "labelAt": [
+        176,
+        312
+      ]
+    },
+    {
+      "id": "corrected",
+      "from": "pick",
+      "to": "out",
+      "label": "corrected",
+      "variant": "emphasis",
+      "labelAt": [
+        328.0,
+        312.0
+      ]
+    },
+    {
+      "id": "applied",
+      "from": "fix",
+      "to": "out",
+      "label": "all three, or none",
+      "labelAt": [
+        404.0,
+        194.0
+      ]
+    },
+    {
+      "id": "shown",
+      "from": "out",
+      "to": "read",
+      "label": "in a unit",
+      "variant": "emphasis",
+      "labelDy": -24
+    },
+    {
+      "id": "stopped",
+      "from": "floor",
+      "to": "read",
+      "label": "stops falling",
+      "labelAt": [
+        556.0,
+        194.0
+      ]
+    }
+  ],
+  "cards": [
+    {
+      "dot": "cyan",
+      "title": "What it works out",
+      "items": [
+        "amplitude = 2 * |X[k]| / (block * coherent_gain)",
+        "power = amplitude^2 / 2, and decibel = 10*log10(power)",
+        "density = |X[k]|^2 / (rate * block * noise_gain)"
+      ]
+    },
+    {
+      "dot": "emerald",
+      "title": "How the library gets there",
+      "items": [
+        "Divide by the block, because a longer block gives larger numbers for the same signal",
+        "Divide by the gain, because a window makes the signal smaller",
+        "Double it, because half the power sits in the mirrored half a real signal drops"
+      ]
+    },
+    {
+      "dot": "rose",
+      "title": "What will catch you",
+      "items": [
+        "Leave one correction out and the answer still looks perfectly reasonable",
+        "It then means nothing outside the one program that made it",
+        "The decibel answer stops at a floor, because the logarithm of nothing has no value"
+      ]
+    }
+  ]
+}

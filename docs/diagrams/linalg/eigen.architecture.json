@@ -1,0 +1,245 @@
+{
+  "schema_version": 1,
+  "diagram_type": "architecture",
+  "meta": {
+    "title": "Inside eigen",
+    "animation": "trace",
+    "quality_profile": "showcase",
+    "views": [
+      {
+        "id": "what-it-is",
+        "label": "What such a matrix does",
+        "focus": [
+          "matrix",
+          "stretch"
+        ],
+        "note": "It stretches space by different amounts, in directions that stand at right angles. Those are the whole of what it does."
+      },
+      {
+        "id": "the-turn",
+        "label": "One turn at a time",
+        "focus": [
+          "largest",
+          "turn"
+        ],
+        "note": "Take the largest element off the diagonal and turn the two rows and columns it joins, so that element becomes nothing."
+      },
+      {
+        "id": "the-measure",
+        "label": "How much work is left",
+        "focus": [
+          "off"
+        ],
+        "note": "What is still off the diagonal is the one number that says how far the work has come."
+      },
+      {
+        "id": "the-limit",
+        "label": "Where it does not apply",
+        "focus": [
+          "notsym"
+        ],
+        "note": "For a matrix that is not symmetric the directions need not stand at right angles, and need not be real at all."
+      }
+    ]
+  },
+  "layout": {
+    "mode": "grid",
+    "origin": [
+      40,
+      120
+    ],
+    "cols": 6,
+    "gapX": 28,
+    "gapY": 56,
+    "cellW": 124,
+    "cellH": 62
+  },
+  "components": [
+    {
+      "id": "matrix",
+      "type": "external",
+      "label": "A Symmetric Matrix",
+      "sublabel": "A = A'",
+      "row": 1,
+      "col": 0
+    },
+    {
+      "id": "largest",
+      "type": "backend",
+      "label": "The Largest Off It",
+      "sublabel": "pick that element",
+      "row": 1,
+      "col": 1
+    },
+    {
+      "id": "off",
+      "type": "database",
+      "label": "What Is Left Off",
+      "sublabel": "the measure of work",
+      "row": 0,
+      "col": 2
+    },
+    {
+      "id": "turn",
+      "type": "backend",
+      "label": "Turn Two Rows",
+      "sublabel": "that element goes",
+      "row": 1,
+      "col": 2
+    },
+    {
+      "id": "small",
+      "type": "backend",
+      "label": "The Smaller Angle",
+      "sublabel": "disturbs least",
+      "row": 2,
+      "col": 2
+    },
+    {
+      "id": "diag",
+      "type": "cloud",
+      "label": "The Diagonal",
+      "sublabel": "holds the amounts",
+      "row": 1,
+      "col": 3
+    },
+    {
+      "id": "turns",
+      "type": "database",
+      "label": "Turns Multiplied",
+      "sublabel": "hold the directions",
+      "row": 1,
+      "col": 4
+    },
+    {
+      "id": "notsym",
+      "type": "security",
+      "label": "Not Symmetric",
+      "sublabel": "cannot be used here",
+      "row": 0,
+      "col": 4
+    },
+    {
+      "id": "stretch",
+      "type": "cloud",
+      "label": "What It Does",
+      "sublabel": "A*v = lambda*v",
+      "row": 1,
+      "col": 5
+    }
+  ],
+  "boundaries": [
+    {
+      "kind": "region",
+      "label": "repeated until nothing is left off the diagonal",
+      "wraps": [
+        "largest",
+        "turn"
+      ]
+    }
+  ],
+  "connections": [
+    {
+      "id": "into",
+      "from": "matrix",
+      "to": "largest",
+      "label": "A",
+      "variant": "emphasis",
+      "labelAt": [
+        176,
+        312
+      ]
+    },
+    {
+      "id": "cleared",
+      "from": "largest",
+      "to": "turn",
+      "label": "becomes nothing",
+      "variant": "emphasis",
+      "labelAt": [
+        328.0,
+        312.0
+      ]
+    },
+    {
+      "id": "measured",
+      "from": "turn",
+      "to": "off"
+    },
+    {
+      "id": "chosen",
+      "from": "small",
+      "to": "turn",
+      "label": "the angle"
+    },
+    {
+      "id": "settles",
+      "from": "turn",
+      "to": "diag",
+      "label": "when nothing is left",
+      "variant": "emphasis",
+      "labelAt": [
+        480.0,
+        312.0
+      ]
+    },
+    {
+      "id": "kept",
+      "from": "diag",
+      "to": "turns",
+      "label": "and the turns",
+      "variant": "emphasis",
+      "labelAt": [
+        632.0,
+        312.0
+      ]
+    },
+    {
+      "id": "read",
+      "from": "turns",
+      "to": "stretch",
+      "label": "v and lambda",
+      "variant": "emphasis",
+      "labelDy": -24
+    },
+    {
+      "id": "refused",
+      "from": "notsym",
+      "to": "turns",
+      "label": "no right angles",
+      "labelAt": [
+        708.0,
+        194.0
+      ]
+    }
+  ],
+  "cards": [
+    {
+      "dot": "cyan",
+      "title": "What it works out",
+      "items": [
+        "A * v = lambda * v",
+        "The directions a symmetric matrix stretches, and how far it stretches each",
+        "Together they are the whole of what such a matrix does"
+      ]
+    },
+    {
+      "dot": "emerald",
+      "title": "How the library gets there",
+      "items": [
+        "Pick the largest element off the diagonal and turn the two rows and columns it joins",
+        "The smaller of the two angles that would clear it is taken, because it disturbs least",
+        "When nothing is left off the diagonal, the diagonal holds the amounts"
+      ]
+    },
+    {
+      "dot": "rose",
+      "title": "Where it does not apply",
+      "items": [
+        "This works because the matrix is symmetric",
+        "For one that is not, the directions need not stand at right angles",
+        "They need not be real at all, and this method does not apply"
+      ]
+    }
+  ]
+}

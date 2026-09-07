@@ -9,7 +9,24 @@ python3 scripts/api_doc.py
 
 Vectors of float values. Declared in `ffitt/linalg/vector.h`.
 
-[Back to the index](../API.md) | [How the linalg modules work](../../ffitt/linalg/README.md)
+[Back to the index](../API.md) | [How the linalg modules work](../../ffitt/linalg/README.md) | [How it works](../diagrams/linalg/vector.html) ([preview](https://htmlpreview.github.io/?https://github.com/AugustinJose1221/ffitt/blob/development/docs/diagrams/linalg/vector.html))
+
+## Method
+
+A vector is a list of values, and the operations are the plain ones:
+
+    dot(a, b) = sum over i of a[i] * b[i]
+    norm(a)   = sqrt(dot(a, a))
+
+The dot product is the one that carries the meaning. It is the length of one
+vector times the length of the other times the cosine of the angle between
+them, thus it is nothing when the two stand at right angles, and it is the
+whole product when they point the same way.
+
+Almost everything else in this library is a dot product wearing another
+name: a finite filter is the dot of the samples with the coefficients, a
+correlation is the dot of two signals at an offset, and a projection is a dot
+divided by a norm.
 
 ## Types
 

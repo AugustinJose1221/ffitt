@@ -1,0 +1,209 @@
+{
+  "schema_version": 1,
+  "diagram_type": "architecture",
+  "meta": {
+    "title": "Inside valleydetect",
+    "animation": "trace",
+    "quality_profile": "showcase",
+    "views": [
+      {
+        "id": "the-mirror",
+        "label": "The mirror of a peak",
+        "focus": [
+          "test"
+        ],
+        "note": "A valley is a sample smaller than both its neighbours. Everything said of a peak applies here upside down."
+      },
+      {
+        "id": "the-ends",
+        "label": "The ends can never be",
+        "focus": [
+          "ends"
+        ],
+        "note": "The first and the last sample have only one neighbour each, thus neither can ever be a valley."
+      },
+      {
+        "id": "no-memory",
+        "label": "It takes no memory",
+        "focus": [
+          "buffers"
+        ],
+        "note": "The indices and the values are written into buffers the caller holds."
+      },
+      {
+        "id": "no-judgement",
+        "label": "It judges nothing",
+        "focus": [
+          "judge"
+        ],
+        "note": "This finds every local minimum and judges none of them. On a noisy signal most will not be valleys in any useful sense."
+      }
+    ]
+  },
+  "layout": {
+    "mode": "grid",
+    "origin": [
+      40,
+      120
+    ],
+    "cols": 6,
+    "gapX": 28,
+    "gapY": 56,
+    "cellW": 124,
+    "cellH": 62
+  },
+  "components": [
+    {
+      "id": "signal",
+      "type": "external",
+      "label": "Your Signal",
+      "sublabel": "three or more",
+      "row": 1,
+      "col": 0
+    },
+    {
+      "id": "test",
+      "type": "backend",
+      "label": "Smaller Than Both",
+      "sublabel": "x[n] < either side",
+      "row": 1,
+      "col": 1
+    },
+    {
+      "id": "ends",
+      "type": "security",
+      "label": "First and Last",
+      "sublabel": "only one neighbour",
+      "row": 0,
+      "col": 2
+    },
+    {
+      "id": "buffers",
+      "type": "database",
+      "label": "Your Buffers",
+      "sublabel": "index and value",
+      "row": 2,
+      "col": 2
+    },
+    {
+      "id": "count",
+      "type": "backend",
+      "label": "Count Them",
+      "sublabel": "one for every other",
+      "row": 1,
+      "col": 2
+    },
+    {
+      "id": "judge",
+      "type": "security",
+      "label": "Nothing Is Judged",
+      "sublabel": "peakdetect does that",
+      "row": 0,
+      "col": 3
+    },
+    {
+      "id": "out",
+      "type": "cloud",
+      "label": "Every Local Minimum",
+      "sublabel": "and no opinion",
+      "row": 1,
+      "col": 3
+    }
+  ],
+  "boundaries": [
+    {
+      "kind": "region",
+      "label": "no memory of its own is taken",
+      "wraps": [
+        "count",
+        "out"
+      ]
+    }
+  ],
+  "connections": [
+    {
+      "id": "scan",
+      "from": "signal",
+      "to": "test",
+      "label": "every sample",
+      "variant": "emphasis",
+      "labelAt": [
+        176,
+        312
+      ]
+    },
+    {
+      "id": "never",
+      "from": "ends",
+      "to": "test",
+      "label": "never valleys"
+    },
+    {
+      "id": "found",
+      "from": "test",
+      "to": "count",
+      "label": "each one",
+      "variant": "emphasis",
+      "labelAt": [
+        328.0,
+        312.0
+      ]
+    },
+    {
+      "id": "written",
+      "from": "buffers",
+      "to": "count",
+      "label": "room for them"
+    },
+    {
+      "id": "given",
+      "from": "count",
+      "to": "out",
+      "label": "how many",
+      "variant": "emphasis",
+      "labelAt": [
+        480,
+        312
+      ]
+    },
+    {
+      "id": "unjudged",
+      "from": "judge",
+      "to": "out",
+      "label": "no prominence here",
+      "labelAt": [
+        556.0,
+        194.0
+      ]
+    }
+  ],
+  "cards": [
+    {
+      "dot": "cyan",
+      "title": "What it works out",
+      "items": [
+        "A valley is x[n] < x[n-1] and x[n] < x[n+1]",
+        "The first and the last sample are never valleys",
+        "A signal of fewer than three samples holds no valley at all"
+      ]
+    },
+    {
+      "dot": "emerald",
+      "title": "What it asks of you",
+      "items": [
+        "The index and the value of each valley go into buffers the caller holds",
+        "Thus the function takes no memory of its own",
+        "Both must have room for one valley for every other sample"
+      ]
+    },
+    {
+      "dot": "amber",
+      "title": "What it does not do",
+      "items": [
+        "It judges none of what it finds",
+        "Everything said of a peak applies here upside down",
+        "Where the signal holds noise, most of what it finds will not be useful valleys"
+      ]
+    }
+  ]
+}

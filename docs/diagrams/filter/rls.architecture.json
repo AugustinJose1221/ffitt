@@ -1,0 +1,246 @@
+{
+  "schema_version": 1,
+  "diagram_type": "architecture",
+  "meta": {
+    "title": "Inside rls",
+    "animation": "trace",
+    "quality_profile": "showcase",
+    "views": [
+      {
+        "id": "the-difference",
+        "label": "Not one step downhill",
+        "focus": [
+          "gain",
+          "solve"
+        ],
+        "note": "The adaptive module takes a small step with each sample. This solves the whole least squares problem at every sample."
+      },
+      {
+        "id": "carried",
+        "label": "P is carried, not found again",
+        "focus": [
+          "pmatrix"
+        ],
+        "note": "A fresh solution would cost the cube of the length every sample. Carrying the inverse costs the square."
+      },
+      {
+        "id": "forgetting",
+        "label": "Fading the past",
+        "focus": [
+          "forget"
+        ],
+        "note": "The forgetting factor lets the filter follow a response that changes, instead of averaging over all time."
+      },
+      {
+        "id": "the-price",
+        "label": "What it buys and costs",
+        "focus": [
+          "fast",
+          "cost"
+        ],
+        "note": "About twice the number of coefficients in samples, against 163 for the normalised rule on a filter of 16."
+      }
+    ]
+  },
+  "layout": {
+    "mode": "grid",
+    "origin": [
+      40,
+      120
+    ],
+    "cols": 6,
+    "gapX": 28,
+    "gapY": 56,
+    "cellW": 124,
+    "cellH": 62
+  },
+  "components": [
+    {
+      "id": "signal",
+      "type": "external",
+      "label": "Your Signal",
+      "sublabel": "x[n]",
+      "row": 1,
+      "col": 0
+    },
+    {
+      "id": "pmatrix",
+      "type": "database",
+      "label": "P, the Inverse",
+      "sublabel": "carried forward",
+      "row": 0,
+      "col": 1
+    },
+    {
+      "id": "gain",
+      "type": "backend",
+      "label": "The Gain",
+      "sublabel": "P*x over the rest",
+      "row": 1,
+      "col": 1
+    },
+    {
+      "id": "wanted",
+      "type": "external",
+      "label": "What You Wanted",
+      "sublabel": "the aim",
+      "row": 2,
+      "col": 1
+    },
+    {
+      "id": "solve",
+      "type": "backend",
+      "label": "Move the Whole Way",
+      "sublabel": "h + gain*error",
+      "row": 1,
+      "col": 2
+    },
+    {
+      "id": "forget",
+      "type": "database",
+      "label": "Forgetting",
+      "sublabel": "fades the past",
+      "row": 0,
+      "col": 3
+    },
+    {
+      "id": "update",
+      "type": "backend",
+      "label": "Update P",
+      "sublabel": "for the next sample",
+      "row": 1,
+      "col": 3
+    },
+    {
+      "id": "fast",
+      "type": "cloud",
+      "label": "Settled Quickly",
+      "sublabel": "2 times the length",
+      "row": 1,
+      "col": 4
+    },
+    {
+      "id": "cost",
+      "type": "security",
+      "label": "Cost Is the Square",
+      "sublabel": "of the length",
+      "row": 2,
+      "col": 4
+    }
+  ],
+  "boundaries": [
+    {
+      "kind": "region",
+      "label": "the whole problem, solved again at every sample",
+      "wraps": [
+        "solve",
+        "update"
+      ]
+    }
+  ],
+  "connections": [
+    {
+      "id": "in",
+      "from": "signal",
+      "to": "gain",
+      "label": "x[n]",
+      "variant": "emphasis",
+      "labelAt": [
+        176,
+        312
+      ]
+    },
+    {
+      "id": "held",
+      "from": "pmatrix",
+      "to": "gain",
+      "label": "P",
+      "labelAt": [
+        252.0,
+        194.0
+      ]
+    },
+    {
+      "id": "aim",
+      "from": "wanted",
+      "to": "solve",
+      "label": "the error"
+    },
+    {
+      "id": "weighted",
+      "from": "gain",
+      "to": "solve",
+      "variant": "emphasis"
+    },
+    {
+      "id": "moved",
+      "from": "solve",
+      "to": "update",
+      "label": "h moved",
+      "variant": "emphasis",
+      "labelAt": [
+        480.0,
+        312.0
+      ]
+    },
+    {
+      "id": "fades",
+      "from": "forget",
+      "to": "update",
+      "label": "divided out",
+      "labelAt": [
+        556.0,
+        194.0
+      ]
+    },
+    {
+      "id": "carried",
+      "from": "update",
+      "to": "pmatrix",
+      "label": "P for next"
+    },
+    {
+      "id": "quick",
+      "from": "update",
+      "to": "fast",
+      "label": "and again",
+      "variant": "emphasis",
+      "labelDy": -24
+    },
+    {
+      "id": "price",
+      "from": "cost",
+      "to": "fast",
+      "label": "memory and work"
+    }
+  ],
+  "cards": [
+    {
+      "dot": "cyan",
+      "title": "What it works out",
+      "items": [
+        "gain = P*x / (forgetting + x'*P*x)",
+        "h = h + gain * (wanted[n] - h'*x)",
+        "P = (P - gain*x'*P) / forgetting"
+      ]
+    },
+    {
+      "dot": "emerald",
+      "title": "How the library gets there",
+      "items": [
+        "P is the inverse of the correlation matrix, carried forward and never found again",
+        "A fresh solution would cost the cube of the length at every sample",
+        "Carrying P costs the square, which is what makes this affordable at all"
+      ]
+    },
+    {
+      "dot": "amber",
+      "title": "What it buys and what it costs",
+      "items": [
+        "On 16 coefficients, 40 dB towards the truth in about twice the length in samples",
+        "The normalised least mean squares needed 163 samples for the same",
+        "A long filter costs far more memory and work here than the adaptive module asks"
+      ]
+    }
+  ]
+}

@@ -1,0 +1,194 @@
+{
+  "schema_version": 1,
+  "diagram_type": "architecture",
+  "meta": {
+    "title": "Inside curve",
+    "animation": "trace",
+    "quality_profile": "showcase",
+    "views": [
+      {
+        "id": "not-waves",
+        "label": "These are not waves",
+        "focus": [
+          "once"
+        ],
+        "note": "A wave has a frequency and goes on for ever. These happen once, and are read at whatever place is asked for."
+      },
+      {
+        "id": "no-state",
+        "label": "Nothing is held",
+        "focus": [
+          "stateless"
+        ],
+        "note": "Nothing here carries state and nothing here has a sample rate. Each shape is one line read at a place."
+      },
+      {
+        "id": "the-tails",
+        "label": "How they fall away",
+        "focus": [
+          "gauss",
+          "lorentz"
+        ],
+        "note": "A gaussian is nothing a few widths out. A lorentzian still has something left far from its centre."
+      },
+      {
+        "id": "the-fault",
+        "label": "The usual fault",
+        "focus": [
+          "wrong"
+        ],
+        "note": "Fitting a gaussian to a peak that really has long tails underestimates its area."
+      }
+    ]
+  },
+  "layout": {
+    "mode": "grid",
+    "origin": [
+      40,
+      120
+    ],
+    "cols": 6,
+    "gapX": 28,
+    "gapY": 56,
+    "cellW": 124,
+    "cellH": 62
+  },
+  "components": [
+    {
+      "id": "place",
+      "type": "external",
+      "label": "A Place",
+      "sublabel": "x, and nothing else",
+      "row": 1,
+      "col": 0
+    },
+    {
+      "id": "stateless",
+      "type": "backend",
+      "label": "One Line",
+      "sublabel": "no state, no rate",
+      "row": 1,
+      "col": 1
+    },
+    {
+      "id": "gauss",
+      "type": "backend",
+      "label": "Gaussian",
+      "sublabel": "exp of a square",
+      "row": 0,
+      "col": 2
+    },
+    {
+      "id": "lorentz",
+      "type": "backend",
+      "label": "Lorentzian",
+      "sublabel": "one over a square",
+      "row": 2,
+      "col": 2
+    },
+    {
+      "id": "once",
+      "type": "cloud",
+      "label": "It Happens Once",
+      "sublabel": "a bump on a baseline",
+      "row": 1,
+      "col": 3
+    },
+    {
+      "id": "wrong",
+      "type": "security",
+      "label": "The Wrong One",
+      "sublabel": "area comes out low",
+      "row": 2,
+      "col": 3
+    }
+  ],
+  "boundaries": [
+    {
+      "kind": "region",
+      "label": "read at a place, and nothing is remembered",
+      "wraps": [
+        "stateless",
+        "once"
+      ]
+    }
+  ],
+  "connections": [
+    {
+      "id": "asked",
+      "from": "place",
+      "to": "stateless",
+      "label": "x",
+      "variant": "emphasis",
+      "labelAt": [
+        176,
+        312
+      ]
+    },
+    {
+      "id": "shape1",
+      "from": "stateless",
+      "to": "gauss",
+      "label": "falls fast",
+      "variant": "emphasis"
+    },
+    {
+      "id": "shape2",
+      "from": "stateless",
+      "to": "lorentz",
+      "label": "falls slowly",
+      "variant": "emphasis"
+    },
+    {
+      "id": "read1",
+      "from": "gauss",
+      "to": "once",
+      "label": "a height there"
+    },
+    {
+      "id": "read2",
+      "from": "lorentz",
+      "to": "once",
+      "label": "a height there"
+    },
+    {
+      "id": "misfit",
+      "from": "lorentz",
+      "to": "wrong",
+      "label": "if a gaussian is fitted",
+      "labelAt": [
+        480.0,
+        430.0
+      ]
+    }
+  ],
+  "cards": [
+    {
+      "dot": "cyan",
+      "title": "What it works out",
+      "items": [
+        "gaussian(x) = height * exp(-(x - centre)^2 / (2*width^2))",
+        "lorentzian(x) = height / (1 + ((x - centre)/width)^2)",
+        "Each is read at a place, and nothing is held between calls"
+      ]
+    },
+    {
+      "dot": "emerald",
+      "title": "How they differ",
+      "items": [
+        "A gaussian falls away as the exponential of a square",
+        "Thus it is nothing a few widths out from its centre",
+        "A lorentzian falls as one over a square, and still has something left far out"
+      ]
+    },
+    {
+      "dot": "rose",
+      "title": "The usual fault",
+      "items": [
+        "Fitting a gaussian to a peak that really has long tails",
+        "The area then comes out lower than it is",
+        "These are not waves; generate makes those, and they carry a rate"
+      ]
+    }
+  ]
+}

@@ -9,7 +9,30 @@ python3 scripts/api_doc.py
 
 Vectors with two values. Declared in `ffitt/linalg/vector2d.h`.
 
-[Back to the index](../API.md) | [How the linalg modules work](../../ffitt/linalg/README.md)
+[Back to the index](../API.md) | [How the linalg modules work](../../ffitt/linalg/README.md) | [How it works](../diagrams/linalg/vector2d.html) ([preview](https://htmlpreview.github.io/?https://github.com/AugustinJose1221/ffitt/blob/development/docs/diagrams/linalg/vector2d.html))
+
+## Overview
+
+A vector with two values.
+
+This module gives the operations of the vector module for a vector of the
+size 2, thus the caller does not give the size at each call. The result is a
+vector_t, and every function of the vector module takes it.
+
+## Method
+
+There is no arithmetic here that the vector module does not already do:
+
+    dot(a, b) = a.x*b.x + a.y*b.y
+    norm(a)   = sqrt(dot(a, a))
+
+The size is 2 and the caller never says so. That is the whole of what this
+module adds, and the answer is a vector_t, thus every function of the vector
+module takes it unchanged.
+
+A plane is common enough to be worth the saving: a point on a screen, a
+reading from two axes, a place in a picture. Writing the size at every call
+for a size that never changes is noise in the code that reads it.
 
 ## Functions
 

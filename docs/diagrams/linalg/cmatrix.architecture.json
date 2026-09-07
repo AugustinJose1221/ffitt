@@ -1,0 +1,192 @@
+{
+  "schema_version": 1,
+  "diagram_type": "architecture",
+  "meta": {
+    "title": "Inside cmatrix",
+    "animation": "trace",
+    "quality_profile": "showcase",
+    "views": [
+      {
+        "id": "same-shape",
+        "label": "The same shape as matrix",
+        "focus": [
+          "shape"
+        ],
+        "note": "Add element by element, multiply as a sum over k. The arithmetic has the shape of the real matrix."
+      },
+      {
+        "id": "four-times",
+        "label": "Every product costs four",
+        "focus": [
+          "cost"
+        ],
+        "note": "Each element product is a complex multiplication: four real multiplications and two additions."
+      },
+      {
+        "id": "why-apart",
+        "label": "Why not one module",
+        "focus": [
+          "merged",
+          "real"
+        ],
+        "note": "One module for both would need a second copy of every function, or a check of the type inside every loop."
+      },
+      {
+        "id": "who-pays",
+        "label": "Who would pay for that",
+        "focus": [
+          "real"
+        ],
+        "note": "The caller who never uses a complex matrix is the common one on a small target, and would pay in size and speed."
+      }
+    ]
+  },
+  "layout": {
+    "mode": "grid",
+    "origin": [
+      40,
+      120
+    ],
+    "cols": 6,
+    "gapX": 28,
+    "gapY": 56,
+    "cellW": 124,
+    "cellH": 62
+  },
+  "components": [
+    {
+      "id": "caller",
+      "type": "external",
+      "label": "Complex Elements",
+      "sublabel": "re and im each",
+      "row": 1,
+      "col": 0
+    },
+    {
+      "id": "shape",
+      "type": "backend",
+      "label": "The Same Sum",
+      "sublabel": "over k",
+      "row": 1,
+      "col": 1
+    },
+    {
+      "id": "cost",
+      "type": "security",
+      "label": "Four Multiplies",
+      "sublabel": "for each product",
+      "row": 0,
+      "col": 2,
+      "tag": "about four times"
+    },
+    {
+      "id": "merged",
+      "type": "security",
+      "label": "One Module for Both",
+      "sublabel": "a check in each loop",
+      "row": 2,
+      "col": 2
+    },
+    {
+      "id": "out",
+      "type": "cloud",
+      "label": "A Complex Matrix",
+      "sublabel": "for fft and eigen",
+      "row": 1,
+      "col": 3
+    },
+    {
+      "id": "real",
+      "type": "cloud",
+      "label": "The Real Matrix",
+      "sublabel": "stays small and quick",
+      "row": 2,
+      "col": 3
+    }
+  ],
+  "boundaries": [
+    {
+      "kind": "region",
+      "label": "a separate module, for the cost it would otherwise add",
+      "wraps": [
+        "shape",
+        "out"
+      ]
+    }
+  ],
+  "connections": [
+    {
+      "id": "in",
+      "from": "caller",
+      "to": "shape",
+      "label": "the elements",
+      "variant": "emphasis",
+      "labelAt": [
+        176,
+        312
+      ]
+    },
+    {
+      "id": "each",
+      "from": "shape",
+      "to": "cost",
+      "label": "every product"
+    },
+    {
+      "id": "would",
+      "from": "shape",
+      "to": "merged",
+      "label": "if joined"
+    },
+    {
+      "id": "gives",
+      "from": "shape",
+      "to": "out",
+      "label": "the product",
+      "variant": "emphasis",
+      "labelAt": [
+        480,
+        312
+      ]
+    },
+    {
+      "id": "spared",
+      "from": "merged",
+      "to": "real",
+      "label": "stays as it is",
+      "labelAt": [
+        480.0,
+        430.0
+      ]
+    }
+  ],
+  "cards": [
+    {
+      "dot": "cyan",
+      "title": "What it works out",
+      "items": [
+        "(A * B)(i,j) = sum over k of A(i,k) * B(k,j)",
+        "Every one of those products is a complex multiplication",
+        "(a + i*b) * (c + i*d) = (a*c - b*d) + i*(a*d + b*c)"
+      ]
+    },
+    {
+      "dot": "emerald",
+      "title": "What that costs",
+      "items": [
+        "Four real multiplications and two additions for each element product",
+        "Thus a complex multiply costs about four times a real one of the same shape",
+        "That cost is the reason this is a module of its own"
+      ]
+    },
+    {
+      "dot": "amber",
+      "title": "Why not one module for both",
+      "items": [
+        "It would need a second copy of each function, or a union and a type check in every loop",
+        "Both make the real matrix larger and slower",
+        "On a small target the caller who needs only real numbers is the common one"
+      ]
+    }
+  ]
+}

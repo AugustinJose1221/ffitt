@@ -41,6 +41,28 @@
 // A function of the standard library that takes a float and gives a float,
 // such as real_sin or real_cos, fits the type of an element directly.
 
+// Method:
+// Each element is not a number but a function of one parameter:
+//
+//     M(x)(i,j) = f_ij(x)
+//
+// Giving a value for x calls every one of those functions once and writes the
+// answers into a plain matrix:
+//
+//     matrix(i,j) = f_ij(x)
+//
+// which every other module of the library can then take.
+//
+// That is the whole of it. The module holds pointers to functions rather than
+// values, and the evaluation is one pass over the elements. Nothing is
+// differentiated, nothing is solved, and no arithmetic is done on the functions
+// themselves.
+//
+// It exists because a state that moves with time or with an angle is written
+// once as a shape, and then evaluated at each step, rather than rebuilt by hand
+// at every step by the caller.
+
+
 typedef real_t (*pmatrix_function_t)(real_t x);
 
 typedef struct{

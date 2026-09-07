@@ -9,7 +9,137 @@ python3 scripts/api_doc.py
 
 How alike two signals are. Declared in `ffitt/transform/correlate.h`.
 
-[Back to the index](../API.md) | [How the transform modules work](../../ffitt/transform/README.md)
+[Back to the index](../API.md) | [How the transform modules work](../../ffitt/transform/README.md) | [How it works](../diagrams/transform/correlate.html) ([preview](https://htmlpreview.github.io/?https://github.com/AugustinJose1221/ffitt/blob/development/docs/diagrams/transform/correlate.html))
+
+## Overview
+
+How much one signal is like another when one of them is moved in time.
+
+This answers three questions that come up again and again, and all three are
+the same question with different signals put into it.
+
+  HOW LONG IS THE DELAY between two recordings of the same thing? Correlate
+  the two. The lag where the answer is largest is the delay.
+
+  DOES THIS SIGNAL REPEAT, and how often? Correlate the signal with itself.
+  A signal that repeats every 100 samples has a peak at a lag of 100.
+
+  IS THIS SHAPE IN THAT SIGNAL? Correlate the signal with the shape. A peak
+  says where the shape sits.
+
+WHAT THE ANSWER IS SCALED BY, AND WHY IT MATTERS
+
+The raw sum of products grows with the length of the signal and with how
+large the samples are, thus two answers cannot be set beside each other. The
+scaling decides what the number means:
+
+  CORRELATE_RAW         the sum of the products, and nothing more
+  CORRELATE_BIASED      divided by the number of samples
+  CORRELATE_UNBIASED    divided by how many samples overlapped at that lag
+  CORRELATE_COEFFICIENT a number between -1 and 1
+
+TAKE CORRELATE_COEFFICIENT WHEN THE ANSWER MUST BE JUDGED and not only
+compared with itself. It is the only one that means the same thing for every
+signal: 1 is a perfect match, 0 is no likeness at all, -1 is the same shape
+turned upside down. A threshold on it holds from one recording to the next,
+and a threshold on any of the others does not.
+
+THE MEAN MUST COME OFF FIRST, AND THE COEFFICIENT TAKES IT OFF
+
+A signal that never goes below zero correlates well with itself at EVERY
+lag, because the product of two positive numbers is positive whatever the
+lag. The mean then swamps the part that actually repeats, and the largest
+answer lands wherever the arithmetic happens to put it rather than at the
+period.
+
+CORRELATE_COEFFICIENT takes the mean off, because a correlation coefficient
+is not defined any other way. The other three do not, because they are sums
+and a caller who asks for a sum should get one.
+
+
+A SIGNAL MUST HAVE A SHAPE ABOVE ITS OWN ROUNDING, OR THERE IS NOTHING TO
+MATCH
+
+The coefficient is worked out from how far each sample stands from the mean
+of its window. Where a signal barely moves, those distances are the last
+digits of the samples and nothing else, and a coefficient worked out from
+them is a coefficient of the rounding.
+
+It is NOT enough for the signal to be large. A reading that sits at 3.0 and
+wanders by a hundred-thousandth has plenty of energy and no shape at all:
+at 32 bits a value near 3 is held to about three ten-millionths, thus a
+wander of a hundred-thousandth carries barely two digits.
+
+The mark of it is that the coefficient stops being free of how loud the
+signal is. Measured, on a window that sits at 3.0 and wanders by the amount
+shown, the coefficient moved this much when the signal was merely turned up:
+
+    wander, as a part of the size     the coefficient moved by
+             0.0003                            0.00002
+             0.00003                           0.0002
+             0.000003                          0.005
+             0.0000003                         0.03
+
+A wander of less than about a millionth of the size leaves no coefficient
+worth reading at 32 bits. There is no arithmetic that mends this: the digits
+were never in the samples. Take a wider build, or measure something that
+moves.
+
+The coefficient is worked out over the samples that overlap AT EACH LAG and
+no others. The shorter way, which is the sum at each lag divided by the sum
+at no lag, falls away as the lag grows: at a lag of k only size-k samples
+overlap, thus the answer comes out about (size-k)/size of the truth. For a
+lag of an eighth of the signal that is an eighth too small, and a threshold
+set on it would hold for one length of signal and not for another. That
+would defeat the whole reason for having a coefficient.
+
+WHAT IT COSTS, AND THE FAST WAY
+
+The plain method multiplies and adds once for each sample at each lag, thus
+it costs size times lags. For 4096 samples and 4096 lags that is 17 million
+operations.
+
+The transform does the same work in three transforms and one multiplication
+of each bin, because a correlation in time is a multiplication in frequency.
+For the same numbers that is about 300 thousand operations, which is fifty
+times less. It needs memory to work in, which the caller gives, and the size
+must be a power of two. Below about 300 samples the plain method wins,
+because the transform has a fixed cost that the plain method does not.
+
+## Method
+
+At each lag the two signals are multiplied sample by sample and the products
+are added up:
+
+    r[lag] = sum over n of (a[n] - mean_a) * (b[n+lag] - mean_b)
+
+Only the samples that still overlap are counted, thus a longer lag adds up
+fewer products. That is why the scaling matters:
+
+    RAW          r[lag]
+    BIASED       r[lag] / size
+    UNBIASED     r[lag] / (size - lag)
+    COEFFICIENT  r[lag] / sqrt(r_aa[0] * r_bb[0])
+
+UNBIASED divides by how many samples actually overlapped, thus a long lag is
+not made to look weak by the ones that fell off the end.
+
+COEFFICIENT is the only one that means the same thing for every signal, and
+it is the only one that takes the mean off first. The means are zero for the
+other three, thus one sum serves all four.
+
+## Types
+
+### `correlate_scaling_t`
+
+```c
+typedef enum{
+    CORRELATE_RAW = 0,          // The sum of the products
+    CORRELATE_BIASED,           // Divided by the number of samples
+    CORRELATE_UNBIASED,         // Divided by the overlap at each lag
+    CORRELATE_COEFFICIENT       // Between -1 and 1, with the mean taken off
+}correlate_scaling_t;
+```
 
 ## Functions
 

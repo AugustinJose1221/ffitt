@@ -9,7 +9,63 @@ python3 scripts/api_doc.py
 
 Filters with an infinite impulse response. Declared in `ffitt/filter/iir.h`.
 
-[Back to the index](../API.md) | [How the filter modules work](../../ffitt/filter/README.md)
+[Back to the index](../API.md) | [How the filter modules work](../../ffitt/filter/README.md) | [How it works](../diagrams/filter/iir.html) ([preview](https://htmlpreview.github.io/?https://github.com/AugustinJose1221/ffitt/blob/development/docs/diagrams/filter/iir.html))
+
+## Overview
+
+A filter with an infinite impulse response, as a chain of biquad sections.
+
+Such a filter feeds its own output back into itself. Thus it gives a sharp
+edge with very few operations for each sample: a section of two poles needs
+five multiplications, where an FIR filter of the same sharpness needs
+dozens. The cost is that the filter moves the different frequencies by
+different times, and that a filter with bad coefficients can run away.
+
+One section holds two poles. The order of the whole filter is two times the
+number of sections, thus a filter of the order 4 needs two sections. The
+design functions build the coefficients of a filter of Butterworth, whose
+band that passes is as flat as it can be.
+
+Give the cutoff as a part of the sample rate, thus 0.25 means one quarter of
+the sample rate. The value must lie between 0 and 0.5.
+
+Each section keeps its state in the form of Direct Form II transposed. That
+form needs two values for each section, and it holds the error of a float
+better than the plain form does.
+
+The number of coefficients of one section: b0, b1, b2, a1 and a2.
+
+The number of values of the state of one section.
+
+The number of float values that a filter with the given number of sections
+needs for its coefficients.
+
+The number of float values that a filter with the given number of sections
+needs for its state.
+
+## Method
+
+One section of two poles carries two values of state, and each sample costs
+five multiplications:
+
+    y     = b0*x + s0
+    s0    = b1*x - a1*y + s1
+    s1    = b2*x - a2*y
+
+That is the transposed direct form II. The output y is fed back into the
+state, and that feedback is what buys the sharpness: an answer that never
+quite ends, from five multiplications a sample.
+
+The whole filter is a chain of such sections, thus the order is two times
+the number of sections and a filter of order 4 is two sections.
+
+The feedback is also the whole of the risk. A coefficient that is a little
+wrong moves a pole, and a pole outside the circle is a filter that runs
+away. Working in sections of two rather than one long recursion is what
+keeps that from happening at a high order.
+
+The design gives a filter of Butterworth, whose band that passes is as flat
+as it can be made.
 
 ## Macros
 
@@ -112,6 +168,90 @@ typedef struct{
     real_t* state;               // Two values for each section
     bool dynamic_alloc;         // True if the memory comes from the heap
 }iir_t;
+```
+
+### `iir_shape_t`
+
+WHICH SHAPE OF FILTER TO ASK FOR
+
+A filter trades three things against each other: how flat the band that
+passes is, how sharply it falls, and how much of the band that is stopped
+gets through. NO FILTER IS BEST AT ALL THREE, and the shapes here sit at
+different corners of that trade.
+
+Measured, on a low pass of order 8 at a cutoff of a tenth of the sample
+rate, asked for 1 dB of ripple and a stop band 60 dB down:
+
+  shape           at nothing   ripple in the band   falls to 60 dB below
+                               that passes
+  Butterworth        1.000     none                  0.209
+  Chebyshev I        0.891     1.000 dB              0.151
+  Chebyshev II       1.000     none                  0.100
+  Elliptic           0.891     1.000 dB              0.110
+
+And the same trade seen the other way round. To pass everything below 0.1
+and stop everything above 0.15, 60 dB down, with 1 dB of ripple allowed:
+
+  shape           sections needed   order
+  Butterworth            9           18
+  Chebyshev I            5           10
+  Chebyshev II           5           10
+  Elliptic               3            6
+
+A THIRD OF THE SECTIONS FOR THE SAME WORK. That is what ripple in both bands
+buys, and iir_sections_for is how to ask before choosing. Every filter in
+that table was built and measured, and every one really meets what was
+asked.
+
+  TAKE BUTTERWORTH where the band that passes must be flat and there is room
+  for the fall. It is the safe answer and the one to start from.
+  TAKE CHEBYSHEV I where the fall must be sharper and a known ripple in the
+  band that passes can be borne.
+  TAKE CHEBYSHEV II where the band that passes must stay flat but the fall
+  must still be sharp. The ripple goes into the band that is stopped, where
+  it usually matters less.
+  TAKE ELLIPTIC where the two bands stand close together and nothing else
+  will fit. It ripples in both bands and it has the worst phase of the four,
+  and in exchange it needs a third of the sections.
+
+ONE THING TO KNOW ABOUT AN ELLIPTIC FILTER AT 32 BITS. It holds its band
+that is stopped down with a set of notches, and a notch must be placed
+exactly to reach all the way down. At 32 bits the coefficients cannot always
+place them exactly, and the floor between them then sits a little higher
+than was asked. Measured, at a cutoff of 0.05 with 70 dB asked for:
+
+    ripple asked   0.5    1.0    2.0    3.0    5.0  dB
+    32 bits       -70.0  -70.0  -66.9  -69.2  -69.6  dB delivered
+    64 bits       -70.0  -70.0  -70.0  -70.0  -70.0  dB delivered
+
+The shortfall is at most about 3 dB and MORE SECTIONS DO NOT MEND IT,
+because the fault is in placing the notches and not in having too few. Ask
+for a few dB more than is needed at 32 bits, or build at 64. No other shape
+here shows this: a Chebyshev II delivers exactly what is asked at either
+width, all the way to 110 dB.
+
+A WORD ON PHASE, WHICH IS THE PART THAT IS FORGOTTEN. Every shape here moves
+the different frequencies by different times, and the sharper the fall the
+worse that gets. Where the shape of a waveform matters, and not only which
+frequencies it holds, use iir_group_delay to see what the filter will do to
+it, or use filtfilt, which runs the filter both ways and leaves no phase
+shift at all.
+
+```c
+typedef enum{
+    // The band that passes is as flat as it can be. No ripple anywhere.
+    IIR_BUTTERWORTH = 0,
+
+    // Ripples in the band that passes by the amount asked for, and falls
+    // faster than Butterworth for the same order.
+    IIR_CHEBYSHEV_I,
+
+    // Flat in the band that passes, and ripples in the band that is stopped.
+    IIR_CHEBYSHEV_II,
+
+    // Ripples in both bands and falls fastest of all for the order.
+    IIR_ELLIPTIC
+}iir_shape_t;
 ```
 
 ## Functions

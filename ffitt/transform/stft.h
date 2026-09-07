@@ -90,6 +90,26 @@
 // (f * stft_bin_count(block)) + b. Only the bins up to half the block and one
 // more are kept, because the signal is real and the rest is their mirror.
 
+// Method:
+//
+// The signal is cut into blocks that overlap, each block is windowed, and each
+// is transformed:
+//
+//     X[m][k] = sum over n of x[n + m*hop] * w[n] * exp(-2*pi*i*k*n/block)
+//
+// m counts the blocks and is the moment; k counts the bins and is the
+// frequency. Thus one transform of the whole recording becomes a grid of
+// answers, one for each moment.
+//
+// The hop is how far the window moves between blocks. A hop of half the block
+// is the usual choice: the windows then add up to a constant, thus what the
+// window takes away at the edge of one block is put back by the next.
+//
+// The trade cannot be escaped. A block of n samples at a rate of r covers n/r
+// seconds and its bins stand r/n hertz apart, and the product of those two is
+// 1 whatever is chosen. A short block says when and not what; a long block
+// says what and not when.
+
 typedef struct{
     uint32_t block;             // Samples in one block, a power of two
     uint32_t hop;               // Samples from the start of one block to the next

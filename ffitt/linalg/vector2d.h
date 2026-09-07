@@ -15,6 +15,21 @@
 // size 2, thus the caller does not give the size at each call. The result is a
 // vector_t, and every function of the vector module takes it.
 
+// Method:
+// There is no arithmetic here that the vector module does not already do:
+//
+//     dot(a, b) = a.x*b.x + a.y*b.y
+//     norm(a)   = sqrt(dot(a, a))
+//
+// The size is 2 and the caller never says so. That is the whole of what this
+// module adds, and the answer is a vector_t, thus every function of the vector
+// module takes it unchanged.
+//
+// A plane is common enough to be worth the saving: a point on a screen, a
+// reading from two axes, a place in a picture. Writing the size at every call
+// for a size that never changes is noise in the code that reads it.
+
+
 // Give a vector with two values. The memory comes from the heap. Give the
 // vector to vector_free when you no longer need it.
 vector_t vector2d_alloc(void);

@@ -13,6 +13,23 @@
 #include "callback.h"
 #endif
 
+// Method:
+// A vector is a list of values, and the operations are the plain ones:
+//
+//     dot(a, b) = sum over i of a[i] * b[i]
+//     norm(a)   = sqrt(dot(a, a))
+//
+// The dot product is the one that carries the meaning. It is the length of one
+// vector times the length of the other times the cosine of the angle between
+// them, thus it is nothing when the two stand at right angles, and it is the
+// whole product when they point the same way.
+//
+// Almost everything else in this library is a dot product wearing another
+// name: a finite filter is the dot of the samples with the coefficients, a
+// correlation is the dot of two signals at an offset, and a projection is a dot
+// divided by a norm.
+
+
 // A vector of float values.
 //
 // Two functions give a vector. vector_alloc takes the memory from the heap,

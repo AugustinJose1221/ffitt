@@ -1,0 +1,245 @@
+{
+  "schema_version": 1,
+  "diagram_type": "architecture",
+  "meta": {
+    "title": "Inside farrow",
+    "animation": "trace",
+    "quality_profile": "showcase",
+    "views": [
+      {
+        "id": "whole-is-free",
+        "label": "A whole sample costs nothing",
+        "focus": [
+          "whole"
+        ],
+        "note": "Delaying by a whole number of samples is reading further back in a buffer, and ringbuf already does it."
+      },
+      {
+        "id": "part-is-a-filter",
+        "label": "A part of one is a filter",
+        "focus": [
+          "between",
+          "poly"
+        ],
+        "note": "The value between two samples is not in the reading. A polynomial is laid through the samples around it and read there."
+      },
+      {
+        "id": "the-difficulty",
+        "label": "Why a new filter each time",
+        "focus": [
+          "mu",
+          "trouble"
+        ],
+        "note": "The coefficients depend on the fraction asked for, thus a delay that drifts would mean designing a filter at every sample."
+      },
+      {
+        "id": "the-structure",
+        "label": "What Farrow avoids",
+        "focus": [
+          "fixed",
+          "cheap"
+        ],
+        "note": "Each coefficient is itself a polynomial in the fraction. The fixed parts are found once, and a new fraction costs a few multiplications."
+      }
+    ]
+  },
+  "layout": {
+    "mode": "grid",
+    "origin": [
+      40,
+      120
+    ],
+    "cols": 6,
+    "gapX": 28,
+    "gapY": 56,
+    "cellW": 124,
+    "cellH": 62
+  },
+  "components": [
+    {
+      "id": "ask",
+      "type": "external",
+      "label": "Delay of 2.35",
+      "sublabel": "measured elsewhere",
+      "row": 1,
+      "col": 0
+    },
+    {
+      "id": "whole",
+      "type": "backend",
+      "label": "The 2 Is Free",
+      "sublabel": "read further back",
+      "row": 0,
+      "col": 1
+    },
+    {
+      "id": "between",
+      "type": "backend",
+      "label": "The 0.35 Is Not",
+      "sublabel": "not in the reading",
+      "row": 1,
+      "col": 1
+    },
+    {
+      "id": "poly",
+      "type": "backend",
+      "label": "A Polynomial",
+      "sublabel": "through the samples",
+      "row": 1,
+      "col": 2
+    },
+    {
+      "id": "mu",
+      "type": "database",
+      "label": "Depends on mu",
+      "sublabel": "the fraction",
+      "row": 0,
+      "col": 3
+    },
+    {
+      "id": "trouble",
+      "type": "security",
+      "label": "A New Filter",
+      "sublabel": "at every sample",
+      "row": 0,
+      "col": 4,
+      "tag": "what it would cost"
+    },
+    {
+      "id": "fixed",
+      "type": "database",
+      "label": "Fixed a Values",
+      "sublabel": "found once",
+      "row": 2,
+      "col": 3
+    },
+    {
+      "id": "cheap",
+      "type": "backend",
+      "label": "Evaluate in mu",
+      "sublabel": "a few multiplies",
+      "row": 1,
+      "col": 3
+    },
+    {
+      "id": "out",
+      "type": "cloud",
+      "label": "Delayed Signal",
+      "sublabel": "changed any sample",
+      "row": 1,
+      "col": 4
+    }
+  ],
+  "boundaries": [
+    {
+      "kind": "region",
+      "label": "the fixed parts are worked out one time",
+      "wraps": [
+        "cheap",
+        "out"
+      ]
+    }
+  ],
+  "connections": [
+    {
+      "id": "in",
+      "from": "ask",
+      "to": "between",
+      "variant": "emphasis"
+    },
+    {
+      "id": "free",
+      "from": "ask",
+      "to": "whole",
+      "label": "the whole part"
+    },
+    {
+      "id": "laid",
+      "from": "between",
+      "to": "poly",
+      "label": "read between",
+      "variant": "emphasis",
+      "labelAt": [
+        328.0,
+        312.0
+      ]
+    },
+    {
+      "id": "varies",
+      "from": "mu",
+      "to": "cheap",
+      "label": "the fraction",
+      "labelAt": [
+        556.0,
+        194.0
+      ]
+    },
+    {
+      "id": "would",
+      "from": "mu",
+      "to": "trouble",
+      "label": "if designed again",
+      "labelAt": [
+        632.0,
+        194.0
+      ]
+    },
+    {
+      "id": "held",
+      "from": "fixed",
+      "to": "cheap",
+      "label": "a0, a1, a2"
+    },
+    {
+      "id": "built",
+      "from": "poly",
+      "to": "cheap",
+      "label": "the coefficients",
+      "variant": "emphasis",
+      "labelAt": [
+        480.0,
+        312.0
+      ]
+    },
+    {
+      "id": "given",
+      "from": "cheap",
+      "to": "out",
+      "label": "y[n]",
+      "variant": "emphasis",
+      "labelAt": [
+        784,
+        312
+      ]
+    }
+  ],
+  "cards": [
+    {
+      "dot": "cyan",
+      "title": "What it works out",
+      "items": [
+        "y[n] = sum over k of c_k(mu) * x[n-k], with mu the fraction of a sample",
+        "A delay of a whole number of samples is free; a part of one is a filter",
+        "The value between two samples is not in the reading and must be worked out"
+      ]
+    },
+    {
+      "dot": "emerald",
+      "title": "What the structure avoids",
+      "items": [
+        "c_k(mu) = a0_k + a1_k*mu + a2_k*mu^2 + ...",
+        "The a values are fixed and worked out one time",
+        "A new fraction costs only the evaluation of those small polynomials"
+      ]
+    },
+    {
+      "dot": "amber",
+      "title": "What it is for",
+      "items": [
+        "Lining two readings up after delay_by_phase has measured the offset",
+        "Steering an array of microphones, and resampling by a ratio that is not whole",
+        "Following a clock that drifts, where the fraction changes at every sample"
+      ]
+    }
+  ]
+}

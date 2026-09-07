@@ -9,7 +9,127 @@ python3 scripts/api_doc.py
 
 The directions a matrix stretches. Declared in `ffitt/linalg/eigen.h`.
 
-[Back to the index](../API.md) | [How the linalg modules work](../../ffitt/linalg/README.md)
+[Back to the index](../API.md) | [How the linalg modules work](../../ffitt/linalg/README.md) | [How it works](../diagrams/linalg/eigen.html) ([preview](https://htmlpreview.github.io/?https://github.com/AugustinJose1221/ffitt/blob/development/docs/diagrams/linalg/eigen.html))
+
+## Overview
+
+The directions a symmetric matrix stretches, and how far it stretches each.
+
+A symmetric matrix does one thing: it stretches space, by different amounts
+in different directions, and those directions stand at right angles to each
+other. THE DIRECTIONS ARE THE EIGENVECTORS AND THE AMOUNTS ARE THE
+EIGENVALUES, and together they are the whole of what the matrix does.
+
+WHAT THIS IS FOR
+
+  READING A COVARIANCE. A covariance says how a set of measurements spreads.
+  Its largest eigenvalue is how far the spread reaches at its widest, and
+  the eigenvector beside it is which way that is. For a sensor of three
+  axes, that direction is the axis the movement really lies along, whatever
+  the axes of the sensor happen to be.
+
+  FINDING WHAT MATTERS AND WHAT DOES NOT. Where one eigenvalue is far larger
+  than the rest, nearly all of the movement lies in one direction and the
+  rest is noise. Where they are all alike, there is no structure to find.
+  This is what principal components means, and it is two lines once the
+  eigenvalues are in hand.
+
+  SAYING WHETHER AN ANSWER CAN BE TRUSTED. eigen_condition gives the largest
+  eigenvalue divided by the smallest, and that number is how much a small
+  error in what goes in is multiplied on its way out. It is the number
+  behind two things this library already records: why lstsq refuses a fit,
+  and why an RLS filter can run correctly for thousands of samples and then
+  fall apart.
+
+SYMMETRIC ONLY, AND THAT IS ON PURPOSE
+
+This module takes a symmetric matrix and nothing else. That is not a
+shortcut; it is the case that signal processing asks for, because every
+covariance is symmetric. It also happens to be the case that behaves: a
+symmetric matrix has real eigenvalues and eigenvectors at right angles, and
+the method below finds them steadily.
+
+A matrix that is NOT symmetric can have eigenvalues that are complex, can
+have eigenvectors that lie almost on top of each other, and needs a method
+several times larger that holds far less well in a float. Where the question
+is really about the roots of a polynomial, ask for those directly rather
+than through a general eigenvalue.
+
+HOW IT IS DONE
+
+The rotations of Jacobi. Each rotation picks the largest element that is off
+the diagonal and turns two rows and two columns so that element becomes
+nothing. That undoes a little of what earlier rotations did, thus it is done
+again and again, and the off-diagonal part falls away quickly. What is left
+on the diagonal are the eigenvalues, and the rotations multiplied together
+are the eigenvectors.
+
+It is not the fastest method for a large matrix. It is the one that keeps
+its accuracy for the small matrices this library works with, and it needs no
+memory of its own beyond what the caller gives.
+
+WHAT IT COSTS IN PRECISION
+
+Measured on matrices built by turning a known set of eigenvalues, so that
+the right answer is known exactly. The worst eigenvalue out by, as a part of
+the largest one, over 200 matrices at each order:
+
+    order            2         3         4         6         8
+    32 bits    0.0000002 0.0000004 0.0000004 0.0000004 0.0000007
+    64 bits    below what these figures can show, at every order
+
+THE ERROR DOES NOT FOLLOW THE CONDITIONING, and that is what parts this
+method from the ones that are quicker. Measured on matrices of order 5 built
+to a chosen conditioning, at 32 bits:
+
+    condition of the matrix      1      10    1 000   100 000   10 000 000
+    worst of A times v less
+      the value times v        0.0    0.00000005  0.00000007  0.00000009  0.00000003
+    each direction is this
+      far from unit length     0.0    0.0000001   0.0000001   0.00000004  0.0000001
+
+A matrix whose widest direction is ten million times its narrowest still
+gives directions that are right to seven digits. A method that worked
+through the normal equations, as lstsq does, would have nothing left at all
+by then.
+
+How many sweeps of the whole matrix to make before giving up.
+
+A sweep turns every element that is off the diagonal once. The off-diagonal
+part falls away faster than by half each sweep, thus a handful of sweeps
+carries any matrix this library works with past what either width can hold.
+This is well above that, and it is here so that a matrix which somehow will
+not settle cannot spin for ever.
+
+How small the off-diagonal part must be, against the diagonal, before the
+work is done.
+
+## Method
+
+A symmetric matrix stretches space by different amounts in directions that
+stand at right angles:
+
+    A * v = lambda * v
+
+The library finds them by the method of Jacobi, which turns the matrix a
+little at a time until nothing is left off the diagonal:
+
+    pick the largest element off the diagonal
+    turn the two rows and columns it joins, so that element becomes nothing
+    repeat
+
+Each turn undoes a little of what earlier turns settled, thus the work is
+measured by what is still off the diagonal, and that number is what says how
+much is left to do. The angle is chosen as the smaller of the two that would
+clear the element, because a small turn disturbs least of what is already
+settled.
+
+When nothing is left off the diagonal, the diagonal holds the eigenvalues and
+the turns multiplied together hold the directions.
+
+This works because the matrix is symmetric. For a matrix that is not, the
+directions need not stand at right angles and need not be real at all, and
+this method does not apply.
 
 ## Macros
 

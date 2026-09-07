@@ -9,7 +9,88 @@ python3 scripts/api_doc.py
 
 A filter that finds its own coefficients. Declared in `ffitt/filter/adaptive.h`.
 
-[Back to the index](../API.md) | [How the filter modules work](../../ffitt/filter/README.md)
+[Back to the index](../API.md) | [How the filter modules work](../../ffitt/filter/README.md) | [How it works](../diagrams/filter/adaptive.html) ([preview](https://htmlpreview.github.io/?https://github.com/AugustinJose1221/ffitt/blob/development/docs/diagrams/filter/adaptive.html))
+
+## Overview
+
+A filter that finds its own coefficients while it runs.
+
+Every other filter in this library is designed once and then applied. This
+one is given no design at all. It is given an answer to aim at, and it
+changes its own coefficients a little with every sample until it hits it.
+
+WHAT IT IS FOR
+
+TAKING AWAY NOISE THAT IS MEASURED SOMEWHERE ELSE. This is the use that
+matters most and the one a fixed filter cannot serve. A microphone near an
+engine, a coil near a transformer, a lead near a motor: in each case a
+second sensor sees the noise ALONE, without the signal. The noise reaches
+the first sensor changed in size and delayed, and by an amount nobody knows
+and which does not stay still.
+
+Give the noisy signal as what to aim at and the second sensor as the
+reference. The filter learns whatever turns one into the other and takes it
+away. WHAT IS LEFT OVER IS THE ANSWER, not what the filter gives out: the
+output is the noise it has learned, and the error is the signal with that
+noise gone.
+
+This works when no filter of frequency can, because the noise and the signal
+may hold exactly the same frequencies. What parts them is that the reference
+holds one and not the other.
+
+FOLLOWING SOMETHING THAT CHANGES. A fixed filter is right for the conditions
+it was designed for. This one follows.
+
+WHAT IT NEEDS, AND WHAT GOES WRONG WITHOUT IT
+
+THE REFERENCE MUST NOT HOLD THE SIGNAL. If it does, the filter learns to
+take the signal away as well, because that also makes the error smaller.
+This is the one way to use it that fails quietly: the error falls, everything
+looks well, and the answer has had the signal removed from it.
+
+THE RATE DECIDES EVERYTHING. Too high and the filter never settles but
+rattles around the answer, or runs away to nothing at all. Too low and it
+takes for ever to learn and cannot follow a change. adaptive_normalised is
+the answer to that, and the reason it usually wins.
+
+WHY adaptive_normalised IS THE ONE TO REACH FOR
+
+The plain rule moves each coefficient by the rate times the error times the
+reference. Thus how far it moves follows how LARGE the reference is, and a
+rate that settles for a quiet reference makes the filter run away for a loud
+one. The safe rate therefore depends on a signal that the designer has not
+heard yet.
+
+The normalised rule divides by the energy of what is in the filter now. The
+step then does not follow how loud the reference is, and a rate between 0
+and 2 is stable FOR ANY SIGNAL. Take 0.1 to 0.5 and it will work.
+
+## Method
+
+The filter gives its answer as any finite filter does, and then moves every
+coefficient a little towards whatever would have been right:
+
+    y[n]    = sum over k of x[n-k] * h[k]
+    error   = wanted[n] - y[n]
+    h[k]    = (1 - leak) * h[k] + step * x[n-k]
+
+The step is what parts the three rules. Plain least mean squares uses
+step = rate * error, thus a loud signal moves the coefficients further than
+a quiet one and the same rate is too fast for one and too slow for the
+other.
+
+The normalised rule divides that step by the loudness of the window, thus
+the same rate behaves the same way whatever the signal is doing. It is
+stable for any signal while the rate lies between 0 and 2, and outside that
+it runs away whatever the signal is. That is arithmetic, not judgement, thus
+the module refuses it.
+
+The sign rule takes a step of a fixed size in the direction of the error
+only. It needs no multiplication at all, and it settles more slowly and
+never quite as close.
+
+The leak pulls every coefficient gently towards nothing, so that a
+coefficient which nothing is driving cannot wander away over hours.
 
 ## Macros
 
@@ -23,6 +104,39 @@ The smallest energy that the normalised rule will divide by, so that a
 silent reference cannot make the step run away.
 
 ## Types
+
+### `adaptive_rule_t`
+
+```c
+typedef enum{
+    ADAPTIVE_PLAIN = 0,         // The rule of least mean squares
+    ADAPTIVE_NORMALISED,        // The same, divided by the energy in the filter
+    // Only the sign of the error is used, thus the step needs no
+    // multiplication at all. IT NEVER ARRIVES, AND THAT IS THE TRADE.
+    //
+    // The other two move by an amount that follows the error, thus as the error
+    // falls so does the step and the filter settles. This one moves by a fixed
+    // amount whatever the error is: once it is near the answer it steps past
+    // it, turns round, and steps past it again. What is left is not an error
+    // that falls away but one that HUNTS, by an amount that follows the rate
+    // directly.
+    //
+    // Measured on a path of two taps over sixty thousand samples, the
+    // coefficient wandered by:
+    //
+    //     rate      0.002     0.008     0.031
+    //     wander   0.0066    0.0262    0.1059
+    //
+    // Four times the rate, four times the wander. The normalised rule at the
+    // middle rate wandered by 0.00005, five hundred times less, and what was
+    // left of the error was two thousand times smaller.
+    //
+    // Reach for this only where a multiplication for each coefficient for each
+    // sample is genuinely too much, and choose the rate by how close the answer
+    // has to be rather than by how quickly it must get there.
+    ADAPTIVE_SIGN
+}adaptive_rule_t;
+```
 
 ### `adaptive_t`
 

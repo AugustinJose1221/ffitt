@@ -1,0 +1,221 @@
+{
+  "schema_version": 1,
+  "diagram_type": "architecture",
+  "meta": {
+    "title": "Inside peakdetect",
+    "animation": "trace",
+    "quality_profile": "showcase",
+    "views": [
+      {
+        "id": "every-max",
+        "label": "Every maximum is not a peak",
+        "focus": [
+          "local",
+          "noise"
+        ],
+        "note": "Noise puts a local maximum every few samples. A heart at 500 samples a second gives about a hundred of them for every beat."
+      },
+      {
+        "id": "prominence",
+        "label": "How far you must descend",
+        "focus": [
+          "prom"
+        ],
+        "note": "How far you must go down from a peak before you can climb to a higher one."
+      },
+      {
+        "id": "the-ripple",
+        "label": "A ripple on a flank",
+        "focus": [
+          "ripple",
+          "alone"
+        ],
+        "note": "A ripple high on a large peak has almost no prominence. A small peak alone in a valley has a great deal."
+      },
+      {
+        "id": "drift",
+        "label": "Why a drifting level is safe",
+        "focus": [
+          "drift"
+        ],
+        "note": "Prominence does not care where the signal sits, thus a threshold in prominence holds over a whole recording."
+      }
+    ]
+  },
+  "layout": {
+    "mode": "grid",
+    "origin": [
+      40,
+      120
+    ],
+    "cols": 6,
+    "gapX": 28,
+    "gapY": 56,
+    "cellW": 124,
+    "cellH": 62
+  },
+  "components": [
+    {
+      "id": "signal",
+      "type": "external",
+      "label": "Your Signal",
+      "sublabel": "noise and beats",
+      "row": 1,
+      "col": 0
+    },
+    {
+      "id": "local",
+      "type": "backend",
+      "label": "Larger Than Both",
+      "sublabel": "x[n] > either side",
+      "row": 1,
+      "col": 1
+    },
+    {
+      "id": "noise",
+      "type": "security",
+      "label": "A Hundred a Beat",
+      "sublabel": "on a real signal",
+      "row": 0,
+      "col": 2
+    },
+    {
+      "id": "prom",
+      "type": "backend",
+      "label": "Descend, Then Climb",
+      "sublabel": "that depth",
+      "row": 1,
+      "col": 2
+    },
+    {
+      "id": "ripple",
+      "type": "security",
+      "label": "A Ripple",
+      "sublabel": "almost no prominence",
+      "row": 0,
+      "col": 3
+    },
+    {
+      "id": "alone",
+      "type": "cloud",
+      "label": "Alone in a Valley",
+      "sublabel": "a great deal of it",
+      "row": 2,
+      "col": 3
+    },
+    {
+      "id": "drift",
+      "type": "cloud",
+      "label": "A Drifting Level",
+      "sublabel": "changes nothing",
+      "row": 2,
+      "col": 4
+    },
+    {
+      "id": "real",
+      "type": "cloud",
+      "label": "The Real Peaks",
+      "sublabel": "judged, not counted",
+      "row": 1,
+      "col": 4
+    }
+  ],
+  "boundaries": [
+    {
+      "kind": "region",
+      "label": "prominence is what separates a peak from a ripple",
+      "wraps": [
+        "prom",
+        "real"
+      ]
+    }
+  ],
+  "connections": [
+    {
+      "id": "scan",
+      "from": "signal",
+      "to": "local",
+      "label": "every sample",
+      "variant": "emphasis",
+      "labelAt": [
+        176,
+        312
+      ]
+    },
+    {
+      "id": "many",
+      "from": "local",
+      "to": "noise",
+      "label": "far too many"
+    },
+    {
+      "id": "judged",
+      "from": "local",
+      "to": "prom",
+      "label": "each candidate",
+      "variant": "emphasis",
+      "labelAt": [
+        328.0,
+        312.0
+      ]
+    },
+    {
+      "id": "low",
+      "from": "prom",
+      "to": "ripple",
+      "label": "step down a little"
+    },
+    {
+      "id": "high",
+      "from": "prom",
+      "to": "alone",
+      "label": "must descend far"
+    },
+    {
+      "id": "kept",
+      "from": "prom",
+      "to": "real",
+      "label": "above the threshold",
+      "variant": "emphasis",
+      "labelAt": [
+        632,
+        312
+      ]
+    },
+    {
+      "id": "safe",
+      "from": "drift",
+      "to": "real",
+      "label": "holds anyway"
+    }
+  ],
+  "cards": [
+    {
+      "dot": "cyan",
+      "title": "What it works out",
+      "items": [
+        "A local maximum is x[n] > x[n-1] and x[n] > x[n+1]",
+        "prominence = height less the highest of the two lowest points on either side",
+        "walking out until a higher peak, or the end of the signal"
+      ]
+    },
+    {
+      "dot": "rose",
+      "title": "Why the simple test is not enough",
+      "items": [
+        "On a clean signal a local maximum is what a peak means",
+        "On a real one, noise puts one every few samples",
+        "A heart at 500 samples a second holds about a hundred for every beat"
+      ]
+    },
+    {
+      "dot": "emerald",
+      "title": "Why prominence and not height",
+      "items": [
+        "A ripple on the flank of a large peak has almost no prominence however high it stands",
+        "A small peak alone in a valley has a large one",
+        "Prominence does not care where the signal sits, thus a drifting level does not change it"
+      ]
+    }
+  ]
+}

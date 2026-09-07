@@ -94,6 +94,28 @@
 #endif
 #endif
 
+// Method:
+// Each output is the last few samples weighed against the coefficients:
+//
+//     y[n] = sum over k of x[n-k] * h[k]
+//
+// There is no feedback in that line, and that is the whole character of the
+// filter. Nothing it has produced comes back in, thus it cannot run away and
+// it is stable whatever the coefficients are.
+//
+// Every frequency is held back by the same time, which is half the length of
+// the filter. Thus the shape of a signal survives it, and that is why a filter
+// whose output must keep its shape is built this way.
+//
+// The coefficients come from the windowed sinc: the ideal filter is a sinc in
+// time, which runs for ever, and a window cuts it to a length that can be
+// held. The window decides how deep the stop band is, and the length decides
+// how sharp the edge is.
+//
+// The cost is that length. For the same sharpness this needs dozens of
+// coefficients where a biquad needs five.
+
+
 // True if a filter of the given length can hold the given cutoff.
 //
 // The turn from passing to stopping is FIR_TRANSITION/length wide. A cutoff

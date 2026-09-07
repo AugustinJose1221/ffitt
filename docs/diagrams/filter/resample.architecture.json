@@ -1,0 +1,210 @@
+{
+  "schema_version": 1,
+  "diagram_type": "architecture",
+  "meta": {
+    "title": "Inside resample",
+    "animation": "trace",
+    "quality_profile": "showcase",
+    "views": [
+      {
+        "id": "the-danger",
+        "label": "What folds back",
+        "focus": [
+          "fold"
+        ],
+        "note": "A signal at 32 kHz may hold 16 kHz. At 500 Hz nothing above 250 fits, and what was above it comes back at a frequency it never had."
+      },
+      {
+        "id": "three-steps",
+        "label": "Three steps, not one",
+        "focus": [
+          "up",
+          "filterit",
+          "down"
+        ],
+        "note": "Put Q-1 zeros between the samples, filter at the higher rate, then keep every Pth sample."
+      },
+      {
+        "id": "two-jobs",
+        "label": "One filter, two jobs",
+        "focus": [
+          "filterit"
+        ],
+        "note": "On the way up it fills the zeros, which are samples of nothing. On the way down it removes what would fold back."
+      },
+      {
+        "id": "never-really",
+        "label": "Never really done that way",
+        "focus": [
+          "cheap"
+        ],
+        "note": "The zeros are not inserted and the thrown samples are not worked out. Only the outputs that are kept are computed."
+      }
+    ]
+  },
+  "layout": {
+    "mode": "grid",
+    "origin": [
+      40,
+      120
+    ],
+    "cols": 6,
+    "gapX": 28,
+    "gapY": 56,
+    "cellW": 124,
+    "cellH": 62
+  },
+  "components": [
+    {
+      "id": "signal",
+      "type": "external",
+      "label": "At One Rate",
+      "sublabel": "32 kHz, say",
+      "row": 1,
+      "col": 0
+    },
+    {
+      "id": "fold",
+      "type": "security",
+      "label": "What Folds Back",
+      "sublabel": "cannot be removed",
+      "row": 0,
+      "col": 1,
+      "tag": "the whole danger"
+    },
+    {
+      "id": "up",
+      "type": "backend",
+      "label": "Insert Q-1 Zeros",
+      "sublabel": "rate times Q",
+      "row": 1,
+      "col": 1
+    },
+    {
+      "id": "filterit",
+      "type": "backend",
+      "label": "One Filter",
+      "sublabel": "fills and protects",
+      "row": 1,
+      "col": 2
+    },
+    {
+      "id": "down",
+      "type": "backend",
+      "label": "Keep Every Pth",
+      "sublabel": "rate over P",
+      "row": 1,
+      "col": 3
+    },
+    {
+      "id": "cheap",
+      "type": "backend",
+      "label": "Only the Kept",
+      "sublabel": "never really done",
+      "row": 2,
+      "col": 3
+    },
+    {
+      "id": "out",
+      "type": "cloud",
+      "label": "At the New Rate",
+      "sublabel": "P over Q",
+      "row": 1,
+      "col": 4
+    }
+  ],
+  "boundaries": [
+    {
+      "kind": "region",
+      "label": "the filter does both jobs at once",
+      "wraps": [
+        "up",
+        "filterit"
+      ]
+    }
+  ],
+  "connections": [
+    {
+      "id": "in",
+      "from": "signal",
+      "to": "up",
+      "label": "x[n]",
+      "variant": "emphasis",
+      "labelAt": [
+        176,
+        312
+      ]
+    },
+    {
+      "id": "risk",
+      "from": "signal",
+      "to": "fold",
+      "label": "if nothing is done"
+    },
+    {
+      "id": "raised",
+      "from": "up",
+      "to": "filterit",
+      "label": "zeros between",
+      "variant": "emphasis",
+      "labelAt": [
+        328.0,
+        312.0
+      ]
+    },
+    {
+      "id": "cut",
+      "from": "filterit",
+      "to": "down",
+      "label": "band made safe",
+      "variant": "emphasis",
+      "labelAt": [
+        480.0,
+        312.0
+      ]
+    },
+    {
+      "id": "saved",
+      "from": "cheap",
+      "to": "down",
+      "label": "only what is kept"
+    },
+    {
+      "id": "done",
+      "from": "down",
+      "to": "out",
+      "label": "y[n]",
+      "variant": "emphasis",
+      "labelDy": -24
+    }
+  ],
+  "cards": [
+    {
+      "dot": "cyan",
+      "title": "What it works out",
+      "items": [
+        "Put Q-1 zeros between the samples, which raises the rate by Q",
+        "Filter, at that higher rate",
+        "Keep every Pth sample, which lowers the rate by P"
+      ]
+    },
+    {
+      "dot": "emerald",
+      "title": "Why the filter is not optional",
+      "items": [
+        "Going up, it fills in the zeros, which are not samples of anything",
+        "Going down, it removes everything above half the NEW rate first",
+        "One filter does both jobs, because both are the same job at different ends"
+      ]
+    },
+    {
+      "dot": "rose",
+      "title": "What cannot be undone",
+      "items": [
+        "A signal at 32 kHz may hold up to 16 kHz; at 500 Hz nothing above 250 fits",
+        "What was above 250 comes back at a frequency it never had",
+        "It then sits on top of the signal and looks exactly like part of it"
+      ]
+    }
+  ]
+}

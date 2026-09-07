@@ -1,0 +1,197 @@
+{
+  "schema_version": 1,
+  "diagram_type": "architecture",
+  "meta": {
+    "title": "Inside imf",
+    "animation": "trace",
+    "quality_profile": "showcase",
+    "views": [
+      {
+        "id": "no-arithmetic",
+        "label": "No arithmetic here",
+        "focus": [
+          "holds"
+        ],
+        "note": "The module holds one mode that emd has already made, as the places and the values."
+      },
+      {
+        "id": "the-promise",
+        "label": "What makes it a mode",
+        "focus": [
+          "promise"
+        ],
+        "note": "As many crossings of zero as peaks and valleys, and envelopes about zero. Sifting worked to reach that."
+      },
+      {
+        "id": "why-it-matters",
+        "label": "Why that promise matters",
+        "focus": [
+          "hilbert"
+        ],
+        "note": "An amplitude and a frequency at every sample mean something only where the signal holds one frequency at a time."
+      },
+      {
+        "id": "the-bridge",
+        "label": "From emd to hht",
+        "focus": [
+          "bridge"
+        ],
+        "note": "This shape is what carries the promise from the one module to the other."
+      }
+    ]
+  },
+  "layout": {
+    "mode": "grid",
+    "origin": [
+      40,
+      120
+    ],
+    "cols": 6,
+    "gapX": 28,
+    "gapY": 56,
+    "cellW": 124,
+    "cellH": 62
+  },
+  "components": [
+    {
+      "id": "emd",
+      "type": "external",
+      "label": "emd Made It",
+      "sublabel": "by sifting",
+      "row": 1,
+      "col": 0
+    },
+    {
+      "id": "holds",
+      "type": "database",
+      "label": "x and y",
+      "sublabel": "the places and values",
+      "row": 1,
+      "col": 1
+    },
+    {
+      "id": "promise",
+      "type": "backend",
+      "label": "What Makes a Mode",
+      "sublabel": "crossings and envelopes",
+      "row": 1,
+      "col": 2
+    },
+    {
+      "id": "hilbert",
+      "type": "backend",
+      "label": "hilbert Reads It",
+      "sublabel": "amplitude and hertz",
+      "row": 1,
+      "col": 3
+    },
+    {
+      "id": "bridge",
+      "type": "cloud",
+      "label": "On to hht",
+      "sublabel": "the two joined",
+      "row": 1,
+      "col": 4
+    },
+    {
+      "id": "notone",
+      "type": "security",
+      "label": "Not a Mode",
+      "sublabel": "a mean of several",
+      "row": 0,
+      "col": 3
+    }
+  ],
+  "boundaries": [
+    {
+      "kind": "region",
+      "label": "one shape, carrying one promise",
+      "wraps": [
+        "holds",
+        "promise"
+      ]
+    }
+  ],
+  "connections": [
+    {
+      "id": "made",
+      "from": "emd",
+      "to": "holds",
+      "label": "the result",
+      "variant": "emphasis",
+      "labelAt": [
+        176,
+        312
+      ]
+    },
+    {
+      "id": "kept",
+      "from": "holds",
+      "to": "promise",
+      "label": "and its property",
+      "variant": "emphasis",
+      "labelAt": [
+        328.0,
+        312.0
+      ]
+    },
+    {
+      "id": "read",
+      "from": "promise",
+      "to": "hilbert",
+      "label": "one frequency",
+      "variant": "emphasis",
+      "labelAt": [
+        480.0,
+        312.0
+      ]
+    },
+    {
+      "id": "fails",
+      "from": "notone",
+      "to": "hilbert",
+      "label": "describes nothing",
+      "labelAt": [
+        556.0,
+        194.0
+      ]
+    },
+    {
+      "id": "joined",
+      "from": "hilbert",
+      "to": "bridge",
+      "label": "hht uses both",
+      "variant": "emphasis",
+      "labelDy": -24
+    }
+  ],
+  "cards": [
+    {
+      "dot": "cyan",
+      "title": "What it holds",
+      "items": [
+        "imf = the places x[i] and the values y[i]",
+        "There is no arithmetic here",
+        "emd makes them, and this module holds one and writes it out"
+      ]
+    },
+    {
+      "dot": "emerald",
+      "title": "What makes it a mode",
+      "items": [
+        "As many crossings of zero as it has peaks and valleys",
+        "Envelopes that sit about zero",
+        "That is the property emd's sifting worked to reach"
+      ]
+    },
+    {
+      "dot": "amber",
+      "title": "Why the promise matters",
+      "items": [
+        "hilbert gives an amplitude and a frequency at every sample",
+        "Both mean something only where the signal holds ONE frequency at a time",
+        "Hand it something that is not a mode and it gives a mean that describes nothing"
+      ]
+    }
+  ]
+}

@@ -9,7 +9,150 @@ python3 scripts/api_doc.py
 
 Taking the level and the drift out of a block. Declared in `ffitt/filter/detrend.h`.
 
-[Back to the index](../API.md) | [How the filter modules work](../../ffitt/filter/README.md)
+[Back to the index](../API.md) | [How the filter modules work](../../ffitt/filter/README.md) | [How it works](../diagrams/filter/detrend.html) ([preview](https://htmlpreview.github.io/?https://github.com/AugustinJose1221/ffitt/blob/development/docs/diagrams/filter/detrend.html))
+
+## Overview
+
+Take the level, or the level and the drift, out of a block of samples.
+
+A block of readings almost never sits about zero. A converter gives a large
+constant part, and a sensor that warms up gives a slow drift on top of it.
+Neither carries anything, and both ruin whatever is done next.
+
+WHY IT MATTERS MORE THAN IT LOOKS
+
+A transform of a block that ends higher than it began sees a step, because
+the transform reads the block as one period of something that repeats. The
+step is not in the signal; it is the join between the end of the block and
+the start of the next copy of it. Its energy spreads across EVERY frequency
+and buries whatever was there. Measured, on a wave of one unit at bin 8 with
+a drift of 4 units across the block:
+
+    what is at bin 1, which holds no signal at all
+    with the drift left in         1.27
+    with the drift taken out       0.08
+
+The false answer at a bin that holds nothing is larger than the true signal,
+which stands at 0.99 where it belongs. A window helps, but it cannot undo a
+drift; it only softens the join.
+
+WHAT IT IS NOT
+
+This is a BLOCK operation. It reads the whole block before it can give the
+first answer, thus it cannot run on a stream. For a stream the dcblock
+module follows the level as it goes and takes it away one sample at a time.
+
+Nor is this a filter. It fits one straight line across the whole block and
+takes that away. A drift that turns round in the middle of the block is not
+a straight line and will not go; that wants a high pass, or a shorter block.
+
+AND IT TAKES A LITTLE OF THE SIGNAL WITH THE DRIFT. THIS IS NOT SMALL.
+
+A straight line through a block always holds something in common with a wave
+in that block, thus fitting one takes a piece of the wave away. How much
+depends on where the wave sits against the middle of the block, and the two
+cases are far apart. Measured, as the part of the amplitude that goes:
+
+  A wave EVEN about the middle of the block loses 3/(n+1) of itself, and
+  nothing else about the wave matters. That is 0.046 for a block of 64 and
+  0.0007 for a block of 4096: it falls away as the block grows, and for any
+  block worth transforming it is nothing.
+
+  A wave ODD about the middle loses about 3 divided by (pi times the number
+  of periods it makes across the block), AND THE LENGTH OF THE BLOCK DOES
+  NOT COME INTO IT:
+
+    periods in the block      1       4      16      32
+    part of the wave taken   0.95    0.24    0.06    0.03
+
+  A wave that makes ONE period across the block loses 95 of every 100 parts
+  of itself, at a block of 64 samples and at a block of 4096 alike.
+
+The fit is not at fault. A wave that makes one period across the block IS a
+drift, as far as anything looking at that block can tell, and no method can
+separate the two. THE ANSWER IS TO KEEP THE BLOCK LONG COMPARED WITH THE
+LOWEST FREQUENCY WANTED: at sixteen periods the loss is 6 parts in 100 and
+at thirty-two it is 3, whatever the sample rate.
+
+THE ARITHMETIC, AND WHY THE SAMPLES ARE NUMBERED FROM THE MIDDLE
+
+A straight line of least squared error has a closed form, thus this module
+does not go near the general fit of the lstsq module. It numbers the samples
+from the MIDDLE of the block rather than from the start, which makes their
+numbers sum to zero and keeps every sum below the size of the samples
+themselves.
+
+That is not free precision; it is measured precision. On a block of 4096
+samples rising by 0.001 each, the worst the recovered trend is out across
+the block, at 32 bits:
+
+    level of the block        0    1 000   100 000   8 300 000
+    numbered from the start   0.000013  0.00073   8.20     614.5
+    numbered from the middle  0.0000025 0.000047  2.05     153.7
+
+About four times better at every level, for the same work. At 64 bits both
+give the answer exactly and the choice does not show.
+
+READ THE LAST COLUMN, NOT THE FIRST. A block sitting on a level of eight
+million is out by 150 units however it is numbered, because at 32 bits the
+samples themselves are that coarse: the level has spent the digits before
+this module ever sees them. WHERE A BLOCK SITS ON A LARGE LEVEL, TAKE THE
+LEVEL OUT FIRST, with the dcblock module as the samples arrive or with
+DETREND_CONSTANT here, and only then look for a drift.
+
+The neighbouring trap is worth knowing. A trend that bends is not this
+module's work, and reaching for lstsq_polyfit with the sample number as x is
+how it is usually attempted. THAT IS REFUSED AT 32 BITS from the second
+order upwards, for a block of any length, because the sample number sits far
+from zero and its powers cannot stay apart. Use lstsq_polyfit_scaled, which
+exists for exactly this.
+
+BECAUSE OF THE NUMBERING, the slope and the offset are about the middle of
+the block. The offset is the value of the trend at the middle, which is the
+mean of the block, and NOT the value at the first sample. Use
+detrend_trend_at to get the trend at a sample rather than working it out by
+hand.
+
+## Method
+
+For the level alone, the mean of the block is taken off:
+
+    y[n] = x[n] - mean(x)
+
+For the drift as well, a straight line is laid through the block by least
+squares and that line is taken off:
+
+    y[n] = x[n] - (a + b*n)
+
+where b is the slope the readings suggest and a is where that line starts.
+
+This works on a whole block, not on a stream, and that is the difference
+from dcblock. A block can be measured from both ends, thus the line is the
+best one for the block and not a guess that follows behind.
+
+The reason it matters is the transform. A block that ends higher than it
+began is read as one period of something that repeats, and the join between
+the end and the next copy is a step. That step is not in the signal, and its
+energy spreads across EVERY frequency.
+
+## Types
+
+### `detrend_kind_t`
+
+Which trend to take away.
+
+```c
+typedef enum{
+    // The mean of the block. Use this where the readings sit at a level that
+    // does not move.
+    DETREND_CONSTANT = 0,
+
+    // The straight line of least squared error through the block. Use this
+    // where the level drifts across the block, which a sensor that warms up
+    // and almost any long recording will do.
+    DETREND_LINEAR
+}detrend_kind_t;
+```
 
 ## Functions
 

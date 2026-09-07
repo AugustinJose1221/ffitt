@@ -1,0 +1,183 @@
+{
+  "schema_version": 1,
+  "diagram_type": "architecture",
+  "meta": {
+    "title": "Inside vector",
+    "animation": "trace",
+    "quality_profile": "showcase",
+    "views": [
+      {
+        "id": "the-dot",
+        "label": "One operation matters",
+        "focus": [
+          "dot"
+        ],
+        "note": "The dot product is the length of one vector times the length of the other times the cosine of the angle between them."
+      },
+      {
+        "id": "right-angles",
+        "label": "Nothing at right angles",
+        "focus": [
+          "angle"
+        ],
+        "note": "It is nothing when the two stand at right angles, and the whole product when they point the same way."
+      },
+      {
+        "id": "the-norm",
+        "label": "Length from the dot",
+        "focus": [
+          "norm"
+        ],
+        "note": "The length of a vector is the square root of its dot with itself."
+      },
+      {
+        "id": "everywhere",
+        "label": "Wearing other names",
+        "focus": [
+          "elsewhere"
+        ],
+        "note": "A finite filter, a correlation and a projection are each a dot product under another name."
+      }
+    ]
+  },
+  "layout": {
+    "mode": "grid",
+    "origin": [
+      40,
+      120
+    ],
+    "cols": 6,
+    "gapX": 28,
+    "gapY": 56,
+    "cellW": 124,
+    "cellH": 62
+  },
+  "components": [
+    {
+      "id": "a",
+      "type": "external",
+      "label": "Vector a",
+      "sublabel": "a list of values",
+      "row": 0,
+      "col": 0
+    },
+    {
+      "id": "b",
+      "type": "external",
+      "label": "Vector b",
+      "sublabel": "the same size",
+      "row": 2,
+      "col": 0
+    },
+    {
+      "id": "dot",
+      "type": "backend",
+      "label": "Dot Product",
+      "sublabel": "sum of a[i]*b[i]",
+      "row": 1,
+      "col": 1
+    },
+    {
+      "id": "angle",
+      "type": "cloud",
+      "label": "The Angle",
+      "sublabel": "nothing at right angles",
+      "row": 0,
+      "col": 2
+    },
+    {
+      "id": "norm",
+      "type": "backend",
+      "label": "Norm",
+      "sublabel": "sqrt of a dot a",
+      "row": 2,
+      "col": 2
+    },
+    {
+      "id": "elsewhere",
+      "type": "cloud",
+      "label": "Under Other Names",
+      "sublabel": "fir, correlate, project",
+      "row": 1,
+      "col": 3
+    }
+  ],
+  "boundaries": [
+    {
+      "kind": "region",
+      "label": "almost everything here is this, wearing another name",
+      "wraps": [
+        "dot",
+        "elsewhere"
+      ]
+    }
+  ],
+  "connections": [
+    {
+      "id": "one",
+      "from": "a",
+      "to": "dot",
+      "label": "a[i]",
+      "variant": "emphasis"
+    },
+    {
+      "id": "two",
+      "from": "b",
+      "to": "dot",
+      "label": "b[i]",
+      "variant": "emphasis"
+    },
+    {
+      "id": "cos",
+      "from": "dot",
+      "to": "angle",
+      "label": "times the cosine"
+    },
+    {
+      "id": "self",
+      "from": "dot",
+      "to": "norm",
+      "label": "with itself"
+    },
+    {
+      "id": "same",
+      "from": "dot",
+      "to": "elsewhere",
+      "label": "the same sum",
+      "variant": "emphasis",
+      "labelAt": [
+        480,
+        312
+      ]
+    }
+  ],
+  "cards": [
+    {
+      "dot": "cyan",
+      "title": "What it works out",
+      "items": [
+        "dot(a, b) = sum over i of a[i] * b[i]",
+        "norm(a) = sqrt(dot(a, a))",
+        "The dot is the length of one, times the length of the other, times the cosine between"
+      ]
+    },
+    {
+      "dot": "emerald",
+      "title": "What that means",
+      "items": [
+        "It is nothing when the two stand at right angles",
+        "It is the whole product when they point the same way",
+        "Thus it measures how much of one vector lies along the other"
+      ]
+    },
+    {
+      "dot": "amber",
+      "title": "Where it turns up again",
+      "items": [
+        "A finite filter is the dot of the samples with the coefficients",
+        "A correlation is the dot of two signals at an offset",
+        "A projection is a dot divided by a norm"
+      ]
+    }
+  ]
+}
