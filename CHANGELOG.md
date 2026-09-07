@@ -1,3 +1,21 @@
+## 1.0.1 (2026-09-07)
+
+### Docs
+
+- **api**: Carry the explanation of a module into its document
+- **api**: Read an enum as a type, and the choices it names
+- **api**: Point each module document at its diagram
+- **diagrams**: Say what every module works out, and draw how it does it
+- **diagrams**: Add the page that lists every diagram
+- **diagrams**: Say how a diagram is made again, and let a program make it
+- **diagrams**: Check that every module keeps its method and its diagram
+
+### Fix
+
+- **docs**: Do not print the comment of a declaration twice
+- **docs**: Point the preview link at a branch that holds the diagrams
+- **test**: Set the last struct the tests left as the stack found it
+
 ## 1.0.0 (2026-09-04)
 
 ### Feat
