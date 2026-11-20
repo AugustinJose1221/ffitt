@@ -134,5 +134,6 @@ void run_correlate_cost_tests(void);
 void run_movavg_cost_tests(void);
 void run_goertzel_cost_tests(void);
 void run_convolve_cost_tests(void);
+void run_fft_cost_tests(void);
 
 #endif//COST_H

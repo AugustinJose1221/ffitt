@@ -17,6 +17,7 @@ int main(void)
     run_correlate_cost_tests();
     run_goertzel_cost_tests();
     run_convolve_cost_tests();
+    run_fft_cost_tests();
 
     cost_report_summary();
 
