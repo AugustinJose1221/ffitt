@@ -74,26 +74,44 @@ two filters of about 40, and the two together cost far less than the one.
 
 ## Method
 
-Changing the rate by P/Q is three steps, and only the middle one is obvious:
+A DECIMATOR filters, and then keeps one sample in every factor:
 
-    1. put Q-1 zeros between the samples, which raises the rate by Q
-    2. filter, at the higher rate
-    3. keep every Pth sample, which lowers the rate by P
+    y[m] = sum over k of h[k] * x[m*factor - k]
 
-The filter in the middle does two jobs at once, and both are necessary. On
-the way up it fills in the zeros, which are not samples of anything. On the
-way down it removes everything above half the NEW rate, before that content
-can fold back.
+The filter is worked out ONLY for the samples that are kept. A decimator by
+64 at the advised length of 2113 coefficients costs 2113 products for each
+sample it gives, and not 64 times that.
 
-That folding is the whole reason this is a module and not a line of code. A
-signal at 32 kHz may hold up to 16 kHz. Keep every 64th sample and the new
-rate holds nothing above 250 Hz. What was above 250 does not disappear: it
-comes back at a frequency it never had, sitting on top of the signal and
-looking exactly like part of it, and NOTHING can take it out afterwards.
+The filter must come first. A signal at 32 kHz may hold up to 16 kHz. Keep
+every 64th sample and the new rate holds nothing above 250 Hz. What was
+above 250 does not disappear: it comes back at a frequency it never had,
+sitting on top of the signal and looking exactly like part of it, and
+NOTHING can take it out afterwards. That folding is the whole reason this
+is a module and not a line of code.
 
-The zeros are never really inserted and the thrown samples are never really
-worked out. The library computes only the outputs it keeps, thus the cost is
-the cost of the answers and not of the intermediate rate.
+An INTERPOLATOR makes factor samples for each one it is given. Between two
+input samples the filter would be fed zeros, and a zero times a coefficient
+is nothing, thus each output reads only every factor-th coefficient:
+
+    y[m*factor + p] = sum over j of h[p + j*factor] * x[m - j]
+
+The zeros are never put in. Each input sample costs one product for each
+coefficient of the filter, spread across the factor samples it makes.
+
+A RATIO THAT IS NOT A WHOLE NUMBER, such as 44 100 to 48 000, is an
+interpolator by 160 followed by a decimator by 147. This module gives no
+single function for that: the caller builds the two and gives the output of
+the first to the second. That road is correct, and it is dear. Counted from
+the two loops at the advised lengths:
+
+    intermediate samples made each second    7 056 000
+    of those, kept                               48 000   (0.68 %)
+    products for each sample given                9 703
+
+The interpolator works out every intermediate sample, and the decimator
+throws away all but one in 147. A single filter that knew both factors
+would work out only the samples that are kept, at about 33 products for
+each, which is close to three hundred times less.
 
 ## Macros
 
