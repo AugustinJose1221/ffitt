@@ -77,17 +77,30 @@ THE SPECIFICATION IS THE SOURCE AND THE PAGE IS THE RESULT. Neither is edited
 by hand: the specification is written, and the page is delivered from it.
 
 The pages are delivered by [archify](https://github.com/tt-a1i/archify),
-which is a separate project. This repository draws with version 2.17.0-dev.1,
-as `scripts/build_diagrams.py` records. Another version may draw the same
-specification differently, and the script says so.
-
-To make every page again, or to examine that each one agrees with its
-specification:
+which is a separate project. THIS REPOSITORY DRAWS WITH ONE COMMIT OF IT, and
+`scripts/build_diagrams.py` records which. The version, 2.17.0-dev.1, is only
+a label: a version that ends in -dev names no one commit. archify has moved on
+since, and a fresh clone gives a version that refuses every specification
+here. Put the right one beside this repository:
 
 ```bash
-ARCHIFY_HOME=/path/to/archify/archify python3 scripts/build_diagrams.py
-ARCHIFY_HOME=/path/to/archify/archify python3 scripts/build_diagrams.py --check
+git -C .. clone https://github.com/tt-a1i/archify.git archify
+git -C ../archify checkout d8e4daf2610d512821365f41b139d874b29efe81
 ```
+
+The script finds it there, or wherever `ARCHIFY_HOME` says. It names the
+commit it expects and gives these two commands when it finds the wrong one or
+none at all. To make every page again, or to examine that each one agrees with
+its specification:
+
+```bash
+python3 scripts/build_diagrams.py
+python3 scripts/build_diagrams.py --check
+```
+
+THE CHECK CHANGES NOTHING. It delivers each page into a place of its own and
+compares it with the page in the tree, which it leaves exactly as it was. A
+page does not depend on where it is written, thus the bytes agree.
 
 A PAGE IS ACCEPTED ONLY ON A DELIVERY THAT PASSES ALL NINE ARTIFACT CHECKS
 with no errors and no warnings. Anything less is not a diagram of this
