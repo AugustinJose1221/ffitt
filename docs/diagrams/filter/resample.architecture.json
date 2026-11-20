@@ -7,38 +7,38 @@
     "quality_profile": "showcase",
     "views": [
       {
-        "id": "the-danger",
-        "label": "What folds back",
+        "id": "two-objects",
+        "label": "Two objects, chained",
         "focus": [
-          "fold"
+          "interp",
+          "decim"
         ],
-        "note": "A signal at 32 kHz may hold 16 kHz. At 500 Hz nothing above 250 fits, and what was above it comes back at a frequency it never had."
+        "note": "The module gives no single function for a ratio. The caller builds an interpolator and a decimator and feeds one to the other."
       },
       {
-        "id": "three-steps",
-        "label": "Three steps, not one",
+        "id": "no-zeros",
+        "label": "No zeros are put in",
         "focus": [
-          "up",
-          "filterit",
-          "down"
+          "interp"
         ],
-        "note": "Put Q-1 zeros between the samples, filter at the higher rate, then keep every Pth sample."
+        "note": "A zero times a coefficient is nothing, thus each output reads only every 160th coefficient and the zeros never exist."
       },
       {
-        "id": "two-jobs",
-        "label": "One filter, two jobs",
+        "id": "only-kept",
+        "label": "Only the kept are worked out",
         "focus": [
-          "filterit"
+          "decim"
         ],
-        "note": "On the way up it fills the zeros, which are samples of nothing. On the way down it removes what would fold back."
+        "note": "The decimator works out its filter for the one sample in 147 it keeps, and for no other."
       },
       {
-        "id": "never-really",
-        "label": "Never really done that way",
+        "id": "where-it-goes",
+        "label": "Where the cost goes",
         "focus": [
-          "cheap"
+          "middle",
+          "waste"
         ],
-        "note": "The zeros are not inserted and the thrown samples are not worked out. Only the outputs that are kept are computed."
+        "note": "Every intermediate sample is made, and all but one in 147 is thrown away. A filter that knew both factors would not make them."
       }
     ]
   },
@@ -48,7 +48,7 @@
       40,
       120
     ],
-    "cols": 6,
+    "cols": 5,
     "gapX": 28,
     "gapY": 56,
     "cellW": 124,
@@ -56,10 +56,10 @@
   },
   "components": [
     {
-      "id": "signal",
+      "id": "src",
       "type": "external",
-      "label": "At One Rate",
-      "sublabel": "32 kHz, say",
+      "label": "At 44 100",
+      "sublabel": "one rate",
       "row": 1,
       "col": 0
     },
@@ -67,48 +67,49 @@
       "id": "fold",
       "type": "security",
       "label": "What Folds Back",
-      "sublabel": "cannot be removed",
+      "sublabel": "filter first, always",
       "row": 0,
-      "col": 1,
-      "tag": "the whole danger"
+      "col": 4,
+      "tag": "cannot be undone"
     },
     {
-      "id": "up",
+      "id": "interp",
       "type": "backend",
-      "label": "Insert Q-1 Zeros",
-      "sublabel": "rate times Q",
+      "label": "Interpolator by 160",
+      "sublabel": "160 for each sample",
       "row": 1,
       "col": 1
     },
     {
-      "id": "filterit",
-      "type": "backend",
-      "label": "One Filter",
-      "sublabel": "fills and protects",
+      "id": "middle",
+      "type": "database",
+      "label": "The Middle Rate",
+      "sublabel": "7 056 000 a second",
       "row": 1,
       "col": 2
     },
     {
-      "id": "down",
+      "id": "decim",
       "type": "backend",
-      "label": "Keep Every Pth",
-      "sublabel": "rate over P",
+      "label": "Decimator by 147",
+      "sublabel": "keeps one in 147",
       "row": 1,
       "col": 3
     },
     {
-      "id": "cheap",
-      "type": "backend",
-      "label": "Only the Kept",
-      "sublabel": "never really done",
+      "id": "waste",
+      "type": "security",
+      "label": "Made, Then Thrown",
+      "sublabel": "99.3 % of them",
       "row": 2,
-      "col": 3
+      "col": 2,
+      "tag": "the cost of the chain"
     },
     {
       "id": "out",
       "type": "cloud",
-      "label": "At the New Rate",
-      "sublabel": "P over Q",
+      "label": "At 48 000",
+      "sublabel": "9 703 products each",
       "row": 1,
       "col": 4
     }
@@ -116,18 +117,18 @@
   "boundaries": [
     {
       "kind": "region",
-      "label": "the filter does both jobs at once",
+      "label": "built by the caller, not by the module",
       "wraps": [
-        "up",
-        "filterit"
+        "interp",
+        "decim"
       ]
     }
   ],
   "connections": [
     {
       "id": "in",
-      "from": "signal",
-      "to": "up",
+      "from": "src",
+      "to": "interp",
       "label": "x[n]",
       "variant": "emphasis",
       "labelAt": [
@@ -136,16 +137,10 @@
       ]
     },
     {
-      "id": "risk",
-      "from": "signal",
-      "to": "fold",
-      "label": "if nothing is done"
-    },
-    {
-      "id": "raised",
-      "from": "up",
-      "to": "filterit",
-      "label": "zeros between",
+      "id": "made",
+      "from": "interp",
+      "to": "middle",
+      "label": "every one made",
       "variant": "emphasis",
       "labelAt": [
         328.0,
@@ -153,10 +148,10 @@
       ]
     },
     {
-      "id": "cut",
-      "from": "filterit",
-      "to": "down",
-      "label": "band made safe",
+      "id": "fed",
+      "from": "middle",
+      "to": "decim",
+      "label": "given to the next",
       "variant": "emphasis",
       "labelAt": [
         480.0,
@@ -164,18 +159,32 @@
       ]
     },
     {
-      "id": "saved",
-      "from": "cheap",
-      "to": "down",
-      "label": "only what is kept"
+      "id": "thrown",
+      "from": "middle",
+      "to": "waste",
+      "label": "146 in 147",
+      "labelAt": [
+        404.0,
+        312.0
+      ]
     },
     {
-      "id": "done",
-      "from": "down",
+      "id": "kept",
+      "from": "decim",
       "to": "out",
-      "label": "y[n]",
+      "label": "y[m]",
       "variant": "emphasis",
       "labelDy": -24
+    },
+    {
+      "id": "guards",
+      "from": "fold",
+      "to": "out",
+      "label": "the filter stops it",
+      "labelAt": [
+        708.0,
+        194.0
+      ]
     }
   ],
   "cards": [
@@ -183,27 +192,27 @@
       "dot": "cyan",
       "title": "What it works out",
       "items": [
-        "Put Q-1 zeros between the samples, which raises the rate by Q",
-        "Filter, at that higher rate",
-        "Keep every Pth sample, which lowers the rate by P"
+        "A decimator keeps one sample in every factor, after the filter",
+        "An interpolator makes factor samples for each one it is given",
+        "A ratio such as 44 100 to 48 000 is one of each, chained by the caller"
       ]
     },
     {
       "dot": "emerald",
-      "title": "Why the filter is not optional",
+      "title": "How the library gets there",
       "items": [
-        "Going up, it fills in the zeros, which are not samples of anything",
-        "Going down, it removes everything above half the NEW rate first",
-        "One filter does both jobs, because both are the same job at different ends"
+        "The decimator works out its filter only for the samples it keeps",
+        "The interpolator never puts the zeros in; each output reads every factor-th coefficient",
+        "The filter comes before the keeping, or what lies above the new limit folds back"
       ]
     },
     {
       "dot": "rose",
-      "title": "What cannot be undone",
+      "title": "What the chain costs",
       "items": [
-        "A signal at 32 kHz may hold up to 16 kHz; at 500 Hz nothing above 250 fits",
-        "What was above 250 comes back at a frequency it never had",
-        "It then sits on top of the signal and looks exactly like part of it"
+        "Counted at the advised lengths: 9 703 products for each sample given",
+        "7 056 000 intermediate samples a second, of which 48 000 are kept",
+        "A single filter that knew both factors would need about 33, near three hundred times less"
       ]
     }
   ]
