@@ -173,6 +173,25 @@
 # test, which refuse on command. Only that one executable is built this way.
 :flags:
   :test:
+    # WHAT A NEWER GCC REFUSES, REFUSED HERE AS WELL.
+    #
+    # GCC 14 made these into errors that stop the build. A GCC older than that
+    # only warns, and Ceedling does not show a warning, thus a test could pass
+    # here and fail on the build machine. That happened when the build machine
+    # moved to a newer GCC: two test files were refused there and passed here,
+    # and one of them held a real fault. Naming the five makes every GCC agree.
+    #
+    # These are the names GCC 13 knows. GCC 14 calls two more of its changes
+    # return-mismatch and declaration-missing-parameter-type; an older GCC does
+    # not know those names and would stop on them, and return-type already
+    # covers the first.
+    :compile:
+      '*':
+        - -Werror=incompatible-pointer-types
+        - -Werror=implicit-function-declaration
+        - -Werror=implicit-int
+        - -Werror=int-conversion
+        - -Werror=return-type
     :link:
       'Test_heap_refusal':
         - -Wl,--wrap=malloc
