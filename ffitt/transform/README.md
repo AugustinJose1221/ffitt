@@ -232,8 +232,11 @@ It works as a filter with two poles that rings at the frequency you chose.
 After a whole block, the two values of its state give the answer.
 
 Use it when you watch for a few known tones, such as the tones of a telephone
-keypad. When you need more than about `log2(n)` frequencies, the whole
-transform costs less.
+keypad. A count of operations puts the crossover at about `log2(n)`
+frequencies, but measured on a block of 1024 it comes at two or three: above
+that, `fft_forward_half` gives every frequency for less. This algorithm keeps
+its place where the samples come one at a time or there is no memory for the
+block.
 
 ## hilbert
 
@@ -461,8 +464,9 @@ each: at 64 bits the plain recurrence drifted by four parts in ten thousand
 million over twenty million samples, and a caller there who wants the answer to
 read true should switch the damping off.
 
-Take `fft` when the whole spectrum is wanted. Past about log2(N) frequencies
-the whole transform is cheaper, which is the same crossover `goertzel` names.
+Take `fft` when the whole spectrum is wanted. Past a few frequencies of one
+block the whole transform is cheaper: `goertzel` measures that crossover at two
+or three, and a step here costs more than a step there.
 
 ## dct
 

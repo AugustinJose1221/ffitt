@@ -82,8 +82,10 @@
 //
 // WHAT THIS IS NOT. It gives the bins it was told to watch and no others. A
 // caller who wants the whole spectrum wants fft, which does all N bins for
-// less than N of these. The crossover is the same one goertzel names: past
-// about log2(N) frequencies the whole transform is cheaper.
+// less than N of these. Past a few frequencies of one block the whole
+// transform is cheaper. goertzel measures that crossover at two or three
+// frequencies, and a step here costs more than a step there, thus here it
+// comes no later.
 
 // Method:
 //

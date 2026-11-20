@@ -8,7 +8,7 @@ The headers of this library say what things cost.
 - `correlate` says the plain method wins below about 300 samples and the
   transform wins far above it.
 - `convolve` says the same about a shape of about 60.
-- `goertzel` says the transform costs less above about log2(n) frequencies.
+- `goertzel` says the transform costs less above two or three frequencies.
 - `ringbuf` says putting a sample in costs the same at any size of buffer.
 - `fft` says the half road for a real signal costs about half the work of the
   plain road, forward and inverse.
