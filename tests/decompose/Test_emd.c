@@ -50,7 +50,12 @@ void test_emd_static_alloc(void)
     real_t membank[5];
     real_t mempool[5];
     real_t *membank_ptr[5] = {membank, membank, membank, membank, membank};
-    real_t *mempool_ptr = mempool;
+    // The pool is an array of buffers, as the bank beside it is: the
+    // function reads mempool[0], mempool[1] and mempool[2] as three of
+    // them. A plain pointer to the floats compiled, and only because the
+    // spline is a mock here; the real function would have read the floats
+    // as addresses.
+    real_t *mempool_ptr[5] = {mempool, mempool, mempool, mempool, mempool};
     cspline_t cspline;
     cspline_mempool_t cspline_mempool;
     memset(&cspline, 0, sizeof(cspline));
