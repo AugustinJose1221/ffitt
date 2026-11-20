@@ -51,7 +51,7 @@ static double convolve_time_of_the_plain_way(uint32_t shape_size)
 {
     double seconds;
 
-    COST_MEASURE(seconds, CONVOLVE_REPEATS,
+    COST_MEASURE(seconds, 1u,
     {
         for(uint32_t call = 0u; call < CONVOLVE_CALLS; call++)
         {
@@ -75,7 +75,7 @@ static double convolve_time_of_the_transform(uint32_t shape_size)
     cnum_t* second = (cnum_t*)malloc(sizeof(cnum_t) * transform_size);
     real_t* work = (real_t*)malloc(sizeof(real_t) * transform_size);
 
-    COST_MEASURE(seconds, CONVOLVE_REPEATS,
+    COST_MEASURE(seconds, 1u,
     {
         for(uint32_t call = 0u; call < CONVOLVE_CALLS; call++)
         {
@@ -97,10 +97,10 @@ static double convolve_time_of_the_transform(uint32_t shape_size)
 
 void run_convolve_cost_tests(void)
 {
-    double plain_at_8;
-    double transform_at_8;
-    double plain_at_512;
-    double transform_at_512;
+    double plain_at_8 = 0.0;
+    double transform_at_8 = 0.0;
+    double plain_at_512 = 0.0;
+    double transform_at_512 = 0.0;
 
     for(uint32_t index = 0u; index < CONVOLVE_SIGNAL_SIZE; index++)
     {
@@ -112,10 +112,16 @@ void run_convolve_cost_tests(void)
         convolve_shape[index] = cost_random_value();
     }
 
-    plain_at_8 = convolve_time_of_the_plain_way(CONVOLVE_SHORT_SHAPE);
-    transform_at_8 = convolve_time_of_the_transform(CONVOLVE_SHORT_SHAPE);
-    plain_at_512 = convolve_time_of_the_plain_way(CONVOLVE_LONG_SHAPE);
-    transform_at_512 = convolve_time_of_the_transform(CONVOLVE_LONG_SHAPE);
+    // One run of each, in turn, for as many rounds as there were once
+    // runs. cost.h says why the two sides of a claim are not measured
+    // one after the other.
+    for(uint32_t round = 0u; round < CONVOLVE_REPEATS; round++)
+    {
+        cost_keep_fastest(&plain_at_8, convolve_time_of_the_plain_way(CONVOLVE_SHORT_SHAPE), round);
+        cost_keep_fastest(&transform_at_8, convolve_time_of_the_transform(CONVOLVE_SHORT_SHAPE), round);
+        cost_keep_fastest(&plain_at_512, convolve_time_of_the_plain_way(CONVOLVE_LONG_SHAPE), round);
+        cost_keep_fastest(&transform_at_512, convolve_time_of_the_transform(CONVOLVE_LONG_SHAPE), round);
+    }
 
     cost_claim_at_least("convolve",
                         "below a shape of about 60 the plain way wins",

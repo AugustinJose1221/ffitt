@@ -41,7 +41,7 @@ static double movavg_time_of_the_mean(uint32_t window)
     double seconds;
     movavg_t mean = movavg_alloc(window);
 
-    COST_MEASURE(seconds, MOVAVG_REPEATS,
+    COST_MEASURE(seconds, 1u,
     {
         for(uint32_t index = 0u; index < MOVAVG_SAMPLES; index++)
         {
@@ -64,7 +64,7 @@ static double movavg_time_of_the_equal_filter(uint32_t window)
         fir_set_coefficient(&filter, index, REAL_C(1.0) / (real_t)window);
     }
 
-    COST_MEASURE(seconds, MOVAVG_REPEATS,
+    COST_MEASURE(seconds, 1u,
     {
         for(uint32_t index = 0u; index < MOVAVG_SAMPLES; index++)
         {
@@ -79,20 +79,26 @@ static double movavg_time_of_the_equal_filter(uint32_t window)
 
 void run_movavg_cost_tests(void)
 {
-    double mean_at_4;
-    double mean_at_4096;
-    double filter_at_4;
-    double filter_at_4096;
+    double mean_at_4 = 0.0;
+    double mean_at_4096 = 0.0;
+    double filter_at_4 = 0.0;
+    double filter_at_4096 = 0.0;
 
     for(uint32_t index = 0u; index < MOVAVG_SAMPLES; index++)
     {
         movavg_input[index] = cost_random_value();
     }
 
-    mean_at_4 = movavg_time_of_the_mean(MOVAVG_SHORT_WINDOW);
-    mean_at_4096 = movavg_time_of_the_mean(MOVAVG_LONG_WINDOW);
-    filter_at_4 = movavg_time_of_the_equal_filter(MOVAVG_SHORT_WINDOW);
-    filter_at_4096 = movavg_time_of_the_equal_filter(MOVAVG_LONG_WINDOW);
+    // One run of each, in turn, for as many rounds as there were once
+    // runs. cost.h says why the two sides of a claim are not measured
+    // one after the other.
+    for(uint32_t round = 0u; round < MOVAVG_REPEATS; round++)
+    {
+        cost_keep_fastest(&mean_at_4, movavg_time_of_the_mean(MOVAVG_SHORT_WINDOW), round);
+        cost_keep_fastest(&mean_at_4096, movavg_time_of_the_mean(MOVAVG_LONG_WINDOW), round);
+        cost_keep_fastest(&filter_at_4, movavg_time_of_the_equal_filter(MOVAVG_SHORT_WINDOW), round);
+        cost_keep_fastest(&filter_at_4096, movavg_time_of_the_equal_filter(MOVAVG_LONG_WINDOW), round);
+    }
 
     cost_claim_at_most("movavg",
                        "the cost does not follow the window, 4 to 4096",

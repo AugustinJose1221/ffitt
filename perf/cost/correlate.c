@@ -56,7 +56,7 @@ static double correlate_time_of_the_plain_way(uint32_t size)
     double seconds;
     uint32_t calls = correlate_calls_for(size);
 
-    COST_MEASURE(seconds, CORRELATE_REPEATS,
+    COST_MEASURE(seconds, 1u,
     {
         for(uint32_t call = 0u; call < calls; call++)
         {
@@ -78,7 +78,7 @@ static double correlate_time_of_the_transform(uint32_t size)
     cnum_t* work = (cnum_t*)malloc(sizeof(cnum_t) * transform_size);
     real_t* window = (real_t*)malloc(sizeof(real_t) * transform_size);
 
-    COST_MEASURE(seconds, CORRELATE_REPEATS,
+    COST_MEASURE(seconds, 1u,
     {
         for(uint32_t call = 0u; call < calls; call++)
         {
@@ -99,20 +99,26 @@ static double correlate_time_of_the_transform(uint32_t size)
 
 void run_correlate_cost_tests(void)
 {
-    double plain_at_64;
-    double transform_at_64;
-    double plain_at_4096;
-    double transform_at_4096;
+    double plain_at_64 = 0.0;
+    double transform_at_64 = 0.0;
+    double plain_at_4096 = 0.0;
+    double transform_at_4096 = 0.0;
 
     for(uint32_t index = 0u; index < CORRELATE_LONG_SIZE; index++)
     {
         correlate_input[index] = cost_random_value();
     }
 
-    plain_at_64 = correlate_time_of_the_plain_way(CORRELATE_SHORT_SIZE);
-    transform_at_64 = correlate_time_of_the_transform(CORRELATE_SHORT_SIZE);
-    plain_at_4096 = correlate_time_of_the_plain_way(CORRELATE_LONG_SIZE);
-    transform_at_4096 = correlate_time_of_the_transform(CORRELATE_LONG_SIZE);
+    // One run of each, in turn, for as many rounds as there were once
+    // runs. cost.h says why the two sides of a claim are not measured
+    // one after the other.
+    for(uint32_t round = 0u; round < CORRELATE_REPEATS; round++)
+    {
+        cost_keep_fastest(&plain_at_64, correlate_time_of_the_plain_way(CORRELATE_SHORT_SIZE), round);
+        cost_keep_fastest(&transform_at_64, correlate_time_of_the_transform(CORRELATE_SHORT_SIZE), round);
+        cost_keep_fastest(&plain_at_4096, correlate_time_of_the_plain_way(CORRELATE_LONG_SIZE), round);
+        cost_keep_fastest(&transform_at_4096, correlate_time_of_the_transform(CORRELATE_LONG_SIZE), round);
+    }
 
     cost_claim_at_least("correlate",
                         "below about 300 samples the plain way wins",

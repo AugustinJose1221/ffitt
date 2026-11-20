@@ -12,6 +12,14 @@ int claims_tested = 0;
 int claims_held = 0;
 int claims_broken = 0;
 
+void cost_keep_fastest(double* fastest, double measured, uint32_t round)
+{
+    if((round == 0u) || (measured < *fastest))
+    {
+        *fastest = measured;
+    }
+}
+
 double cost_now(void)
 {
     struct timespec now;

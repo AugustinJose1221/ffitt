@@ -46,6 +46,23 @@ faster one way, which is not what the header says.
 Each measurement is the FASTEST of seven runs, because the other work of the
 machine can only make a run slower and never faster.
 
+THE TWO SIDES OF A CLAIM ARE MEASURED IN TURN. Each module makes one run of
+each of its measurements per round, for seven rounds, and keeps the fastest of
+each. The seven runs of one side were once all made before the seven runs of
+the other. The fastest of seven cannot remove a disturbance that lasts through
+all seven runs of one side and not of the other, and on the build machine one
+did: the plain filter ran twice as slowly for all seven of its runs, and a
+ratio that measures 2.24 was reported as 1.05. Measured in turn, a lasting
+disturbance falls on every side alike. Issue #95 holds the record.
+
+Measured here over five runs at each width, the order changed the WORST spread
+of any claim from 7.7 to 3.6 percent at 32 bits, and from 32.8 to 3.1 percent
+at 64 bits. The typical spread did not change: it was near one or two percent
+both ways. What went is the rare large disturbance, which is the one that
+breaks a claim. Running every side between the runs of another leaves each
+run a cache a little colder, and some ratios moved by up to seven percent;
+every one stands several times clear of what it asks.
+
 Every claim was made to fail on purpose before it was kept. The ratios were
 turned round, the ring buffer was made to move its samples, and the moving mean
 was replaced by the filter it exists to avoid. All twelve reported BROKEN and

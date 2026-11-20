@@ -34,7 +34,7 @@ static double ringbuf_time_of_one_put(uint32_t size)
     double seconds;
     ringbuf_t buffer = ringbuf_alloc(size);
 
-    COST_MEASURE(seconds, RINGBUF_REPEATS,
+    COST_MEASURE(seconds, 1u,
     {
         for(uint32_t index = 0u; index < RINGBUF_SAMPLES; index++)
         {
@@ -50,16 +50,22 @@ static double ringbuf_time_of_one_put(uint32_t size)
 
 void run_ringbuf_cost_tests(void)
 {
-    double small_buffer;
-    double large_buffer;
+    double small_buffer = 0.0;
+    double large_buffer = 0.0;
 
     for(uint32_t index = 0u; index < 64u; index++)
     {
         ringbuf_samples[index] = cost_random_value();
     }
 
-    small_buffer = ringbuf_time_of_one_put(RINGBUF_SMALL_SIZE);
-    large_buffer = ringbuf_time_of_one_put(RINGBUF_LARGE_SIZE);
+    // One run of each, in turn, for as many rounds as there were once
+    // runs. cost.h says why the two sides of a claim are not measured
+    // one after the other.
+    for(uint32_t round = 0u; round < RINGBUF_REPEATS; round++)
+    {
+        cost_keep_fastest(&small_buffer, ringbuf_time_of_one_put(RINGBUF_SMALL_SIZE), round);
+        cost_keep_fastest(&large_buffer, ringbuf_time_of_one_put(RINGBUF_LARGE_SIZE), round);
+    }
 
     cost_claim_at_most("ringbuf",
                        "put costs the same at 16 and at 16384",
