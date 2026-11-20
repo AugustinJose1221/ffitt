@@ -210,6 +210,13 @@ transform itself gets no memory.
 second half mirrors the first half. Only the bins from 0 to `size/2` hold new
 information. `fft_bin_frequency` gives the frequency of a bin in hertz.
 
+**A real signal has a faster road.** `fft_forward_half` gives those bins alone
+and `fft_inverse_half` turns them back. They pack the signal into a complex
+signal of half the size, thus they do about half the work, with the same
+`fft_t` and no new table. Measured on 1024 points, forward costs 0.53 to 0.54
+of `fft_forward_real`, and inverse 0.34 to 0.40 of `fft_inverse_real`. Take
+`fft_forward_real` only when you want the mirrored half as well.
+
 **One trap.** A tone that does not lie on a bin gives its energy to many bins
 around it, thus the peak becomes wide and low. Choose the size of the block so
 that the tone you look for lands on a bin, if you can.
@@ -225,8 +232,11 @@ It works as a filter with two poles that rings at the frequency you chose.
 After a whole block, the two values of its state give the answer.
 
 Use it when you watch for a few known tones, such as the tones of a telephone
-keypad. When you need more than about `log2(n)` frequencies, the whole
-transform costs less.
+keypad. A count of operations puts the crossover at about `log2(n)`
+frequencies, but measured on a block of 1024 it comes at two or three: above
+that, `fft_forward_half` gives every frequency for less. This algorithm keeps
+its place where the samples come one at a time or there is no memory for the
+block.
 
 ## hilbert
 
@@ -454,8 +464,9 @@ each: at 64 bits the plain recurrence drifted by four parts in ten thousand
 million over twenty million samples, and a caller there who wants the answer to
 read true should switch the damping off.
 
-Take `fft` when the whole spectrum is wanted. Past about log2(N) frequencies
-the whole transform is cheaper, which is the same crossover `goertzel` names.
+Take `fft` when the whole spectrum is wanted. Past a few frequencies of one
+block the whole transform is cheaper: `goertzel` measures that crossover at two
+or three, and a step here costs more than a step there.
 
 ## dct
 

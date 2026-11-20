@@ -215,7 +215,7 @@
       "items": [
         "The window itself is still held, so the sample that left can be taken off",
         "The turn is made a little under one, thus rounding does not pile up for ever",
-        "Past about log2(size) frequencies, the whole transform is cheaper"
+        "Past two or three frequencies of one block, the whole transform is cheaper"
       ]
     }
   ]

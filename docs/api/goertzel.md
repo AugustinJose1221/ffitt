@@ -22,8 +22,13 @@ Thus it suits a small target that watches for a few known tones, such as the
 tones of a telephone keypad.
 
 The cost for one frequency is one multiplication and two additions for each
-sample. For a few frequencies that is much less work than a transform. When
-you need more than about log2(n) frequencies, the transform costs less.
+sample. A count of operations says that the transform costs less only above
+about log2(n) frequencies, but a machine does not measure that. MEASURED ON A
+BLOCK OF 1024, built with optimisation, one frequency costs less than half of
+fft_forward_half, and two or three cost as much as that transform. Thus for
+a block that is in memory, use this algorithm for one or two frequencies and
+the transform for more. Use this algorithm for more frequencies only when the
+samples come one at a time, or when there is no memory for the block.
 
 The algorithm reads a block of a fixed number of samples. Give each sample
 to goertzel_process_sample, and then read the result. The block size and the

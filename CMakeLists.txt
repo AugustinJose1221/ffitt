@@ -432,6 +432,7 @@ if(BUILD_COST_TESTS)
         perf/cost/correlate.c
         perf/cost/goertzel.c
         perf/cost/convolve.c
+        perf/cost/fft.c
         perf/cost/run.c)
 
     target_link_libraries(cost ffitt m)
