@@ -385,3 +385,223 @@ void test_fft_inverse_real_drops_what_no_real_signal_could_have(void)
 
     fft_free(&fft);
 }
+
+// THE FASTER ROAD FOR A REAL SIGNAL.
+//
+// fft_forward_half and fft_inverse_half must give what fft_forward_real and
+// fft_inverse_real give, to the rounding of the width.
+//
+// THE TOLERANCE IS A SHARE OF THE LARGEST VALUE, AND NOT A FIXED AMOUNT. The
+// rounding of a transform grows with the size of the values and with the
+// logarithm of the size. A fixed amount small enough to mean something at a
+// size of 2 is broken by honest rounding at 1024: it was written that way
+// first, and a bin of 4.13 at 32 bits differed by 6.7e-6, which is a share of
+// 1.6e-6. Measured over every size from 2 to 4096, the worst share is 5.4e-7
+// at 32 bits and 9.4e-16 at 64, and the shares below stand clear of both.
+//
+// A value that is small and known exactly, as in the transform by hand, is
+// held to a fixed amount instead.
+
+#ifdef FFITT_REAL_64
+#define HALF_SHARE      REAL_C(1e-13)
+#define HALF_TOLERANCE  REAL_C(1e-12)
+#else
+#define HALF_SHARE      REAL_C(4e-6)
+#define HALF_TOLERANCE  REAL_C(5e-6)
+#endif
+
+// The largest size of any value in a list, which the share is a share of.
+static real_t largest_of(const real_t* values, uint32_t count)
+{
+    real_t largest = REAL_C(0.0);
+    for(uint32_t index = 0; index < count; index++)
+    {
+        real_t size = REAL_ABS(values[index]);
+        largest = (size > largest) ? size : largest;
+    }
+    return largest;
+}
+
+static real_t largest_bin_of(const cnum_t* bins, uint32_t count)
+{
+    real_t largest = REAL_C(0.0);
+    for(uint32_t index = 0; index < count; index++)
+    {
+        real_t size = cnum_magnitude(bins[index]);
+        largest = (size > largest) ? size : largest;
+    }
+    return largest;
+}
+
+// A signal with something at every frequency, so that no bin is nothing by luck.
+static void fill_with_noise(real_t* signal, uint32_t size, uint32_t seed)
+{
+    srand(seed);
+    for(uint32_t index = 0; index < size; index++)
+    {
+        signal[index] = ((real_t)rand() / (real_t)RAND_MAX) - REAL_C(0.5);
+    }
+}
+
+void test_fft_forward_half_gives_the_bins_of_fft_forward_real_at_every_size(void)
+{
+    // Every size the module takes, from the smallest. The smallest sizes are
+    // where an untwist goes wrong: at 2 there is no pair at all, and at 4 the
+    // only bin besides the two ends is its own mirror.
+    for(uint32_t size = 2u; size <= 1024u; size *= 2u)
+    {
+        fft_t fft = fft_alloc(size);
+        real_t* signal = (real_t*)malloc(sizeof(real_t) * size);
+        cnum_t* full = (cnum_t*)malloc(sizeof(cnum_t) * size);
+        cnum_t* half = (cnum_t*)malloc(sizeof(cnum_t) * FFT_REAL_BIN_COUNT(size));
+
+        fill_with_noise(signal, size, size);
+        fft_forward_real(&fft, signal, full);
+        fft_forward_half(&fft, signal, half);
+
+        real_t allowed = HALF_SHARE * largest_bin_of(full, FFT_REAL_BIN_COUNT(size));
+
+        for(uint32_t bin = 0; bin < FFT_REAL_BIN_COUNT(size); bin++)
+        {
+            TEST_ASSERT_REAL_WITHIN(allowed, full[bin].re, half[bin].re);
+            TEST_ASSERT_REAL_WITHIN(allowed, full[bin].im, half[bin].im);
+        }
+
+        free(signal);
+        free(full);
+        free(half);
+        fft_free(&fft);
+    }
+}
+
+void test_fft_forward_half_of_four_samples_is_the_transform_by_hand(void)
+{
+    // Worked by hand from the definition, for the size where the middle bin is
+    // its own mirror and is written exactly rather than through the table.
+    fft_t fft = fft_alloc(4);
+    real_t signal[4] = {REAL_C(1.0), REAL_C(2.0), REAL_C(3.0), REAL_C(4.0)};
+    cnum_t bins[FFT_REAL_BIN_COUNT(4)];
+
+    fft_forward_half(&fft, signal, bins);
+
+    TEST_ASSERT_REAL_WITHIN(HALF_TOLERANCE, REAL_C(10.0), bins[0].re);   // the sum
+    TEST_ASSERT_REAL_WITHIN(HALF_TOLERANCE, REAL_C(0.0), bins[0].im);
+    TEST_ASSERT_REAL_WITHIN(HALF_TOLERANCE, REAL_C(-2.0), bins[1].re);   // (1-3) - i(2-4)
+    TEST_ASSERT_REAL_WITHIN(HALF_TOLERANCE, REAL_C(2.0), bins[1].im);
+    TEST_ASSERT_REAL_WITHIN(HALF_TOLERANCE, REAL_C(-2.0), bins[2].re);   // 1-2+3-4
+    TEST_ASSERT_REAL_WITHIN(HALF_TOLERANCE, REAL_C(0.0), bins[2].im);
+
+    fft_free(&fft);
+}
+
+void test_fft_forward_half_puts_the_highest_frequency_in_the_last_bin(void)
+{
+    // A signal that turns once for every two samples is the highest the sample
+    // rate can carry. All of it must land in bin size/2, and none elsewhere.
+    fft_t fft = fft_alloc(16);
+    real_t signal[16];
+    cnum_t bins[FFT_REAL_BIN_COUNT(16)];
+
+    for(uint32_t index = 0; index < 16u; index++)
+    {
+        signal[index] = ((index % 2u) == 0u) ? REAL_C(1.0) : REAL_C(-1.0);
+    }
+
+    fft_forward_half(&fft, signal, bins);
+
+    TEST_ASSERT_REAL_WITHIN(HALF_TOLERANCE, REAL_C(16.0), bins[8].re);
+    for(uint32_t bin = 0; bin < 8u; bin++)
+    {
+        TEST_ASSERT_REAL_WITHIN(HALF_TOLERANCE, REAL_C(0.0), cnum_magnitude(bins[bin]));
+    }
+
+    fft_free(&fft);
+}
+
+void test_fft_inverse_half_gives_what_fft_inverse_real_gives(void)
+{
+    // A half spectrum of noise, with imaginary parts at bin 0 and bin size/2
+    // that no real signal can give. Both functions must drop them alike.
+    for(uint32_t size = 2u; size <= 1024u; size *= 2u)
+    {
+        uint32_t bins = FFT_REAL_BIN_COUNT(size);
+        fft_t fft = fft_alloc(size);
+        cnum_t* spectrum = (cnum_t*)malloc(sizeof(cnum_t) * bins);
+        real_t* plain = (real_t*)malloc(sizeof(real_t) * size);
+        real_t* fast = (real_t*)malloc(sizeof(real_t) * size);
+        cnum_t* plain_work = (cnum_t*)malloc(sizeof(cnum_t) * size);
+        cnum_t* fast_work = (cnum_t*)malloc(sizeof(cnum_t) * (size / 2u));
+
+        srand(size + 7u);
+        for(uint32_t bin = 0; bin < bins; bin++)
+        {
+            spectrum[bin] = cnum_make(((real_t)rand() / (real_t)RAND_MAX) - REAL_C(0.5),
+                                      ((real_t)rand() / (real_t)RAND_MAX) - REAL_C(0.5));
+        }
+
+        fft_inverse_real(&fft, spectrum, plain, plain_work);
+        fft_inverse_half(&fft, spectrum, fast, fast_work);
+
+        real_t allowed = HALF_SHARE * largest_of(plain, size);
+
+        for(uint32_t index = 0; index < size; index++)
+        {
+            TEST_ASSERT_REAL_WITHIN(allowed, plain[index], fast[index]);
+        }
+
+        free(spectrum);
+        free(plain);
+        free(fast);
+        free(plain_work);
+        free(fast_work);
+        fft_free(&fft);
+    }
+}
+
+void test_fft_half_gives_the_signal_back(void)
+{
+    fft_t fft = fft_alloc(256);
+    real_t signal[256];
+    real_t back[256];
+    cnum_t bins[FFT_REAL_BIN_COUNT(256)];
+    cnum_t work[128];
+
+    fill_with_noise(signal, 256u, 99u);
+    fft_forward_half(&fft, signal, bins);
+    fft_inverse_half(&fft, bins, back, work);
+
+    real_t allowed = HALF_SHARE * largest_of(signal, 256u);
+
+    for(uint32_t index = 0; index < 256u; index++)
+    {
+        TEST_ASSERT_REAL_WITHIN(allowed, signal[index], back[index]);
+    }
+
+    fft_free(&fft);
+}
+
+void test_fft_half_needs_no_heap_with_the_tables_of_a_static_transform(void)
+{
+    // The faster road reads the tables of the fft_t it is given and takes no
+    // memory of its own, thus a transform built on memory the caller holds
+    // serves it as well as one built on the heap.
+    cnum_t twiddle[FFT_TWIDDLE_COUNT(64)];
+    uint32_t reverse[FFT_REVERSE_COUNT(64)];
+    fft_t fixed = fft_static_alloc(64, twiddle, reverse);
+    fft_t heap = fft_alloc(64);
+    real_t signal[64];
+    cnum_t from_fixed[FFT_REAL_BIN_COUNT(64)];
+    cnum_t from_heap[FFT_REAL_BIN_COUNT(64)];
+
+    fill_with_noise(signal, 64u, 5u);
+    fft_forward_half(&fixed, signal, from_fixed);
+    fft_forward_half(&heap, signal, from_heap);
+
+    for(uint32_t bin = 0; bin < FFT_REAL_BIN_COUNT(64); bin++)
+    {
+        TEST_ASSERT_EQUAL_MEMORY(&from_heap[bin], &from_fixed[bin], sizeof(cnum_t));
+    }
+
+    fft_free(&fixed);
+    fft_free(&heap);
+}

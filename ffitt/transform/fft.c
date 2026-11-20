@@ -19,6 +19,7 @@ static void fft_build_tables(fft_t* fft);
 static uint32_t fft_reverse_bits(uint32_t value, uint32_t bits);
 static uint32_t fft_count_bits(uint32_t size);
 static void fft_transform(fft_t* fft, cnum_t* data);
+static void fft_transform_sized(fft_t* fft, cnum_t* data, uint32_t count);
 
 bool fft_is_valid_size(uint32_t size)
 {
@@ -150,6 +151,148 @@ void fft_inverse_real(fft_t* fft, const cnum_t* input, real_t* output,
     for(uint32_t index = 0; index < size; index++)
     {
         output[index] = cnum_real(work[index]);
+    }
+}
+
+void fft_forward_half(fft_t* fft, const real_t* input, cnum_t* output)
+{
+    ASSERT(fft != NULL);
+    ASSERT(input != NULL);
+    ASSERT(output != NULL);
+
+    uint32_t size = fft->size;
+    uint32_t half = size / 2u;
+
+    // The samples at the even places go into the real parts and the samples at
+    // the odd places into the imaginary parts. That is a complex signal of half
+    // the size, and its transform costs less than half the transform of the
+    // whole.
+    for(uint32_t index = 0; index < half; index++)
+    {
+        output[index] = cnum_make(input[2u * index], input[(2u * index) + 1u]);
+    }
+
+    fft_transform_sized(fft, output, half);
+
+    // What came back is two transforms laid one over the other: E of the even
+    // samples and O of the odd ones, held as Z = E + i*O. Each bin of the
+    // answer is X[k] = E[k] + W^k * O[k], and the two are taken apart from a
+    // bin and its mirror:
+    //
+    //     E[k] = (Z[k] + conj(Z[half-k])) / 2
+    //     O[k] = (Z[k] - conj(Z[half-k])) / 2i
+    //
+    // The mirror of the answer is then conj(E[k] - W^k * O[k]), thus each pair
+    // of places is read once and written once, and the work is done in place.
+
+    // Bin 0 and bin half have Z[0] as their own mirror. Both answers are real.
+    real_t level_re = output[0].re;
+    real_t level_im = output[0].im;
+    output[0] = cnum_make(level_re + level_im, REAL_C(0.0));
+    output[half] = cnum_make(level_re - level_im, REAL_C(0.0));
+
+    for(uint32_t lower = 1u; (2u * lower) < half; lower++)
+    {
+        uint32_t upper = half - lower;
+
+        real_t a_re = output[lower].re;
+        real_t a_im = output[lower].im;
+        real_t b_re = output[upper].re;
+        real_t b_im = output[upper].im;
+
+        real_t even_re = (a_re + b_re) * REAL_C(0.5);
+        real_t even_im = (a_im - b_im) * REAL_C(0.5);
+        real_t odd_re = (a_im + b_im) * REAL_C(0.5);
+        real_t odd_im = (b_re - a_re) * REAL_C(0.5);
+
+        real_t factor_re = fft->twiddle[lower].re;
+        real_t factor_im = fft->twiddle[lower].im;
+        real_t turned_re = (factor_re * odd_re) - (factor_im * odd_im);
+        real_t turned_im = (factor_re * odd_im) + (factor_im * odd_re);
+
+        output[lower] = cnum_make(even_re + turned_re, even_im + turned_im);
+        output[upper] = cnum_make(even_re - turned_re, turned_im - even_im);
+    }
+
+    // The middle pair is its own mirror, and its factor is exactly -i. The table
+    // holds that factor as a cosine that is not quite nothing, thus the exact
+    // answer is written instead: the conjugate of what is there.
+    if((half % 2u) == 0u)
+    {
+        uint32_t middle = half / 2u;
+        output[middle] = cnum_conjugate(output[middle]);
+    }
+}
+
+void fft_inverse_half(fft_t* fft, const cnum_t* input, real_t* output,
+                      cnum_t* work)
+{
+    ASSERT(fft != NULL);
+    ASSERT(input != NULL);
+    ASSERT(output != NULL);
+    ASSERT(work != NULL);
+
+    uint32_t size = fft->size;
+    uint32_t half = size / 2u;
+
+    // The untwist of fft_forward_half, run backwards: from each bin and its
+    // mirror, take E and O apart again and lay them over each other as
+    // Z = E + i*O, whose inverse transform holds the samples at the even
+    // places in its real parts and those at the odd places in its imaginary
+    // parts.
+
+    // Bin 0 and bin half carry no imaginary part that a real signal could
+    // give. As fft_inverse_real does, their real parts are taken and the rest
+    // is dropped.
+    real_t level = cnum_real(input[0]);
+    real_t highest = cnum_real(input[half]);
+    work[0] = cnum_make((level + highest) * REAL_C(0.5),
+                        (level - highest) * REAL_C(0.5));
+
+    for(uint32_t lower = 1u; (2u * lower) < half; lower++)
+    {
+        uint32_t upper = half - lower;
+
+        real_t a_re = input[lower].re;
+        real_t a_im = input[lower].im;
+        real_t b_re = input[upper].re;
+        real_t b_im = input[upper].im;
+
+        real_t even_re = (a_re + b_re) * REAL_C(0.5);
+        real_t even_im = (a_im - b_im) * REAL_C(0.5);
+        real_t turned_re = (a_re - b_re) * REAL_C(0.5);
+        real_t turned_im = (a_im + b_im) * REAL_C(0.5);
+
+        // Turned back by the conjugate of the factor it was turned by.
+        real_t factor_re = fft->twiddle[lower].re;
+        real_t factor_im = fft->twiddle[lower].im;
+        real_t odd_re = (factor_re * turned_re) + (factor_im * turned_im);
+        real_t odd_im = (factor_re * turned_im) - (factor_im * turned_re);
+
+        work[lower] = cnum_make(even_re - odd_im, even_im + odd_re);
+        work[upper] = cnum_make(even_re + odd_im, odd_re - even_im);
+    }
+
+    if((half % 2u) == 0u)
+    {
+        uint32_t middle = half / 2u;
+        work[middle] = cnum_conjugate(input[middle]);
+    }
+
+    // The inverse of a transform of half the size: the forward transform of
+    // the conjugate, the conjugate of that, divided by the half size.
+    for(uint32_t index = 0; index < half; index++)
+    {
+        work[index] = cnum_conjugate(work[index]);
+    }
+
+    fft_transform_sized(fft, work, half);
+
+    real_t scale = REAL_C(1.0) / (real_t)half;
+    for(uint32_t index = 0; index < half; index++)
+    {
+        output[2u * index] = work[index].re * scale;
+        output[(2u * index) + 1u] = -work[index].im * scale;
     }
 }
 
@@ -285,11 +428,32 @@ static void fft_build_tables(fft_t* fft)
 // widths, and every module that stands on the transform gets it.
 static void fft_transform(fft_t* fft, cnum_t* data)
 {
-    uint32_t size = fft->size;
+    fft_transform_sized(fft, data, fft->size);
+}
 
-    for(uint32_t index = 0; index < size; index++)
+// The same transform, of a size that is the size of the tables or a power of
+// two below it. The tables of one size already hold those of every smaller one,
+// thus a smaller transform needs no tables of its own:
+//
+//   THE ORDER. The bit reversal of count places is held at every stride-th
+//   entry of the order for the full size. For a size of 8, the order of 4 is
+//   at entries 0, 2, 4 and 6: reversing 2j in three bits gives what reversing
+//   j gives in two.
+//
+//   THE TURNING FACTORS. A group of a given width turns by the same factors in
+//   a transform of any size, thus the step through the table is set by the
+//   full size and the width alone, and not by count.
+//
+// With count equal to the size the stride is one, and this is the transform
+// as it always was.
+static void fft_transform_sized(fft_t* fft, cnum_t* data, uint32_t count)
+{
+    uint32_t size = fft->size;
+    uint32_t stride = size / count;
+
+    for(uint32_t index = 0; index < count; index++)
     {
-        uint32_t target = fft->reverse[index];
+        uint32_t target = fft->reverse[index * stride];
         if(target > index)
         {
             cnum_t value = data[index];
@@ -298,12 +462,12 @@ static void fft_transform(fft_t* fft, cnum_t* data)
         }
     }
 
-    for(uint32_t group = 2; group <= size; group *= 2)
+    for(uint32_t group = 2; group <= count; group *= 2)
     {
         uint32_t half = group / 2;
         uint32_t step = size / group;
 
-        for(uint32_t start = 0; start < size; start += group)
+        for(uint32_t start = 0; start < count; start += group)
         {
             for(uint32_t position = 0; position < half; position++)
             {

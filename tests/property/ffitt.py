@@ -1370,6 +1370,13 @@ def load_library():
                                          ctypes.POINTER(Cnum), FLOAT_POINTER,
                                          ctypes.POINTER(Cnum)]
     library.fft_inverse_real.restype = None
+    library.fft_forward_half.argtypes = [ctypes.POINTER(Fft), FLOAT_POINTER,
+                                         ctypes.POINTER(Cnum)]
+    library.fft_forward_half.restype = None
+    library.fft_inverse_half.argtypes = [ctypes.POINTER(Fft),
+                                         ctypes.POINTER(Cnum), FLOAT_POINTER,
+                                         ctypes.POINTER(Cnum)]
+    library.fft_inverse_half.restype = None
     library.fft_magnitude.argtypes = [ctypes.POINTER(Cnum), FLOAT_POINTER,
                                       ctypes.c_uint32]
     library.fft_magnitude.restype = None

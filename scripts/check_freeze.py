@@ -55,7 +55,7 @@ FROZEN = {
     "ekf":           20,
     "emd":           6,
     "farrow":        12,
-    "fft":           11,
+    "fft":           13,   # fft_forward_half and fft_inverse_half, for 1.1 (#22)
     "filtfilt":      5,
     "fir":           23,
     "generate":      14,

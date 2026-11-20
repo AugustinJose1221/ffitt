@@ -210,6 +210,13 @@ transform itself gets no memory.
 second half mirrors the first half. Only the bins from 0 to `size/2` hold new
 information. `fft_bin_frequency` gives the frequency of a bin in hertz.
 
+**A real signal has a faster road.** `fft_forward_half` gives those bins alone
+and `fft_inverse_half` turns them back. They pack the signal into a complex
+signal of half the size, thus they do about half the work, with the same
+`fft_t` and no new table. Measured on 1024 points, forward costs 0.53 to 0.54
+of `fft_forward_real`, and inverse 0.34 to 0.40 of `fft_inverse_real`. Take
+`fft_forward_real` only when you want the mirrored half as well.
+
 **One trap.** A tone that does not lie on a bin gives its energy to many bins
 around it, thus the peak becomes wide and low. Choose the size of the block so
 that the tone you look for lands on a bin, if you can.
