@@ -65,7 +65,7 @@ jobs:
       - name: Test the diagram check
         # A check that cannot find a fault has no value. These tests give the
         # check a repository with a known fault and examine that it finds it.
-        run: python -m pytest scripts/test_check_diagrams.py -v
+        run: python -m pytest scripts/test_check_diagrams.py scripts/test_build_diagrams.py -v
 
       - name: Examine that every module has its method, its diagram and a link
         # Sixty four diagrams and sixty four method blocks were right on the day
