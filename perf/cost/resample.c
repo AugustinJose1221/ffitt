@@ -49,7 +49,7 @@ static double resample_time_of_decimating(uint32_t factor)
     double seconds;
     resample_t decimator = resample_alloc_decimator(factor, RESAMPLE_LENGTH);
 
-    COST_MEASURE(seconds, RESAMPLE_REPEATS,
+    COST_MEASURE(seconds, 1u,
     {
         real_t output = REAL_C(0.0);
 
@@ -74,7 +74,7 @@ static double resample_time_of_the_plain_filter(void)
 
     fir_design_low_pass(&filter, REAL_C(0.5) / (real_t)RESAMPLE_LARGE_FACTOR);
 
-    COST_MEASURE(seconds, RESAMPLE_REPEATS,
+    COST_MEASURE(seconds, 1u,
     {
         for(uint32_t index = 0u; index < RESAMPLE_SAMPLES; index++)
         {
@@ -89,18 +89,24 @@ static double resample_time_of_the_plain_filter(void)
 
 void run_resample_cost_tests(void)
 {
-    double going_down_by_2;
-    double going_down_by_64;
-    double the_plain_filter;
+    double going_down_by_2 = 0.0;
+    double going_down_by_64 = 0.0;
+    double the_plain_filter = 0.0;
 
     for(uint32_t index = 0u; index < RESAMPLE_SAMPLES; index++)
     {
         resample_input[index] = cost_random_value();
     }
 
-    going_down_by_2 = resample_time_of_decimating(RESAMPLE_SMALL_FACTOR);
-    going_down_by_64 = resample_time_of_decimating(RESAMPLE_LARGE_FACTOR);
-    the_plain_filter = resample_time_of_the_plain_filter();
+    // One run of each, in turn, for as many rounds as there were once
+    // runs. cost.h says why the two sides of a claim are not measured
+    // one after the other.
+    for(uint32_t round = 0u; round < RESAMPLE_REPEATS; round++)
+    {
+        cost_keep_fastest(&going_down_by_2, resample_time_of_decimating(RESAMPLE_SMALL_FACTOR), round);
+        cost_keep_fastest(&going_down_by_64, resample_time_of_decimating(RESAMPLE_LARGE_FACTOR), round);
+        cost_keep_fastest(&the_plain_filter, resample_time_of_the_plain_filter(), round);
+    }
 
     cost_claim_at_least("resample",
                         "down by 64 beats down by 2, same filter and input",

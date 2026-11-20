@@ -82,6 +82,33 @@ extern int claims_broken;
         }                                                           \
     }while(0)
 
+// Keep the fastest of the measurements made so far, one round at a time.
+//
+// THE TWO SIDES OF A CLAIM ARE MEASURED IN TURN, AND NOT ONE AFTER THE OTHER.
+//
+// Every claim is a ratio of two times. Each time was once the fastest of seven
+// runs, and the seven runs of one side were all made before the seven runs of
+// the other. The fastest of seven removes a short disturbance inside one side.
+// It cannot remove one that lasts through all seven runs of one side and not
+// of the other: a neighbour on the same machine that is busy for a few
+// seconds, or the clock of the processor changing between the two. Each side
+// then took its fastest run under its own conditions, and the ratio carried
+// the difference.
+//
+// That broke a claim on the build machine and nowhere else. The plain filter
+// ran twice as slowly for all seven of its runs, and a ratio that measures
+// 2.24 was reported as 1.05. Issue #95 holds the record.
+//
+// Thus each module now makes ONE run of each of its measurements per round,
+// and calls this for each of them, for as many rounds as it once made runs. A
+// disturbance that lasts falls on every side alike, and a change of clock is
+// shared by every side rather than set against one. The work is the same as
+// before; only the order has changed.
+//
+// Give the round, counted from 0. The first round keeps what it measures,
+// whatever it is.
+void cost_keep_fastest(double* fastest, double measured, uint32_t round);
+
 // Say that the measured ratio must be at least as large as the claim asks.
 // Use it for "far cheaper than" and "so many times as much".
 void cost_claim_at_least(const char* module, const char* claim,

@@ -48,7 +48,7 @@ static double goertzel_time_of_watching(uint32_t count)
 {
     double seconds;
 
-    COST_MEASURE(seconds, GOERTZEL_REPEATS,
+    COST_MEASURE(seconds, 1u,
     {
         for(uint32_t block = 0u; block < GOERTZEL_BLOCKS; block++)
         {
@@ -75,7 +75,7 @@ static double goertzel_time_of_the_transform(void)
     double seconds;
     fft_t fft = fft_alloc(GOERTZEL_BLOCK);
 
-    COST_MEASURE(seconds, GOERTZEL_REPEATS,
+    COST_MEASURE(seconds, 1u,
     {
         for(uint32_t block = 0u; block < GOERTZEL_BLOCKS; block++)
         {
@@ -91,18 +91,24 @@ static double goertzel_time_of_the_transform(void)
 
 void run_goertzel_cost_tests(void)
 {
-    double watching_2;
-    double watching_128;
-    double the_transform;
+    double watching_2 = 0.0;
+    double watching_128 = 0.0;
+    double the_transform = 0.0;
 
     for(uint32_t index = 0u; index < GOERTZEL_BLOCK; index++)
     {
         goertzel_input[index] = cost_random_value();
     }
 
-    watching_2 = goertzel_time_of_watching(GOERTZEL_FEW);
-    watching_128 = goertzel_time_of_watching(GOERTZEL_MANY);
-    the_transform = goertzel_time_of_the_transform();
+    // One run of each, in turn, for as many rounds as there were once
+    // runs. cost.h says why the two sides of a claim are not measured
+    // one after the other.
+    for(uint32_t round = 0u; round < GOERTZEL_REPEATS; round++)
+    {
+        cost_keep_fastest(&watching_2, goertzel_time_of_watching(GOERTZEL_FEW), round);
+        cost_keep_fastest(&watching_128, goertzel_time_of_watching(GOERTZEL_MANY), round);
+        cost_keep_fastest(&the_transform, goertzel_time_of_the_transform(), round);
+    }
 
     cost_claim_at_least("goertzel",
                         "below log2(n) frequencies this beats the transform",
