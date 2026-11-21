@@ -75,9 +75,9 @@ narrowed after it, which costs as well.
 | `interp` | the same, smooth and never above the neighbours | 0.03 us | 0.03 us |
 | `interp` | read 4096 places from that table at one call | 0.03 us | 0.03 us |
 | `fft` | a 1024 point transform of a real signal | 70.40 us | 71.04 us |
-| `fft` | the same 1024 points by the faster road for a real signal | 37.27 us | 38.15 us |
+| `fft` | the same 1024 points, only the bins that hold new information | 37.27 us | 38.15 us |
 | `fft` | a half spectrum of 1024 points back into a real signal | 99.06 us | 125.38 us |
-| `fft` | the same half spectrum back by the faster road | 39.56 us | 42.91 us |
+| `fft` | the same half spectrum back by the faster method | 39.56 us | 42.91 us |
 | `fft` | a 1024 point transform of a complex signal | 63.07 us | 63.48 us |
 | `fft` | a 1024 point inverse transform | 91.73 us | 113.43 us |
 | `fft` | the size of every bin of a 1024 point spectrum | 4.94 us | 5.21 us |

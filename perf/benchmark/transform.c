@@ -69,10 +69,10 @@ static void run_fft_benchmark(void)
     cnum_t* bins = (cnum_t*)malloc(sizeof(cnum_t) *
                                    FFT_REAL_BIN_COUNT(TRANSFORM_BLOCK));
 
-    BENCHMARK_MEASURE("fft", "forward_half",
-                      "the same 1024 points by the faster road for a real signal",
+    BENCHMARK_MEASURE("fft", "forward_real_bins",
+                      "the same 1024 points, only the bins that hold new information",
                       TRANSFORM_BLOCK, 2000,
-                      fft_forward_half(&fft, transform_signal, bins));
+                      fft_forward_real_bins(&fft, transform_signal, bins));
 
     BENCHMARK_MEASURE("fft", "inverse_real",
                       "a half spectrum of 1024 points back into a real signal",
@@ -80,11 +80,11 @@ static void run_fft_benchmark(void)
                       fft_inverse_real(&fft, bins, transform_answer,
                                        transform_work));
 
-    BENCHMARK_MEASURE("fft", "inverse_half",
-                      "the same half spectrum back by the faster road",
+    BENCHMARK_MEASURE("fft", "inverse_real_bins",
+                      "the same half spectrum back by the faster method",
                       TRANSFORM_BLOCK, 2000,
-                      fft_inverse_half(&fft, bins, transform_answer,
-                                       transform_work));
+                      fft_inverse_real_bins(&fft, bins, transform_answer,
+                                            transform_work));
 
     free(bins);
 

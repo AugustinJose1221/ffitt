@@ -210,10 +210,10 @@ transform itself gets no memory.
 second half mirrors the first half. Only the bins from 0 to `size/2` hold new
 information. `fft_bin_frequency` gives the frequency of a bin in hertz.
 
-**A real signal has a faster road.** `fft_forward_half` gives those bins alone
-and `fft_inverse_half` turns them back. They pack the signal into a complex
-signal of half the size, thus they do about half the work, with the same
-`fft_t` and no new table. Measured on 1024 points, forward costs 0.53 to 0.54
+**A real signal has a faster method.** `fft_forward_real_bins` gives those bins
+alone and `fft_inverse_real_bins` turns them back. They pack the signal into a
+complex signal of half the size, thus they do about half the work, with the
+same `fft_t` and no new table. Measured on 1024 points, forward costs 0.53 to 0.54
 of `fft_forward_real`, and inverse 0.34 to 0.40 of `fft_inverse_real`. Take
 `fft_forward_real` only when you want the mirrored half as well.
 
@@ -234,7 +234,7 @@ After a whole block, the two values of its state give the answer.
 Use it when you watch for a few known tones, such as the tones of a telephone
 keypad. A count of operations puts the crossover at about `log2(n)`
 frequencies, but measured on a block of 1024 it comes at two or three: above
-that, `fft_forward_half` gives every frequency for less. This algorithm keeps
+that, `fft_forward_real_bins` gives every frequency for less. This algorithm keeps
 its place where the samples come one at a time or there is no memory for the
 block.
 

@@ -10,8 +10,8 @@ The headers of this library say what things cost.
 - `convolve` says the same about a shape of about 60.
 - `goertzel` says the transform costs less above two or three frequencies.
 - `ringbuf` says putting a sample in costs the same at any size of buffer.
-- `fft` says the half road for a real signal costs about half the work of the
-  plain road, forward and inverse.
+- `fft` says `fft_forward_real_bins` and `fft_inverse_real_bins` cost about
+  half the work of `fft_forward_real` and `fft_inverse_real`.
 
 Those sentences are the reason a caller picks one function over another.
 Nothing held them. The benchmark beside this one MEASURES and PRINTS, thus a

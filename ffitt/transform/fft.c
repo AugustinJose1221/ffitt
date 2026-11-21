@@ -154,7 +154,7 @@ void fft_inverse_real(fft_t* fft, const cnum_t* input, real_t* output,
     }
 }
 
-void fft_forward_half(fft_t* fft, const real_t* input, cnum_t* output)
+void fft_forward_real_bins(fft_t* fft, const real_t* input, cnum_t* output)
 {
     ASSERT(fft != NULL);
     ASSERT(input != NULL);
@@ -224,8 +224,8 @@ void fft_forward_half(fft_t* fft, const real_t* input, cnum_t* output)
     }
 }
 
-void fft_inverse_half(fft_t* fft, const cnum_t* input, real_t* output,
-                      cnum_t* work)
+void fft_inverse_real_bins(fft_t* fft, const cnum_t* input, real_t* output,
+                           cnum_t* work)
 {
     ASSERT(fft != NULL);
     ASSERT(input != NULL);
@@ -235,8 +235,8 @@ void fft_inverse_half(fft_t* fft, const cnum_t* input, real_t* output,
     uint32_t size = fft->size;
     uint32_t half = size / 2u;
 
-    // The untwist of fft_forward_half, run backwards: from each bin and its
-    // mirror, take E and O apart again and lay them over each other as
+    // The untwist of fft_forward_real_bins, run backwards: from each bin and
+    // its mirror, take E and O apart again and lay them over each other as
     // Z = E + i*O, whose inverse transform holds the samples at the even
     // places in its real parts and those at the odd places in its imaginary
     // parts.
