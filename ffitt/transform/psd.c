@@ -176,7 +176,7 @@ bool psd_estimate(psd_t* psd, const real_t* data, uint32_t size,
         const real_t* start = &data[number * step];
 
         window_apply(psd->window, start, psd->windowed, psd->block);
-        fft_forward_real(&psd->fft, psd->windowed, psd->spectrum);
+        fft_forward_real_bins(&psd->fft, psd->windowed, psd->spectrum);
 
         for(uint32_t bin = 0; bin < bins; bin++)
         {
