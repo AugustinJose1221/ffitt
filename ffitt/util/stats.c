@@ -69,33 +69,101 @@ static void stats_select(real_t* data, uint32_t size, uint32_t place)
     }
 }
 
-// The sum runs at the width of the build, and a sum is where the digits run
-// out first. This is worth recording.
+// A SUM THAT KEEPS WHAT EACH ADDITION ROUNDS AWAY.
 //
-// At 32 bits a number holds about seven digits. Adding a thousand samples that
-// each sit near eight million gives a total near eight thousand million, where
-// one step is 512. Every sample after the first few is added to a number too
-// large to hold it, and the low digits fall away. The error grows with the
-// number of samples.
+// Every sum in this module runs at the width of the build, and a sum is where
+// the digits run out first. At 32 bits a number holds about seven digits.
+// Adding a thousand samples that each sit near eight million gives a total
+// near eight thousand million, where one step is 512. Added plainly, every
+// sample after the first few loses its low digits to the rounding of the
+// total, and the error grows with the number of samples.
 //
-// Measured, on five samples at eight million that move by one, where the
-// variance is exactly 2: 32 bits gives 2.25 and 64 bits gives 2.00.
+// This is the compensated sum of Neumaier. Each addition rounds, and the part
+// it rounds away is worked out exactly from the two numbers that were added:
+// whichever of them is the larger, less the rounded total, plus the smaller.
+// That part is kept in a second value, the carry, and the carry is added back
+// at the end. It needs no wider type, thus it works the same way at both
+// widths. Measured at 32 bits, on a million samples near eight million, the
+// plain sum is out by 3.6e-3 of the total and this one by 9.4e-6.
 //
-// The header says what to do about it. There is nothing this function can do
-// on its own, because a sum of large numbers needs digits that the samples
-// themselves do not carry.
+// THE CARRY IS A PLAIN SUM ITSELF. Thus a very long list loses digits in the
+// carry, much later than a plain sum would lose them in the total. The mean
+// and the variance therefore also take each sample as its distance from the
+// first one; stats_offset_of_mean says why.
+//
+// IT COSTS ABOUT FOUR OPERATIONS FOR EACH SAMPLE AND NOT ONE. The table of
+// costs holds the measured time.
+//
+// A BUILD WITH -ffast-math OR -fassociative-math BREAKS IT. Those options let
+// the compiler treat (larger - total) + smaller as zero, which it is in exact
+// arithmetic, and the carry is then always zero. The build of this library
+// gives neither option.
+typedef struct{
+    real_t total;               // The sum, rounded to the width
+    real_t carry;               // What the rounding of the sum lost
+}stats_accumulator_t;
+
+static void stats_add(stats_accumulator_t* sum, real_t value)
+{
+    real_t total = sum->total + value;
+
+    if(REAL_ABS(sum->total) >= REAL_ABS(value))
+    {
+        sum->carry += (sum->total - total) + value;
+    }
+    else
+    {
+        sum->carry += (value - total) + sum->total;
+    }
+
+    sum->total = total;
+}
+
+// The sum divided by a count. The carry is divided on its own and not added
+// to the total first, because the total and the carry together hold more
+// digits than one value can, and the division keeps them apart a step longer.
+static real_t stats_share(const stats_accumulator_t* sum, uint32_t count)
+{
+    return (sum->total / (real_t)count) + (sum->carry / (real_t)count);
+}
+
 real_t stats_sum(const real_t* data, uint32_t size)
 {
     ASSERT(data != NULL);
 
-    real_t total = 0.0;
+    stats_accumulator_t sum = { REAL_C(0.0), REAL_C(0.0) };
 
     for(uint32_t index = 0; index < size; index++)
     {
-        total += (real_t)data[index];
+        stats_add(&sum, data[index]);
     }
 
-    return (real_t)total;
+    return sum.total + sum.carry;
+}
+
+// HOW FAR THE MEAN STANDS FROM THE FIRST SAMPLE.
+//
+// The samples of a reading that sits far from zero are large, and their sum is
+// larger still, thus the steps of the width at that sum are coarse. How far
+// each sample stands from the first one is small, and for two samples within a
+// factor of two of each other that distance is held exactly. Thus the mean of
+// the distances is worked out where the steps are fine, and the first sample
+// is added back one time at the end.
+//
+// Measured at 32 bits, on 65536 samples near a million, the compensated sum of
+// the samples themselves gave a mean one step of the width low: the carry is a
+// plain sum too, and it lost a little. The mean of the distances is right.
+static real_t stats_offset_of_mean(const real_t* data, uint32_t size,
+                                   real_t first)
+{
+    stats_accumulator_t sum = { REAL_C(0.0), REAL_C(0.0) };
+
+    for(uint32_t index = 0; index < size; index++)
+    {
+        stats_add(&sum, data[index] - first);
+    }
+
+    return stats_share(&sum, size);
 }
 
 real_t stats_mean(const real_t* data, uint32_t size)
@@ -107,14 +175,7 @@ real_t stats_mean(const real_t* data, uint32_t size)
         return REAL_C(0.0);
     }
 
-    real_t total = 0.0;
-
-    for(uint32_t index = 0; index < size; index++)
-    {
-        total += (real_t)data[index];
-    }
-
-    return (real_t)(total / (real_t)size);
+    return data[0] + stats_offset_of_mean(data, size, data[0]);
 }
 
 real_t stats_variance(const real_t* data, uint32_t size)
@@ -134,16 +195,23 @@ real_t stats_variance(const real_t* data, uint32_t size)
     // gives two numbers near 64 000 000 000 000 whose difference is 1. A float
     // holds about seven digits, thus that difference is lost and the answer
     // comes out as noise or as a negative number.
-    real_t mean = stats_mean(data, size);
-    real_t total = 0.0;
+    //
+    // The distances are taken from the first sample and then from the mean of
+    // those distances, and not from the mean itself. The mean is rounded to
+    // the step of the width where the samples stand, and that rounding would
+    // be squared into the answer. The mean of the distances from the first
+    // sample stands where the steps are fine.
+    real_t first = data[0];
+    real_t offset = stats_offset_of_mean(data, size, first);
+    stats_accumulator_t sum = { REAL_C(0.0), REAL_C(0.0) };
 
     for(uint32_t index = 0; index < size; index++)
     {
-        real_t distance = (real_t)data[index] - (real_t)mean;
-        total += distance * distance;
+        real_t distance = (data[index] - first) - offset;
+        stats_add(&sum, distance * distance);
     }
 
-    return (real_t)(total / (real_t)size);
+    return stats_share(&sum, size);
 }
 
 real_t stats_deviation(const real_t* data, uint32_t size)
@@ -160,14 +228,14 @@ real_t stats_rms(const real_t* data, uint32_t size)
         return REAL_C(0.0);
     }
 
-    real_t total = 0.0;
+    stats_accumulator_t sum = { REAL_C(0.0), REAL_C(0.0) };
 
     for(uint32_t index = 0; index < size; index++)
     {
-        total += (real_t)data[index] * (real_t)data[index];
+        stats_add(&sum, data[index] * data[index]);
     }
 
-    return (real_t)REAL_SQRT(total / (real_t)size);
+    return REAL_SQRT(stats_share(&sum, size));
 }
 
 real_t stats_min(const real_t* data, uint32_t size)

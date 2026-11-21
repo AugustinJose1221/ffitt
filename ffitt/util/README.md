@@ -68,19 +68,23 @@ one pass over the list instead of one pass for each level. The pivot is the
 middle sample and not the first one, because a list that is already in order is
 a common input and would be the worst case otherwise.
 
-**What the width of `real_t` costs here.** Every sum runs at the width of the
-build, and a sum is where the digits run out first. Five samples that sit at
-eight million and move by one have a variance of exactly 2:
+**What the width of `real_t` costs here.** A plain sum is where the digits run
+out first, because every addition rounds to the step of the total. Every sum
+here is a compensated sum, which keeps what each addition rounds away and adds
+it back at the end. The mean and the variance also take each sample as its
+distance from the first one, where the steps of the width are fine. Measured at
+32 bits:
 
-| build | answer | |
+| case | plain sum | now |
 | --- | --- | --- |
-| 32 bits | 2.25 | out by an eighth |
-| 64 bits | 2.00 | right |
+| variance of 8000000 to 8000004, which is 2 | 2.25 | 2.00 |
+| mean of 65536 samples near a million | out by 372 | right |
+| sum of 65536 samples of a tenth | out by 6 parts in 10 000 | out by less than 1 part in 1 000 000 |
 
-The fault is in the sum and not in the squaring: five samples near eight
-million give a total near forty million, where one step of a float is 4. A
-caller whose readings sit far from zero should build in 64 bits, or take the
-level away first with `dcblock`. The tests hold both numbers.
+What the width still costs is the samples themselves: a float near eight
+million holds steps of a half and nothing finer. A caller whose readings sit
+far from zero and move by less than that should build in 64 bits, or take the
+level away first with `dcblock`.
 
 
 ## Finding the peaks that are real

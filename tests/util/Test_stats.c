@@ -34,28 +34,76 @@ void test_stats_variance_and_deviation(void)
     TEST_ASSERT_REAL_WITHIN(TOLERANCE, REAL_SQRT(REAL_C(2.0)), stats_deviation(data, 5u));
 }
 
-void test_stats_variance_on_a_large_offset_shows_what_the_width_costs(void)
+void test_stats_variance_on_a_large_offset_is_right_at_both_widths(void)
 {
     // These samples sit at eight million and move by one, thus the variance is
-    // exactly 2. Working that out needs more digits than the samples
-    // themselves carry, and this test records what each width really gives.
+    // exactly 2. Each sample is held exactly at both widths.
     //
-    // The variance already takes the mean away before it squares, which is the
-    // careful way. The digits still run out in 32 bits, and they run out in
-    // the SUM: adding five samples near eight million gives a total near forty
-    // million, where one step of a float is 4.
+    // The variance takes the mean away before it squares, which is the
+    // careful way, and still a PLAIN sum gave 2.25 at 32 bits. The digits ran
+    // out in the sum of the mean: adding five samples near eight million gives
+    // a total near forty million, where one step of a float is 4, and the mean
+    // came out a half too high. The compensated sum keeps what the rounding
+    // lost, thus the mean is right, and so is the variance.
     real_t data[5] = {REAL_C(8000000.0), REAL_C(8000001.0), REAL_C(8000002.0),
                       REAL_C(8000003.0), REAL_C(8000004.0)};
 
-#if defined(FFITT_REAL_64)
-    // Sixteen digits are enough, thus the answer is right.
+    TEST_ASSERT_REAL_WITHIN(REAL_C(0.001), REAL_C(8000002.0), stats_mean(data, 5u));
     TEST_ASSERT_REAL_WITHIN(REAL_C(0.001), REAL_C(2.0), stats_variance(data, 5u));
-#else
-    // Seven digits are not enough. The answer comes out as 2.25, which is out
-    // by an eighth. THIS IS WHAT A BUILD IN 64 BITS BUYS, and a caller whose
-    // readings sit far from zero should know it before choosing a width.
-    TEST_ASSERT_REAL_WITHIN(REAL_C(0.01), REAL_C(2.25), stats_variance(data, 5u));
-#endif
+}
+
+// A long list, for the tests of a long sum.
+#define STATS_LONG      65536u
+
+static real_t stats_long[STATS_LONG];
+
+void test_a_long_sum_keeps_its_low_digits(void)
+{
+    // Sixty-five thousand samples of a tenth. A tenth is not held exactly at
+    // either width, thus the true sum is the count times the value as held,
+    // and that product is worked out in double precision here.
+    //
+    // A plain sum at 32 bits was out by six parts in ten thousand, because
+    // every addition to a total near six thousand rounds to a step of half a
+    // thousandth. The compensated sum must be out by no more than one
+    // part in a million.
+    for(uint32_t index = 0; index < STATS_LONG; index++)
+    {
+        stats_long[index] = REAL_C(0.1);
+    }
+
+    double truth = (double)STATS_LONG * (double)REAL_C(0.1);
+    double share = fabs(((double)stats_sum(stats_long, STATS_LONG) - truth) / truth);
+
+    TEST_ASSERT_TRUE(share < 1e-6);
+
+    double mean_share = fabs(((double)stats_mean(stats_long, STATS_LONG)
+                              - (double)REAL_C(0.1)) / (double)REAL_C(0.1));
+
+    TEST_ASSERT_TRUE(mean_share < 1e-6);
+}
+
+void test_a_long_list_far_from_zero_keeps_its_mean_and_its_spread(void)
+{
+    // Samples that sit at a million and step through 0, 0.25, 0.5 and 0.75,
+    // each held exactly at both widths. The mean is a million and three
+    // eighths, and the variance of the four steps is 5/64.
+    //
+    // A plain sum at 32 bits gave a mean of 999628, out by 372. A compensated
+    // sum of the samples themselves gave 1000000.3125, one step of a float
+    // low, because its carry is a plain sum too, and the variance took that
+    // step squared and gave 0.082. The distances from the first sample stand
+    // where the steps are fine, thus both answers are now held to a
+    // thousandth.
+    for(uint32_t index = 0; index < STATS_LONG; index++)
+    {
+        stats_long[index] = REAL_C(1000000.0) + (REAL_C(0.25) * (real_t)(index % 4u));
+    }
+
+    TEST_ASSERT_REAL_WITHIN(REAL_C(0.001), REAL_C(1000000.375),
+                            stats_mean(stats_long, STATS_LONG));
+    TEST_ASSERT_REAL_WITHIN(REAL_C(0.001), REAL_C(0.078125),
+                            stats_variance(stats_long, STATS_LONG));
 }
 
 void test_stats_rms_is_not_the_deviation(void)

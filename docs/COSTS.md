@@ -151,11 +151,11 @@ narrowed after it, which costs as well.
 | `delay` | the same to a fraction of a sample, by phase | 145.47 us | 147.42 us |
 | `emd` | sift 256 samples into three modes | 3.06 us | 3.06 us |
 | `imf` | take the memory for a mode of 1024 points | 0.10 us | 0.08 us |
-| `stats` | the mean of 4096 readings | 10.01 us | 10.01 us |
-| `stats` | how far 4096 readings spread | 20.01 us | 20.02 us |
-| `stats` | the root mean square of 4096 readings | 10.78 us | 10.02 us |
-| `stats` | the middle of 4096 readings | 58.89 us | 58.97 us |
-| `stats` | the spread of 4096 readings, wild ones and all | 180.42 us | 177.91 us |
+| `stats` | the mean of 4096 readings | 24.52 us | 24.25 us |
+| `stats` | how far 4096 readings spread | 53.70 us | 52.95 us |
+| `stats` | the root mean square of 4096 readings | 26.71 us | 26.80 us |
+| `stats` | the middle of 4096 readings | 58.02 us | 59.27 us |
+| `stats` | the spread of 4096 readings, wild ones and all | 179.78 us | 179.84 us |
 | `peakdetect` | every peak in 4096 samples | 16.93 us | 17.11 us |
 | `peakdetect` | the peaks in 4096 samples that pass the rules | 1632.10 us | 1637.02 us |
 | `peakdetect` | how far one peak stands above its neighbours | 0.03 us | 0.03 us |
