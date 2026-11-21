@@ -24,7 +24,10 @@ void hilbert_analytic_signal(fft_t* fft, const real_t* signal, cnum_t* analytic)
     uint32_t size = fft->size;
     uint32_t half = size / 2;
 
-    fft_forward_real(fft, signal, analytic);
+    // Only the bins up to the middle are needed, because every bin above it is
+    // set to zero below. The transform that gives those bins alone does about
+    // half the work.
+    fft_forward_real_bins(fft, signal, analytic);
 
     // Keep the bin of the frequency zero and the bin of the middle as they
     // are. Double every bin below the middle, and set every bin above the

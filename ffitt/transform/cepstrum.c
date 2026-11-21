@@ -129,12 +129,17 @@ bool cepstrum_real(cepstrum_t* cepstrum, const real_t* input, real_t* output)
         cepstrum->windowed[index] = input[index] * cepstrum->window[index];
     }
 
-    fft_forward_real(&cepstrum->fft, cepstrum->windowed, cepstrum->work);
+    // ONLY THE BINS UP TO THE MIDDLE ARE TRANSFORMED. A signal of real values
+    // gives a spectrum that is its own mirror, and how loud a bin is does not
+    // change in the mirror. Thus the bins above the middle say nothing here.
+    uint32_t half = size / 2u;
+
+    fft_forward_real_bins(&cepstrum->fft, cepstrum->windowed, cepstrum->work);
 
     // The loudest bin, which the floor is measured against.
     real_t loudest = REAL_C(0.0);
 
-    for(uint32_t bin = 0; bin < size; bin++)
+    for(uint32_t bin = 0; bin <= half; bin++)
     {
         real_t loudness = cnum_magnitude(cepstrum->work[bin]);
 
@@ -157,7 +162,11 @@ bool cepstrum_real(cepstrum_t* cepstrum, const real_t* input, real_t* output)
     // Throwing the phase away is what makes this the REAL cepstrum, and it is
     // what a caller looking for a period wants: where the harmonics stand does
     // not depend on where in its turn each of them happens to be.
-    for(uint32_t bin = 0; bin < size; bin++)
+    //
+    // The logarithms are written as a signal of real values over the whole
+    // size, each bin and its mirror, into the room that held the windowed
+    // block. That block is no longer needed.
+    for(uint32_t bin = 0; bin <= half; bin++)
     {
         real_t loudness = cnum_magnitude(cepstrum->work[bin]);
 
@@ -166,17 +175,35 @@ bool cepstrum_real(cepstrum_t* cepstrum, const real_t* input, real_t* output)
             loudness = floor_of;
         }
 
-        cepstrum->work[bin] = cnum_make(REAL_LOG(loudness), REAL_C(0.0));
+        real_t level = REAL_LOG(loudness);
+
+        cepstrum->windowed[bin] = level;
+
+        if((bin > 0u) && (bin < half))
+        {
+            cepstrum->windowed[size - bin] = level;
+        }
     }
 
-    // And the transform of that, which is where a row of evenly spaced peaks
-    // becomes one peak. The answer is real because what went in is real and
-    // even, thus only the real part is kept.
-    fft_inverse(&cepstrum->fft, cepstrum->work);
+    // And the inverse transform of that, which is where a row of evenly spaced
+    // peaks becomes one peak.
+    //
+    // WHAT GOES IN IS REAL AND EVEN, thus the inverse transform is the forward
+    // transform divided by the size, and its answer is real and even too. The
+    // forward transform of real values that gives the bins up to the middle
+    // gives the first half of the answer, and the second half is its mirror.
+    fft_forward_real_bins(&cepstrum->fft, cepstrum->windowed, cepstrum->work);
 
-    for(uint32_t place = 0; place < size; place++)
+    real_t scale = REAL_C(1.0) / (real_t)size;
+
+    for(uint32_t place = 0; place <= half; place++)
     {
-        output[place] = cnum_real(cepstrum->work[place]);
+        output[place] = cnum_real(cepstrum->work[place]) * scale;
+    }
+
+    for(uint32_t place = half + 1u; place < size; place++)
+    {
+        output[place] = output[size - place];
     }
 
     return true;
