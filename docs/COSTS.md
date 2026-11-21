@@ -91,11 +91,11 @@ narrowed after it, which costs as well.
 | `window` | build a window of Blackman and Harris over 1024 | 33.28 us | 58.12 us |
 | `window` | put a window over 1024 samples | 2.55 us | 2.66 us |
 | `window` | the noise bandwidth of a window of 1024 | 2.60 us | 2.61 us |
-| `hilbert` | the analytic signal of 1024 samples | 170.80 us | 198.35 us |
-| `hilbert` | the envelope of 1024 samples | 6.66 us | 16.93 us |
-| `hilbert` | the frequency at each of 1024 samples | 49.41 us | 53.08 us |
-| `cepstrum` | the cepstrum of 1024 samples | 193.99 us | 247.51 us |
-| `cepstrum` | find the pitch in a cepstrum of 1024 | 0.87 us | 0.88 us |
+| `hilbert` | the analytic signal of 1024 samples | 137.71 us | 165.95 us |
+| `hilbert` | the envelope of 1024 samples | 6.64 us | 16.03 us |
+| `hilbert` | the frequency at each of 1024 samples | 49.47 us | 53.47 us |
+| `cepstrum` | the cepstrum of 1024 samples | 92.88 us | 107.88 us |
+| `cepstrum` | find the pitch in a cepstrum of 1024 | 0.88 us | 0.88 us |
 | `goertzel` | watch one frequency over a block of 1024 | 6.47 us | 6.47 us |
 | `goertzel` | read how much of that frequency was there | 0.03 us | 0.03 us |
 | `correlate` | 4096 samples against themselves at every lag | 21065.30 us | 21172.60 us |
@@ -104,13 +104,13 @@ narrowed after it, which costs as well.
 | `correlate` | find the period of 4096 samples | 14028.62 us | 13669.78 us |
 | `convolve` | slide a shape of 512 along 4096 samples | 6406.51 us | 6445.19 us |
 | `convolve` | the same by the transform | 2457.11 us | 2747.70 us |
-| `psd` | the spectrum of 4096 samples by the way of Welch | 491.73 us | 498.61 us |
-| `psd` | the power between two frequencies of that spectrum | 1.16 us | 1.12 us |
-| `csd` | the cross spectrum of two signals of 4096 | 1103.49 us | 1220.31 us |
-| `csd` | how much two signals of 4096 agree, bin by bin | 1104.01 us | 1219.25 us |
-| `csd` | the transfer between two signals of 4096 | 1104.32 us | 1219.93 us |
-| `stft` | 4096 samples into frames of 256, hopping 64 | 957.81 us | 963.42 us |
-| `stft` | rebuild the 4096 samples from those frames | 1448.12 us | 1839.65 us |
+| `psd` | the spectrum of 4096 samples by the way of Welch | 280.60 us | 288.95 us |
+| `psd` | the power between two frequencies of that spectrum | 1.16 us | 1.13 us |
+| `csd` | the cross spectrum of two signals of 4096 | 675.67 us | 799.56 us |
+| `csd` | how much two signals of 4096 agree, bin by bin | 675.11 us | 797.95 us |
+| `csd` | the transfer between two signals of 4096 | 676.15 us | 799.60 us |
+| `stft` | 4096 samples into frames of 256, hopping 64 | 521.85 us | 542.38 us |
+| `stft` | rebuild the 4096 samples from those frames | 620.87 us | 676.43 us |
 | `spectrogram` | a picture in decibel from those frames | 124.64 us | 228.23 us |
 | `spectrogram` | hold that picture against its own loudest point | 34.97 us | 35.31 us |
 | `hht` | amplitude and frequency of one mode of 1024 | 227.31 us | 274.22 us |

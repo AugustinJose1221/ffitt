@@ -190,11 +190,11 @@ static bool csd_gather(csd_t* csd, const real_t* first, const real_t* second,
     {
         window_apply(csd->window, &first[number * step], csd->windowed,
                      csd->block);
-        fft_forward_real(&csd->fft, csd->windowed, csd->first);
+        fft_forward_real_bins(&csd->fft, csd->windowed, csd->first);
 
         window_apply(csd->window, &second[number * step], csd->windowed,
                      csd->block);
-        fft_forward_real(&csd->fft, csd->windowed, csd->second);
+        fft_forward_real_bins(&csd->fft, csd->windowed, csd->second);
 
         for(uint32_t bin = 0; bin < bins; bin++)
         {

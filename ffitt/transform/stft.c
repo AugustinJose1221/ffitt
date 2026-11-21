@@ -256,14 +256,12 @@ bool stft_forward(stft_t* stft, const real_t* signal, uint32_t size,
         const real_t* start = &signal[frame * stft->hop];
 
         window_apply(stft->window, start, stft->windowed, block);
-        fft_forward_real(&stft->fft, stft->windowed, stft->spectrum);
 
         // Only the bins up to half the block and one more are kept. The rest
-        // are their mirror and say nothing new.
-        for(uint32_t bin = 0; bin < bins; bin++)
-        {
-            output[(frame * bins) + bin] = stft->spectrum[bin];
-        }
+        // are their mirror and say nothing new, thus the transform that gives
+        // those bins alone writes them into the frame itself.
+        fft_forward_real_bins(&stft->fft, stft->windowed,
+                              &output[frame * bins]);
     }
 
     return true;
@@ -299,8 +297,8 @@ bool stft_inverse(stft_t* stft, const cnum_t* frames, uint32_t frame_count,
 
     for(uint32_t frame = 0; frame < frame_count; frame++)
     {
-        fft_inverse_real(&stft->fft, &frames[frame * bins], stft->windowed,
-                         stft->spectrum);
+        fft_inverse_real_bins(&stft->fft, &frames[frame * bins],
+                              stft->windowed, stft->spectrum);
 
         uint32_t start = frame * stft->hop;
 
