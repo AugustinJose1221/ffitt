@@ -345,3 +345,100 @@ void test_a_block_of_silence_gives_a_cepstrum_and_not_a_logarithm_of_nothing(voi
 
     cepstrum_free(&cepstrum);
 }
+
+// The whole answer, every place of it, against the definition worked out
+// plainly in double precision:
+//
+//     X[k] = sum over n of w[n]*x[n] * exp(-2*pi*i*k*n/size)
+//     L[k] = log(the larger of |X[k]| and the floor)
+//     c[n] = (1/size) * sum over k of L[k] * exp(+2*pi*i*k*n/size)
+//
+// The other tests read the peak and its place, which a wrong scale or a wrong
+// second half does not move. This one reads every value. It was written when
+// the module came to work the inverse transform out as a forward one, which
+// is only right because L is real and even, and a fault in that would show at
+// the places above the middle first.
+#ifdef FFITT_REAL_64
+#define CEPSTRUM_PLAIN_TOLERANCE    REAL_C(1e-9)
+#else
+#define CEPSTRUM_PLAIN_TOLERANCE    REAL_C(2e-4)
+#endif
+
+static void check_against_the_definition(uint32_t size)
+{
+    cepstrum_t cepstrum = cepstrum_alloc(size);
+    real_t input[64];
+    real_t output[64];
+    double level[64];
+    double loudness[64];
+    double loudest = 0.0;
+
+    seed = 7u;
+
+    for(uint32_t index = 0; index < size; index++)
+    {
+        input[index] = rough() + REAL_SIN(REAL_C(0.7) * (real_t)index);
+    }
+
+    TEST_ASSERT_TRUE(cepstrum_real(&cepstrum, input, output));
+
+    for(uint32_t bin = 0; bin < size; bin++)
+    {
+        double re = 0.0;
+        double im = 0.0;
+
+        for(uint32_t place = 0; place < size; place++)
+        {
+            double angle = -2.0 * 3.14159265358979323846
+                           * (double)((bin * place) % size) / (double)size;
+            double value = (double)input[place]
+                           * (double)cepstrum.window[place];
+
+            re += value * cos(angle);
+            im += value * sin(angle);
+        }
+
+        loudness[bin] = sqrt((re * re) + (im * im));
+        loudest = (loudness[bin] > loudest) ? loudness[bin] : loudest;
+    }
+
+    // The floor of the module: a fixed part below the loudest bin, and the
+    // smallest value the width holds when the block is silent. At a size of
+    // 2 the window is nothing but zeros, thus that second rule is examined.
+    double floor_of = loudest * (double)CEPSTRUM_FLOOR;
+
+    if(floor_of <= (double)REAL_SMALLEST)
+    {
+        floor_of = (double)REAL_SMALLEST;
+    }
+
+    for(uint32_t bin = 0; bin < size; bin++)
+    {
+        level[bin] = log((loudness[bin] > floor_of) ? loudness[bin] : floor_of);
+    }
+
+    for(uint32_t place = 0; place < size; place++)
+    {
+        double re = 0.0;
+
+        for(uint32_t bin = 0; bin < size; bin++)
+        {
+            double angle = 2.0 * 3.14159265358979323846
+                           * (double)((bin * place) % size) / (double)size;
+            re += level[bin] * cos(angle);
+        }
+
+        TEST_ASSERT_REAL_WITHIN(CEPSTRUM_PLAIN_TOLERANCE,
+                                (real_t)(re / (double)size), output[place]);
+    }
+
+    cepstrum_free(&cepstrum);
+}
+
+void test_every_place_of_the_cepstrum_is_what_the_definition_gives(void)
+{
+    check_against_the_definition(64u);
+    check_against_the_definition(8u);
+    check_against_the_definition(4u);
+    check_against_the_definition(2u);
+}
