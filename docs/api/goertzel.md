@@ -25,9 +25,9 @@ The cost for one frequency is one multiplication and two additions for each
 sample. A count of operations says that the transform costs less only above
 about log2(n) frequencies, but a machine does not measure that. MEASURED ON A
 BLOCK OF 1024, built with optimisation, one frequency costs less than half of
-fft_forward_half, and two or three cost as much as that transform. Thus for
-a block that is in memory, use this algorithm for one or two frequencies and
-the transform for more. Use this algorithm for more frequencies only when the
+fft_forward_real_bins, and two or three cost as much as that transform. Thus
+for a block that is in memory, use this algorithm for one or two frequencies
+and the transform for more. Use this algorithm for more frequencies only when the
 samples come one at a time, or when there is no memory for the block.
 
 The algorithm reads a block of a fixed number of samples. Give each sample

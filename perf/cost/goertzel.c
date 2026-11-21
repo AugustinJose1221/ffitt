@@ -1,7 +1,7 @@
 // WHAT THE HEADER OF goertzel CLAIMS.
 //
 //   "MEASURED ON A BLOCK OF 1024, built with optimisation, one frequency
-//    costs less than half of fft_forward_half, and two or three cost as much
+//    costs less than half of fft_forward_real_bins, and two or three cost as much
 //    as that transform. Thus for a block that is in memory, use this algorithm
 //    for one or two frequencies and the transform for more."
 //
@@ -12,7 +12,7 @@
 // at one time, thus it is one measurement whatever the caller wanted. This
 // algorithm gives one frequency, thus asking for k of them means running it k
 // times over the same block. The transform is given the same block through
-// fft_forward_half, which is the cheapest call for a caller who holds a real
+// fft_forward_real_bins, which is the cheapest call for a caller who holds a real
 // signal.
 //
 // THE HEADER ONCE SAID "about log2(n)", which is 10 here, and these tests were
@@ -82,7 +82,7 @@ static double goertzel_time_of_the_transform(void)
     {
         for(uint32_t block = 0u; block < GOERTZEL_BLOCKS; block++)
         {
-            fft_forward_half(&fft, goertzel_input, goertzel_spectrum);
+            fft_forward_real_bins(&fft, goertzel_input, goertzel_spectrum);
             cost_sink += goertzel_spectrum[1].re;
         }
     });

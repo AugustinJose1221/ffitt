@@ -249,7 +249,7 @@ def test_a_real_signal_comes_back_from_half_a_spectrum(lib, values):
 @given(signals(magnitude=10.0))
 @TRANSFORM
 def test_the_faster_road_gives_the_bins_of_the_plain_transform(lib, values):
-    """fft_forward_half must give the first half and one more of the spectrum.
+    """fft_forward_real_bins must give the first half and one more of the spectrum.
 
     It is held against the transform written plainly, and not against
     fft_forward_real, thus the two cannot be wrong together.
@@ -260,7 +260,7 @@ def test_the_faster_road_gives_the_bins_of_the_plain_transform(lib, values):
 
     fft = lib.fft_alloc(size)
     bins = (ffitt.Cnum * count)()
-    lib.fft_forward_half(ctypes.byref(fft), ffitt.float_array(real_only), bins)
+    lib.fft_forward_real_bins(ctypes.byref(fft), ffitt.float_array(real_only), bins)
     answer = from_c(bins, count)
 
     expected = plain_transform([(value, 0.0) for value in real_only])
@@ -275,7 +275,7 @@ def test_the_faster_road_gives_the_bins_of_the_plain_transform(lib, values):
 @given(signals(magnitude=10.0))
 @TRANSFORM
 def test_the_faster_inverse_gives_what_the_plain_inverse_gives(lib, values):
-    """fft_inverse_half must agree with fft_inverse_real for any half spectrum.
+    """fft_inverse_real_bins must agree with fft_inverse_real for any half spectrum.
 
     The bins are drawn freely, thus bin 0 and bin size/2 carry an imaginary
     part that no real signal gives. Both functions must drop it the same way.
@@ -291,7 +291,7 @@ def test_the_faster_inverse_gives_what_the_plain_inverse_gives(lib, values):
     fast_work = (ffitt.Cnum * (size // 2))()
 
     lib.fft_inverse_real(ctypes.byref(fft), spectrum, plain, plain_work)
-    lib.fft_inverse_half(ctypes.byref(fft), spectrum, fast, fast_work)
+    lib.fft_inverse_real_bins(ctypes.byref(fft), spectrum, fast, fast_work)
 
     room = room_for(values[:count])
 
@@ -304,7 +304,7 @@ def test_the_faster_inverse_gives_what_the_plain_inverse_gives(lib, values):
 @given(signals(magnitude=10.0))
 @TRANSFORM
 def test_the_faster_road_and_its_opposite_give_the_signal_back(lib, values):
-    """fft_inverse_half after fft_forward_half must give the first signal."""
+    """fft_inverse_real_bins after fft_forward_real_bins must give the first signal."""
     size = len(values)
     real_only = [value for value, _ in values]
 
@@ -313,8 +313,8 @@ def test_the_faster_road_and_its_opposite_give_the_signal_back(lib, values):
     work = (ffitt.Cnum * (size // 2))()
     output = ffitt.real_buffer(size)
 
-    lib.fft_forward_half(ctypes.byref(fft), ffitt.float_array(real_only), bins)
-    lib.fft_inverse_half(ctypes.byref(fft), bins, output, work)
+    lib.fft_forward_real_bins(ctypes.byref(fft), ffitt.float_array(real_only), bins)
+    lib.fft_inverse_real_bins(ctypes.byref(fft), bins, output, work)
 
     room = room_for([(value, 0.0) for value in real_only])
 

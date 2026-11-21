@@ -55,7 +55,7 @@
 // and never again.
 //
 // A SIGNAL OF REAL VALUES NEEDS ONLY HALF OF THAT WORK. Its spectrum is its own
-// mirror, thus half the bins say nothing new. fft_forward_half packs the
+// mirror, thus half the bins say nothing new. fft_forward_real_bins packs the
 // samples at even places into the real parts and those at odd places into the
 // imaginary parts, which is a complex signal of half the size, and transforms
 // that. What comes back is two transforms laid over each other, E of the even
@@ -116,9 +116,9 @@ void fft_inverse(fft_t* fft, cnum_t* data);
 //
 // A signal of real values gives a result where the second half mirrors the
 // first half. Thus only the bins from 0 to size/2 hold new information. This
-// function is not the faster method that uses that mirror; fft_forward_half
-// is, and gives those bins alone at about half the work. This one stays for
-// the caller who wants the whole spectrum, mirror and all.
+// function is not the faster method that uses that mirror;
+// fft_forward_real_bins is, and gives those bins alone at about half the work.
+// This one stays for the caller who wants the whole spectrum, mirror and all.
 void fft_forward_real(fft_t* fft, const real_t* input, cnum_t* output);
 
 // The number of bins that hold new information in the transform of a real
@@ -163,22 +163,22 @@ void fft_inverse_real(fft_t* fft, const cnum_t* input, real_t* output,
 // and taken apart again. That costs a transform of half the size and one pass
 // over the bins, against a transform of the whole size for fft_forward_real.
 // The table of costs holds the measured difference.
-void fft_forward_half(fft_t* fft, const real_t* input, cnum_t* output);
+void fft_forward_real_bins(fft_t* fft, const real_t* input, cnum_t* output);
 
 // Change the bins that hold new information back into a signal of float values,
 // by the faster method that uses the mirror.
 //
-// This is the opposite of fft_forward_half, and it gives what fft_inverse_real
-// gives for the same input, to the rounding of the width. The input holds
-// FFT_REAL_BIN_COUNT(size) complex numbers and the output holds as many real
-// values as the size. The work buffer holds size/2 complex numbers, which is
-// half of what fft_inverse_real needs, and it loses its content.
+// This is the opposite of fft_forward_real_bins, and it gives what
+// fft_inverse_real gives for the same input, to the rounding of the width. The
+// input holds FFT_REAL_BIN_COUNT(size) complex numbers and the output holds as
+// many real values as the size. The work buffer holds size/2 complex numbers,
+// which is half of what fft_inverse_real needs, and it loses its content.
 //
 // Bin 0 and bin size/2 are treated as fft_inverse_real treats them: their
 // real parts are taken and their imaginary parts dropped, because no signal of
 // real values can give them one.
-void fft_inverse_half(fft_t* fft, const cnum_t* input, real_t* output,
-                      cnum_t* work);
+void fft_inverse_real_bins(fft_t* fft, const cnum_t* input, real_t* output,
+                           cnum_t* work);
 
 // Write the size of each element of the data into the magnitude list. The size
 // of an element says how strong that frequency is in the signal. Both lists
