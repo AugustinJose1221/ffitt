@@ -45,20 +45,21 @@
 //
 // WHAT THE WIDTH OF real_t COSTS HERE
 //
-// Every sum in this module runs at the width of the build, and a sum is where
-// the digits run out first. Five samples that sit at eight million and move by
-// one have a variance of exactly 2. The variance already takes the mean away
-// before it squares, which is the careful way, and even so:
+// Every sum in this module is a compensated sum: what each addition rounds
+// away is kept, and added back at the end. Thus the error of a sum does not
+// grow with the number of samples, as the error of a plain sum does. The mean
+// and the variance also take each sample as its distance from the first one,
+// which is small, thus they are worked out where the steps of the width are
+// fine. Five samples that sit at eight million and move by one have a
+// variance of exactly 2, and both widths give 2. Added plainly, 32 bits gave
+// 2.25.
 //
-//     32 bits    2.25      out by an eighth
-//     64 bits    2.00      right
-//
-// The reason is the SUM, not the squaring: adding five samples near eight
-// million gives a total near forty million, where one step of a float is 4.
-//
-// Thus a caller whose readings sit far from zero should either build in 64
-// bits or take the level away first with the dcblock module. The tests hold
-// both numbers, so that this cost is recorded and not forgotten.
+// What the width still costs is the samples themselves. A float holds about
+// seven digits, thus a sample near eight million holds steps of a half and
+// nothing finer, and no sum can give back a digit that the samples never held.
+// A caller whose readings sit far from zero and move by less than that step
+// should build in 64 bits, or take the level away first with the dcblock
+// module.
 
 // What the median absolute deviation must be multiplied by to estimate the
 // standard deviation of samples that follow a normal spread.
