@@ -83,6 +83,52 @@ void test_nolibm_the_hyperbolic_functions_hold_their_table(void)
     TEST_ASSERT_TRUE(nolibm_acosh(0.5) != nolibm_acosh(0.5));
 }
 
+// NEAR THEIR ZERO THE TWO INVERSE FUNCTIONS ONCE LOST EVERY DIGIT.
+//
+// Both are the logarithm of a number close to one there, and forming that
+// number plainly kept only what fits beside the one. asinh of 1e-12 was out by
+// 9 parts in a hundred thousand and asinh of 1e-20 gave nothing at all; acosh
+// of one and 1e-15 was out by 2 parts in a thousand million. A grid from -100
+// to 100 never comes close enough to nothing to see it, thus these are taken
+// one power of ten at a time.
+void test_nolibm_the_inverse_hyperbolic_functions_keep_their_digits_near_zero(void)
+{
+    double worst_asinh = 0.0;
+    double worst_acosh = 0.0;
+
+    for(int32_t power = 1; power <= 300; power++)
+    {
+        double small = pow(10.0, -(double)power);
+        double apart = how_far(nolibm_asinh(small), asinh(small));
+
+        if(apart > worst_asinh) { worst_asinh = apart; }
+
+        apart = how_far(nolibm_asinh(-small), asinh(-small));
+        if(apart > worst_asinh) { worst_asinh = apart; }
+
+        apart = how_far(nolibm_acosh(1.0 + small), acosh(1.0 + small));
+        if(apart > worst_acosh) { worst_acosh = apart; }
+    }
+
+    TEST_ASSERT_TRUE(worst_asinh < 1e-15);
+    TEST_ASSERT_TRUE(worst_acosh < 1e-15);
+
+    // So small that one and it add to exactly one: the answer is the number.
+    TEST_ASSERT_TRUE(nolibm_asinh(1e-20) == 1e-20);
+    TEST_ASSERT_TRUE(nolibm_acosh(1.0) == 0.0);
+}
+
+// THE LOGARITHM AT THE EDGE OF ITS RANGE.
+//
+// The number is brought between the root of a half and the root of two, and
+// at those edges the series has the most to do. Stopped too soon it was out by
+// 3.4 parts in 10^14 just above the root of a half.
+void test_nolibm_the_logarithm_holds_its_table_at_the_edge_of_its_range(void)
+{
+    TEST_ASSERT_TRUE(worst_over(0.7071, 0.7072, STEPS, nolibm_log, log) < 1e-15);
+    TEST_ASSERT_TRUE(worst_over(1.4141, 1.4143, STEPS, nolibm_log, log) < 1e-15);
+}
+
 void test_nolibm_the_error_function_holds_its_table(void)
 {
     TEST_ASSERT_TRUE(worst_over(-4.0, 4.0, STEPS, nolibm_erf, erf) < 2e-7);
@@ -188,6 +234,12 @@ void test_nolibm_the_two_argument_functions_hold_their_table(void)
     TEST_ASSERT_TRUE(fabs(nolibm_atan2(1.0, -1.0) - atan2(1.0, -1.0)) < 1e-11);
     TEST_ASSERT_TRUE(fabs(nolibm_atan2(-1.0, -1.0) - atan2(-1.0, -1.0)) < 1e-11);
     TEST_ASSERT_TRUE(nolibm_atan2(0.0, 0.0) == 0.0);
+
+    // Minus nothing above a negative x is half a turn DOWN, as the system has
+    // it. It once gave half a turn up, and the conjugate of a negative real
+    // number carries exactly that minus nothing.
+    TEST_ASSERT_TRUE(nolibm_atan2(-0.0, -1.0) == atan2(-0.0, -1.0));
+    TEST_ASSERT_TRUE(nolibm_atan2(0.0, -1.0) == atan2(0.0, -1.0));
 }
 
 // THE EDGES, WHICH ARE THE WHOLE REASON A GUARD IS THERE.

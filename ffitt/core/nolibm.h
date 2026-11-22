@@ -20,14 +20,15 @@
 //
 // These are not the system's functions and they do not pretend to be. Each is
 // a reduction of the argument and then a series. MEASURED against the system's
-// own functions over the ranges named, 200000 points each, as the worst
-// RELATIVE error seen:
+// own functions, as the worst RELATIVE error seen, first over a million points
+// each and then by a search that looks for the worst point on purpose
+// (tests/property/test_nolibm_properties.py):
 //
 //   floor  ceil  fmod            exact
-//   sqrt   hypot                 2.2e-16
-//   log    log10  tan            2.3e-15
-//   acosh                        3.5e-14
-//   asinh                        1.7e-13
+//   sqrt                         2.3e-16    one step of the last digit
+//   hypot  log  log10            1.0e-15
+//   asinh  acosh                 1.0e-15    near their zero as well
+//   tan                          2.3e-15
 //   atan   atan2  asin           3.8e-12
 //   exp    pow    cosh  sinh     1.2e-11
 //   cos                          4.2e-10

@@ -42,6 +42,24 @@ static bool nolibm_is_not_a_number(double x)
     return x != x;
 }
 
+// A number and the bits that hold it, read through one another.
+typedef union{
+    double number;
+    uint64_t bits;
+}nolibm_bits_t;
+
+// True if the sign of the number is set, which a comparison cannot see for a
+// zero: minus nothing and nothing are equal, and only the top bit of the
+// number tells them apart.
+static bool nolibm_has_sign(double x)
+{
+    nolibm_bits_t held;
+
+    held.number = x;
+
+    return (held.bits >> 63) != 0u;
+}
+
 double nolibm_fabs(double x)
 {
     return (x < 0.0) ? -x : x;
@@ -307,12 +325,19 @@ double nolibm_log(double x)
         twos--;
     }
 
+    // HOW FAR THE SERIES RUNS. At the edges of the range the part is the root
+    // of two less one over the root of two and one, which is 0.172, and each
+    // term is that squared times the one before. Stopped at the fifteenth
+    // power, the first term left out was 1 in 10^14 of an answer of 0.35,
+    // and searching for the worst case found the logarithm out by 3.4 parts
+    // in 10^14 there, fifteen times what the table above claims. Run to the
+    // twenty fifth, the first term left out is below 1 in 10^19.
     double part = (x - 1.0) / (x + 1.0);
     double squared = part * part;
     double term = part;
     double total = part;
 
-    for(uint32_t power = 3u; power <= 15u; power += 2u)
+    for(uint32_t power = 3u; power <= 25u; power += 2u)
     {
         term *= squared;
         total += term / (double)power;
@@ -524,7 +549,10 @@ double nolibm_atan2(double y, double x)
     {
         double angle = nolibm_atan(y / x);
 
-        return (y >= 0.0) ? (angle + NOLIBM_PI) : (angle - NOLIBM_PI);
+        // Which way round the half turn goes is decided by the sign of y,
+        // and a y of minus nothing is below the axis as the system reads it.
+        // A conjugate of a real number carries exactly such a y.
+        return nolibm_has_sign(y) ? (angle - NOLIBM_PI) : (angle + NOLIBM_PI);
     }
 
     // Straight up, straight down, or nowhere at all.
@@ -589,10 +617,63 @@ double nolibm_cosh(double x)
     return 0.5 * (up + (1.0 / up));
 }
 
+// The logarithm of one and a small number, without losing the small number.
+//
+// One and a small number, added, keep only as much of the small number as
+// fits beside the one, and the logarithm of that sum is then the logarithm of
+// a rounded number. Near nothing that rounding is all there is: one and a
+// millionth of a millionth keeps four digits of it. The sum is formed anyway,
+// and what it lost is put back by measuring how far the sum really stands
+// from one, which is exact, against how far it was meant to.
+static double nolibm_log_of_one_and(double y)
+{
+    double sum = 1.0 + y;
+
+    if(sum == 1.0)
+    {
+        // So small that the sum kept nothing of it, and there the logarithm
+        // is the number itself to every digit the width holds.
+        return y;
+    }
+
+    return nolibm_log(sum) * (y / (sum - 1.0));
+}
+
+// THE TWO INVERSE HYPERBOLIC FUNCTIONS ARE TAKEN NEAR THEIR ZERO WITH CARE.
+//
+// Both are the logarithm of a number that stands close to one there, and the
+// plain way to them forms that number first. Measured before this was done,
+// asinh of a millionth of a millionth was out by 9 parts in a hundred
+// thousand and asinh of anything below a thousandth of a millionth of a
+// millionth gave nothing at all; acosh just above one was out by 2 parts in a
+// thousand million, where the table above claims a thousand times better.
+//
+// Below 2 both are therefore written as the logarithm of one and a small
+// number, with the small number formed so that nothing nearly equal is taken
+// from anything:
+//
+//     asinh(x) = log(1 + x + x*x / (1 + sqrt(1 + x*x)))
+//     acosh(x) = log(1 + t + sqrt(t * (t + 2))),     t = x - 1
+//
+// t is exact, because x and one stand within a factor of two of each other.
+// Above 2 nothing cancels, and the plain way is kept.
 double nolibm_asinh(double x)
 {
     double size = nolibm_fabs(x);
-    double answer = nolibm_log(size + nolibm_sqrt((size * size) + 1.0));
+    double answer;
+
+    if(size < 2.0)
+    {
+        double squared = size * size;
+
+        answer = nolibm_log_of_one_and(size
+                                       + (squared
+                                          / (1.0 + nolibm_sqrt(1.0 + squared))));
+    }
+    else
+    {
+        answer = nolibm_log(size + nolibm_sqrt((size * size) + 1.0));
+    }
 
     return (x < 0.0) ? -answer : answer;
 }
@@ -602,6 +683,13 @@ double nolibm_acosh(double x)
     if(x < 1.0)
     {
         return nolibm_not_a_number();
+    }
+
+    if(x < 2.0)
+    {
+        double t = x - 1.0;
+
+        return nolibm_log_of_one_and(t + nolibm_sqrt(t * (t + 2.0)));
     }
 
     return nolibm_log(x + nolibm_sqrt((x * x) - 1.0));
