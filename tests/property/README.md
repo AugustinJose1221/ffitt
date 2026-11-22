@@ -47,7 +47,7 @@ The tests build `build/property/libffitt.so` one time for each run. You need
 | `test_vector_properties.py` | Rules for the vector module |
 | `test_cspline_properties.py` | Rules for the cubic spline module |
 | `test_kalman_properties.py` | Rules for the Kalman filter |
-| `test_utils_properties.py` | Rules for the search, the peaks and the valleys |
+| `test_binarysearch_properties.py`, `test_peakdetect_properties.py`, `test_valleydetect_properties.py` | Rules for the search, the peaks and the valleys |
 
 ## Two points to remember
 
@@ -82,12 +82,27 @@ every input, or a second way to the same answer.
 | `test_quaternion_properties.py` | a matrix written and read back is the same attitude, through all four branches |
 | `test_window_properties.py` | every window is symmetric, and the three gains agree |
 | `test_peakdetect_rules_properties.py` | a stricter rule never finds more peaks |
+| `test_peakdetect_properties.py` | a peak and its prominence are what the header defines, and a refined parabola is its own top |
+| `test_valleydetect_properties.py` | a valley is a peak of the signal turned upside down |
+| `test_binarysearch_properties.py` | the search gives what Python's `bisect` gives, among equal values too |
+| `test_cnum_properties.py` | each operation against Python's complex numbers, and a division undoes a multiplication |
+| `test_fir_properties.py` | the output is a convolution, the gain is a transform, and every design holds every frequency back alike |
+| `test_iir_properties.py` | the output is the plain difference equation, and the gain and the phase are the answer on the circle |
+| `test_real_properties.py` | each function of `real.h` agrees with Python at the width of the build |
+| `test_nolibm_properties.py` | each function searched for its worst point against the table of `nolibm.h` |
+| `test_imf_properties.py` | a mode written out reads back as its points, one column to a mode |
 | `test_matrix_properties.py`, `test_vector_properties.py`, `test_stats_properties.py`, `test_medfilt_properties.py`, `test_cspline_properties.py`, `test_kalman_properties.py` | the rules of the modules they name |
 
 **A test that fails is not always the library.** Several of the rules above were
 wrong when they were first written, and the library was right: a discrete ramp
 is not orthogonal to a sinusoid, an even-sized window has no sample at its peak,
 and bin `size/2` is its own mirror. Measure before changing the library.
+
+**And sometimes it is.** The search of `test_nolibm_properties.py` found the
+logarithm fifteen times worse than its table at the edge of its range, and the
+inverse hyperbolic functions wrong in every digit near their zero, where a grid
+of 20000 points had found nothing. A rule that searches is worth more than a
+grid of the same cost.
 
 ## Keeping the tests quick
 

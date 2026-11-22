@@ -2181,7 +2181,134 @@ def load_library():
                                         ctypes.c_uint32]
     library.peakdetect_find.restype = ctypes.c_uint32
 
+    bind_the_small_modules(library)
+
     return library
+
+
+def bind_the_small_modules(library):
+    """Give the types of the modules that had no property file of their own.
+
+    The complex numbers, the two layers of arithmetic, the filters with and
+    without feedback, and the intrinsic mode functions. They are kept together
+    here so that the file that tests each one can find what it calls.
+    """
+    # cnum
+    two = ("cnum_add", "cnum_subtract", "cnum_multiply", "cnum_divide")
+    for name in two:
+        function = getattr(library, name)
+        function.argtypes = [Cnum, Cnum]
+        function.restype = Cnum
+    for name in ("cnum_conjugate", "cnum_negate"):
+        function = getattr(library, name)
+        function.argtypes = [Cnum]
+        function.restype = Cnum
+    for name in ("cnum_zero", "cnum_one"):
+        function = getattr(library, name)
+        function.argtypes = []
+        function.restype = Cnum
+    library.cnum_from_real.argtypes = [REAL_T]
+    library.cnum_from_real.restype = Cnum
+    library.cnum_scale.argtypes = [Cnum, REAL_T]
+    library.cnum_scale.restype = Cnum
+    for name in ("cnum_real", "cnum_imaginary", "cnum_magnitude_squared"):
+        function = getattr(library, name)
+        function.argtypes = [Cnum]
+        function.restype = REAL_T
+    library.cnum_is_zero.argtypes = [Cnum]
+    library.cnum_is_zero.restype = ctypes.c_bool
+    library.cnum_is_equal.argtypes = [Cnum, Cnum]
+    library.cnum_is_equal.restype = ctypes.c_bool
+    library.cnum_is_near.argtypes = [Cnum, Cnum, REAL_T]
+    library.cnum_is_near.restype = ctypes.c_bool
+
+    # real
+    for name in REAL_FUNCTIONS:
+        function = getattr(library, name)
+        function.argtypes = [REAL_T]
+        function.restype = REAL_T
+
+    # nolibm
+    for name in NOLIBM_ONE_ARGUMENT:
+        function = getattr(library, name)
+        function.argtypes = [ctypes.c_double]
+        function.restype = ctypes.c_double
+    for name in NOLIBM_TWO_ARGUMENTS:
+        function = getattr(library, name)
+        function.argtypes = [ctypes.c_double, ctypes.c_double]
+        function.restype = ctypes.c_double
+
+    # imf
+    library.imf_static_alloc.argtypes = [ctypes.c_uint32, FLOAT_POINTER,
+                                         FLOAT_POINTER]
+    library.imf_static_alloc.restype = Imf
+    library.imf_printf.argtypes = [ctypes.POINTER(Imf), ctypes.c_void_p]
+    library.imf_printf.restype = None
+    library.imf_print_all.argtypes = [ctypes.POINTER(Imf), ctypes.c_uint32,
+                                      ctypes.c_uint32, ctypes.c_void_p]
+    library.imf_print_all.restype = None
+
+    # iir
+    library.iir_set_section.argtypes = [ctypes.POINTER(Iir), ctypes.c_uint32,
+                                        REAL_T, REAL_T, REAL_T, REAL_T, REAL_T,
+                                        REAL_T]
+    library.iir_set_section.restype = None
+    library.iir_process_block.argtypes = [ctypes.POINTER(Iir), FLOAT_POINTER,
+                                          FLOAT_POINTER, ctypes.c_uint32]
+    library.iir_process_block.restype = None
+    library.iir_is_valid_cutoff.argtypes = [REAL_T]
+    library.iir_is_valid_cutoff.restype = ctypes.c_bool
+    for name in ("iir_design_low_pass", "iir_design_high_pass"):
+        function = getattr(library, name)
+        function.argtypes = [ctypes.POINTER(Iir), REAL_T]
+        function.restype = ctypes.c_bool
+    for name in ("iir_design_band_pass", "iir_design_band_stop",
+                 "iir_design_notch", "iir_design_peak"):
+        function = getattr(library, name)
+        function.argtypes = [ctypes.POINTER(Iir), REAL_T, REAL_T]
+        function.restype = ctypes.c_bool
+
+    # fir
+    library.fir_set_coefficient.argtypes = [ctypes.POINTER(Fir),
+                                            ctypes.c_uint32, REAL_T]
+    library.fir_set_coefficient.restype = None
+    library.fir_process_block.argtypes = [ctypes.POINTER(Fir), FLOAT_POINTER,
+                                          FLOAT_POINTER, ctypes.c_uint32]
+    library.fir_process_block.restype = None
+    for name in ("fir_phase", "fir_group_delay"):
+        function = getattr(library, name)
+        function.argtypes = [ctypes.POINTER(Fir), REAL_T]
+        function.restype = REAL_T
+    library.fir_is_symmetric.argtypes = [ctypes.POINTER(Fir)]
+    library.fir_is_symmetric.restype = ctypes.c_bool
+    library.fir_is_valid_band.argtypes = [ctypes.c_uint32, REAL_T, REAL_T]
+    library.fir_is_valid_band.restype = ctypes.c_bool
+    for name in ("fir_design_low_pass", "fir_design_high_pass"):
+        function = getattr(library, name)
+        function.argtypes = [ctypes.POINTER(Fir), REAL_T]
+        function.restype = ctypes.c_bool
+    for name in ("fir_design_band_pass", "fir_design_band_stop"):
+        function = getattr(library, name)
+        function.argtypes = [ctypes.POINTER(Fir), REAL_T, REAL_T]
+        function.restype = ctypes.c_bool
+    library.fir_design_band_stop_with.argtypes = [ctypes.POINTER(Fir), REAL_T,
+                                                  REAL_T, ctypes.c_int,
+                                                  REAL_T]
+    library.fir_design_band_stop_with.restype = ctypes.c_bool
+
+
+# The functions of real.h, each named after what it gives.
+REAL_FUNCTIONS = ("real_sin", "real_cos", "real_tan", "real_sqrt", "real_exp",
+                  "real_log", "real_abs")
+
+# The functions of nolibm.h that take one number, and the ones that take two.
+NOLIBM_ONE_ARGUMENT = ("nolibm_sqrt", "nolibm_erf", "nolibm_sin", "nolibm_cos",
+                       "nolibm_tan", "nolibm_fabs", "nolibm_exp", "nolibm_log",
+                       "nolibm_log10", "nolibm_atan", "nolibm_sinh",
+                       "nolibm_cosh", "nolibm_asin", "nolibm_asinh",
+                       "nolibm_acosh", "nolibm_floor", "nolibm_ceil")
+NOLIBM_TWO_ARGUMENTS = ("nolibm_hypot", "nolibm_pow", "nolibm_atan2",
+                        "nolibm_fmod")
 
 
 def float_array(values):
